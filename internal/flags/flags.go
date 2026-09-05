@@ -70,6 +70,9 @@ var (
 	Concurrency         int
 	Dir                 string
 	Entrypoint          string
+	TUI                 bool
+	TUIStatus           string
+	TUITaskNavigator    string
 	Output              ast.Output
 	Color               bool
 	Interval            time.Duration
@@ -144,6 +147,9 @@ func init() {
 	pflag.BoolVarP(&ExitCode, "exit-code", "x", false, "Pass-through the exit code of the task command.")
 	pflag.StringVarP(&Dir, "dir", "d", "", "Sets the directory in which Task will execute and look for a Taskfile.")
 	pflag.StringVarP(&Entrypoint, "taskfile", "t", "", `Choose which Taskfile to run. Defaults to "Taskfile.yml".`)
+	pflag.BoolVarP(&TUI, "tui", "T", false, "Runs Task in an interactive terminal interface.")
+	pflag.StringVar(&TUIStatus, "tui-status", "", "Sets TUI task status style: [icons|labels].")
+	pflag.StringVar(&TUITaskNavigator, "tui-task-navigator", "", "Sets TUI task navigator: [list|tree]. Defaults to tree.")
 	pflag.StringVar(&TempDir, "temp-dir", getConfig(config, "TEMP_DIR", func() *string { return config.TempDir }, ""), "Sets the directory used to store Task temporary files, such as checksums. Relative paths are relative to the root Taskfile.")
 	pflag.StringVarP(&Output.Name, "output", "o", getConfig(config, "OUTPUT", func() *string { return nil }, ""), "Sets output style: [interleaved|group|prefixed].")
 	pflag.StringVar(&Output.Group.Begin, "output-group-begin", getConfig(config, "OUTPUT_GROUP_BEGIN", func() *string { return nil }, ""), "Message template to print before a task's grouped output.")
@@ -213,16 +219,14 @@ func Validate() error {
 		return errors.New("task: You can't set both --global and --dir")
 	}
 
-	if Output.Name != "group" {
-		if Output.Group.Begin != "" {
-			return errors.New("task: You can't set --output-group-begin without --output=group")
-		}
-		if Output.Group.End != "" {
-			return errors.New("task: You can't set --output-group-end without --output=group")
-		}
-		if Output.Group.ErrorOnly {
-			return errors.New("task: You can't set --output-group-error-only without --output=group")
-		}
+	if err := validateOutputOptions(Output); err != nil {
+		return err
+	}
+	if err := validateTUIOptions(TUI, TUIStatus, TUITaskNavigator); err != nil {
+		return err
+	}
+	if TUI && (List || ListAll || ListJson || Status || Summary || Watch || Interactive) {
+		return errors.New("task: --tui cannot be combined with task listing, status, summary, watch, or interactive modes")
 	}
 
 	if List && ListAll {
@@ -246,6 +250,34 @@ func Validate() error {
 		return errors.New("task: --cert and --cert-key must be provided together")
 	}
 
+	return nil
+}
+
+func validateOutputOptions(output ast.Output) error {
+	if output.Name != "group" {
+		if output.Group.Begin != "" {
+			return errors.New("task: You can't set --output-group-begin without --output=group")
+		}
+		if output.Group.End != "" {
+			return errors.New("task: You can't set --output-group-end without --output=group")
+		}
+		if output.Group.ErrorOnly {
+			return errors.New("task: You can't set --output-group-error-only without --output=group")
+		}
+	}
+	return nil
+}
+
+func validateTUIOptions(enabled bool, status, navigator string) error {
+	if enabled {
+		return nil
+	}
+	if status != "" {
+		return errors.New("task: You can't set --tui-status without --tui")
+	}
+	if navigator != "" {
+		return errors.New("task: You can't set --tui-task-navigator without --tui")
+	}
 	return nil
 }
 

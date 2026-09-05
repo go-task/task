@@ -2710,6 +2710,14 @@ tasks:
   # ...
 ```
 
+::: tip
+
+The `output` option can also be specified by the `--output` or `-o` flags.
+
+:::
+
+### `group` output
+
 The `group` output will print the entire output of a command once after it
 finishes, so you will not have live feedback for commands that take a long time
 to run.
@@ -2768,7 +2776,9 @@ output-of-errors
 task: Failed to run task "errors": exit status 1
 ```
 
-The `prefix` output will prefix every line printed by a command with
+### `prefixed` output
+
+The `prefixed` output will prefix every line printed by a command with
 `[task-name] ` as the prefix, but you can customize the prefix for a command
 with the `prefix:` attribute:
 
@@ -2801,11 +2811,109 @@ $ task default
 [print-baz] baz
 ```
 
-::: tip
+## Interactive TUI
 
-The `output` option can also be specified by the `--output` or `-o` flags.
+Run `task --tui` (or `task -T`) to open an interactive, full-screen Terminal
+User Interface (TUI). The launcher lists the available non-internal tasks and
+their descriptions. Type to filter by task name or description and use the
+up/down arrows to select a task. Press Enter to run it in the execution
+dashboard, or press Ctrl+R to leave the TUI and run it with Task's normal
+terminal output. Escape clears the current filter and Ctrl+C quits.
 
-:::
+You can skip the launcher by providing task names directly:
+
+```shell
+$ task --tui build test lint
+$ task --tui --parallel build test lint
+```
+
+After direct execution completes, press Escape or `b` to open the launcher.
+
+Each requested task is displayed as an independent root. As with regular Task
+invocations, multiple requested tasks run sequentially by default; pass
+`--parallel` to run them concurrently.
+
+During execution, the left pane shows a task navigator and the right pane shows
+the output of the currently selected task.
+
+The requested root task appears at the top and can be selected to inspect output
+from commands that it runs directly. When the root only orchestrates other
+tasks, the first child is selected automatically. By default, tasks are nested
+beneath the task that invoked them. Repeated executions have separate entries,
+while calls that join an existing `run: once` or `run: when_changed` execution
+remain visible at each location with a `↳` marker and share the owner's status
+and output. Pass `--tui-task-navigator list` to show all tasks reached from each
+root in a compact, single-level list instead.
+
+Each task shows a status icon, including distinct canceled and skipped states.
+Canceled tasks were interrupted, while skipped tasks were never attempted after
+an earlier sequential task failed. Pass `--tui-status labels` to replace the
+icons with text labels.
+
+Press `?` at any time to see every key available in the current view.
+
+Use Tab or the left/right arrow keys to switch between the task navigator and
+the output pane. Clicking either pane also focuses it.
+
+When the navigator is focused, use the up/down arrows or `j`/`k` to select a
+task. You can also click a task directly. When the output pane is focused, use
+the following controls to scroll:
+
+- Up/down arrows or `j`/`k`
+- Page Up and Page Down
+- `g` and `G` to jump to the beginning or end
+- Mouse wheel
+
+Each task shows how long it ran, counting up while it is running and keeping its
+final duration afterwards. Quick tasks are reported in milliseconds. A task that
+has not started has no duration, which is not the same as a duration of zero. On
+a narrow terminal the durations are dropped so that task names keep their space.
+
+Press `f` to show the selected task's output fullscreen. Incoming output remains
+visible; the view follows it while at the bottom and preserves the current
+position after you scroll up. The keyboard scrolling controls above remain
+available. Press `f` again or Escape to return to the two-pane view.
+
+### Copying task output
+
+Selecting text with the mouse does not work inside the dashboard. A terminal
+discards a selection whenever the screen is repainted, and scrolling either pane
+is a repaint. Three controls get the text out instead:
+
+- `y` copies the selected task's output to the system clipboard with its ANSI
+  escape sequences stripped, which is what a terminal gives you when you select
+  text by hand.
+- `Y` copies it with those sequences intact, for pasting somewhere that renders
+  them, such as an editor with an ANSI extension. They carry bold, dim and
+  underline as well as colour.
+- `t` prints the output to the terminal and waits for Enter. The text lands in
+  your terminal's normal scrollback, where its own scrolling and selection apply
+  as they would to any other command output.
+
+All three work whether or not the task has finished. A snapshot of a running
+task says so, and shows the output as it stood at that moment.
+
+Copying uses the OSC 52 escape sequence and, where one is available, a clipboard
+helper such as `wl-copy`, `pbcopy`, `xclip`, `xsel` or `clip.exe`. OSC 52 works
+over SSH but is not supported everywhere; terminals based on VTE, including
+GNOME Terminal, ignore it. When no helper confirmed the copy, the message says
+so and points at `t`.
+
+```shell
+$ task --tui --tui-task-navigator tree --tui-status labels build
+```
+
+Pressing `q` while tasks are running requests cancellation and closes the TUI
+after Task's execution has returned. After execution finishes normally, the TUI
+remains open so its output can be inspected; press Escape or `b` to open the
+launcher, or press Enter or `q` to close it. Switching to the launcher while
+execution is still in progress first cancels the tasks and waits for their
+processes to exit.
+
+The TUI requires an interactive terminal. It is intended for local use; use one
+of the stream-based output modes in CI or when redirecting output. Watch mode,
+interactive commands, and interactive variable prompting are not currently
+supported. Task confirmation prompts can be accepted up front with `--yes`.
 
 ## CI Integration
 

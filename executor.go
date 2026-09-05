@@ -68,6 +68,7 @@ type (
 		Compiler           *Compiler
 		Output             output.Output
 		OutputStyle        ast.Output
+		Listener           *Listener // Optional; observes execution and may draw the display
 		TaskSorter         sort.Sorter
 		UserWorkingDir     string
 		EnableVersionCheck bool
@@ -81,6 +82,7 @@ type (
 		mkdirMutexMap        map[string]*sync.Mutex
 		executionHashes      map[string]*executionState
 		executionHashesMutex sync.Mutex
+		taskInvocationID     uint64
 		watchedDirs          *xsync.Map[string, bool]
 	}
 	TempDir struct {

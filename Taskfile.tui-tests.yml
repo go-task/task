@@ -1,0 +1,172 @@
+version: '3'
+
+tasks:
+  shared-dep-always-running:
+    desc: Two parents call a shared dependency with the default run behavior
+    deps: [parent-a-always, parent-b-always]
+
+  parent-a-always:
+    internal: true
+    deps: [shared-always]
+    cmds:
+      - echo "parent A continued after shared-always"
+
+  parent-b-always:
+    internal: true
+    deps: [shared-always]
+    cmds:
+      - echo "parent B continued after shared-always"
+
+  shared-always:
+    internal: true
+    silent: true
+    cmds:
+      - |
+        echo "shared-always START $(date +%H:%M:%S.%3N)"
+        sleep 2
+        echo "shared-always END   $(date +%H:%M:%S.%3N)"
+
+  shared-dep-running-once:
+    desc: Two parents call a shared dependency configured with run once
+    deps: [parent-a-once, parent-b-once]
+
+  parent-a-once:
+    internal: true
+    deps: [shared-once]
+    cmds:
+      - echo "parent A continued after shared-once"
+
+  parent-b-once:
+    internal: true
+    deps: [shared-once]
+    cmds:
+      - echo "parent B continued after shared-once"
+
+  shared-once:
+    internal: true
+    run: once
+    silent: true
+    cmds:
+      - |
+        echo "shared-once START $(date +%H:%M:%S.%3N)"
+        sleep 2
+        echo "shared-once END   $(date +%H:%M:%S.%3N)"
+
+  fail-fast-example:
+    desc: One task succeeds, one fails, and one is canceled by fail-fast
+    failfast: true
+    deps:
+      - success-after-1s
+      - fail-after-2s
+      - success-after-3s
+
+  success-after-1s:
+    internal: true
+    cmds:
+      - echo "1-second task START"
+      - sleep 1
+      - echo "1-second task SUCCESS"
+
+  fail-after-2s:
+    internal: true
+    cmds:
+      - echo "2-second task START"
+      - sleep 2
+      - echo "2-second task FAILING"
+      - exit 1
+
+  success-after-3s:
+    internal: true
+    cmds:
+      - echo "3-second task START"
+      - sleep 3
+      - echo "3-second task SUCCESS"
+
+  unresolvable-dep-example:
+    desc: A dep that does not exist still appears, with its own error
+    deps:
+      - compiles-fine
+      - typoo
+
+  compiles-fine:
+    internal: true
+    cmds:
+      - echo "this one resolves and runs"
+
+  skipped-deps-example:
+    desc: Deps skipped by platform and by an if condition, next to one that runs
+    deps:
+      - other-platform-only
+      - condition-not-met
+      - condition-met
+
+  other-platform-only:
+    internal: true
+    platforms: [plan9]
+    cmds:
+      - echo "never runs on a normal machine"
+
+  condition-not-met:
+    internal: true
+    if: 'false'
+    cmds:
+      - echo "never runs"
+
+  condition-met:
+    internal: true
+    if: 'true'
+    cmds:
+      - echo "the if condition was met, so this ran"
+
+  labelled-task-example:
+    desc: A dep announced by its Taskfile name, then renamed to its label
+    deps:
+      - docs
+
+  docs:
+    internal: true
+    label: Build the docs
+    cmds:
+      - echo "renamed once compilation resolved the label"
+
+  progress-bar-example:
+    desc: A progress bar that redraws one line, next to ordinary line output
+    cmds:
+      - |
+        echo "starting download"
+        for i in $(seq 0 5 100); do
+          printf "\rDownloading... %3d%%" "$i"
+          sleep 0.15
+        done
+        printf "\rDownloading... done   \n"
+        echo "finished"
+
+  prompt-vars-example:
+    desc: Required variables, asked for up front when run with --interactive
+    requires:
+      vars:
+        - RELEASE_NAME
+        - name: ENVIRONMENT
+          enum: [development, staging, production]
+    cmds:
+      - echo "releasing {{.RELEASE_NAME}} to {{.ENVIRONMENT}}"
+
+  prompt-vars-midrun-example:
+    desc: A sub-task whose variables are only asked for once the run reaches it
+    cmds:
+      - echo "this runs first, in the dashboard"
+      - task: needs-a-variable
+      - echo "and this runs after the prompt"
+
+  needs-a-variable:
+    internal: true
+    requires:
+      vars: [TICKET]
+    cmds:
+      - echo "working on {{.TICKET}}"
+
+  confirm-example:
+    desc: A confirmation Task asks for before running the task
+    prompt: Really run the example?
+    cmds:
+      - echo "confirmed"

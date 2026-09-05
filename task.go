@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 	"mvdan.cc/sh/v3/interp"
@@ -39,6 +40,10 @@ type MatchingTask struct {
 
 // Run runs Task
 func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
+	if e.ownsScreen() && e.Interactive {
+		return errors.New("task: interactive variable prompting is not supported while a terminal UI is active")
+	}
+
 	// check if given tasks exist
 	for _, call := range calls {
 		task, err := e.GetTask(call)
@@ -82,6 +87,18 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 	if err != nil {
 		return err
 	}
+	if e.ownsScreen() && len(watchCalls) > 0 {
+		return errors.New("task: watch mode is not supported while a terminal UI is active")
+	}
+	// Schedule every requested root before starting execution so lifecycle
+	// consumers can present the complete set even when roots run sequentially.
+	for _, call := range regularCalls {
+		t, err := e.GetTask(call)
+		if err != nil {
+			return err
+		}
+		e.taskInvocation(call, t.Name())
+	}
 
 	g := &errgroup.Group{}
 	if e.Failfast {
@@ -124,7 +141,27 @@ func (e *Executor) splitRegularAndWatchCalls(calls ...*Call) (regularCalls []*Ca
 }
 
 // RunTask runs a task by its name
-func (e *Executor) RunTask(ctx context.Context, call *Call) error {
+func (e *Executor) RunTask(ctx context.Context, call *Call) (runErr error) {
+	// Announce the call before Task decides whether to run it, so a listener's
+	// task list stays complete even when the task cannot be resolved or
+	// compiled. Requested roots are announced by Run before execution begins;
+	// this covers every other call.
+	invocation := e.taskInvocation(call, call.Task)
+	skipped := false
+	var startedAt time.Time
+	defer func() {
+		finished := Finished{
+			Invocation: invocation,
+			Result:     taskResult(ctx, skipped, runErr),
+			Err:        runErr,
+			At:         time.Now(),
+		}
+		if !startedAt.IsZero() {
+			finished.Duration = finished.At.Sub(startedAt)
+		}
+		e.notifyFinished(finished)
+	}()
+
 	// Inject prompted vars into call if available
 	if e.promptedVars != nil {
 		if call.Vars == nil {
@@ -144,6 +181,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	}
 	if !shouldRunOnCurrentPlatform(t.Platforms) {
 		e.Logger.VerboseOutf(logger.Yellow, `task: %q not for current platform - ignored\n`, call.Task)
+		skipped = true
 		return nil
 	}
 
@@ -159,6 +197,18 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	if err != nil {
 		return err
 	}
+	// Compilation resolves labels and included-taskfile prefixes, which the raw
+	// call name does not carry, so re-read the name for the events that follow.
+	invocation = e.taskInvocation(call, t.Name())
+
+	if e.ownsScreen() {
+		if t.Interactive {
+			return fmt.Errorf("task: task %q is interactive and cannot run while a terminal UI is active", t.Name())
+		}
+		if len(t.Prompt) > 0 && !e.AssumeYes {
+			return fmt.Errorf("task: task %q requires confirmation; run with --yes", t.Name())
+		}
+	}
 
 	// Check if condition after CompiledTask so dynamic variables are resolved
 	if strings.TrimSpace(t.If) != "" {
@@ -168,6 +218,7 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			Env:     env.Get(t),
 		}); err != nil {
 			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
+			skipped = true
 			return nil
 		}
 	}
@@ -203,9 +254,12 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	if err = e.startExecution(ctx, t, func(ctx context.Context) error {
+	err = e.startExecution(ctx, t, invocation, func(ctx context.Context) (runErr error) {
+		startedAt = time.Now()
+		e.notifyStarted(invocation, startedAt)
+
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
-		if err := e.runDeps(ctx, t); err != nil {
+		if err := e.runDeps(ctx, t, call.invocationID, call.rootInvocationID); err != nil {
 			return err
 		}
 
@@ -284,11 +338,55 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		}
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
-	}); err != nil {
+	})
+	if err != nil {
 		return &errors.TaskRunError{TaskName: t.Name(), Err: err}
 	}
 
 	return nil
+}
+
+// taskResult classifies how a task attempt ended, for lifecycle consumers.
+//
+// Cancellation is decided by the context rather than by inspecting the error. A
+// killed process does not report itself the same way on every platform: the
+// shell interpreter surfaces the context error on Unix, while on Windows the
+// same kill arrives as a plain non-zero exit status. The context is the same
+// everywhere.
+func taskResult(ctx context.Context, skipped bool, err error) Result {
+	switch {
+	case skipped:
+		return ResultSkipped
+	case err == nil:
+		return ResultSucceeded
+	case ctx.Err() != nil:
+		return ResultCanceled
+	default:
+		return ResultFailed
+	}
+}
+
+func (e *Executor) taskInvocation(call *Call, name string) Invocation {
+	if call.invocationID == 0 {
+		call.invocationID = atomic.AddUint64(&e.taskInvocationID, 1)
+		if !call.Indirect || call.rootInvocationID == 0 {
+			call.rootInvocationID = call.invocationID
+		}
+		invocation := e.invocationOf(call, name)
+		e.notifyScheduled(invocation)
+		return invocation
+	}
+	return e.invocationOf(call, name)
+}
+
+func (e *Executor) invocationOf(call *Call, name string) Invocation {
+	return Invocation{
+		ID:       call.invocationID,
+		ParentID: call.parentInvocationID,
+		RootID:   call.rootInvocationID,
+		Task:     call.Task,
+		Name:     name,
+	}
 }
 
 func (e *Executor) mkdir(t *ast.Task) error {
@@ -308,7 +406,7 @@ func (e *Executor) mkdir(t *ast.Task) error {
 	return nil
 }
 
-func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
+func (e *Executor) runDeps(ctx context.Context, t *ast.Task, parentInvocationID, rootInvocationID uint64) error {
 	g := &errgroup.Group{}
 	if e.Failfast || t.Failfast {
 		g, ctx = errgroup.WithContext(ctx)
@@ -328,7 +426,14 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 				defer cancel()
 			}
 
-			err := e.RunTask(depCtx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
+			err := e.RunTask(depCtx, &Call{
+				Task:               d.Task,
+				Vars:               d.Vars,
+				Silent:             d.Silent,
+				Indirect:           true,
+				parentInvocationID: parentInvocationID,
+				rootInvocationID:   rootInvocationID,
+			})
 			if err != nil && timedOut(depCtx, timeout) {
 				return timeout
 			}
@@ -395,7 +500,14 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		reacquire := e.releaseConcurrencyLimit()
 		defer reacquire()
 
-		err := e.RunTask(ctx, &Call{Task: cmd.Task, Vars: cmd.Vars, Silent: cmd.Silent, Indirect: true})
+		err := e.RunTask(ctx, &Call{
+			Task:               cmd.Task,
+			Vars:               cmd.Vars,
+			Silent:             cmd.Silent,
+			Indirect:           true,
+			parentInvocationID: call.invocationID,
+			rootInvocationID:   call.rootInvocationID,
+		})
 		if err != nil && timedOut(ctx, timeout) {
 			err = timeout
 		}
@@ -410,7 +522,8 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			return nil
 		}
 
-		if e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
+		logCommand := e.Verbose || (!call.Silent && !cmd.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent)
+		if logCommand && (!e.ownsScreen() || e.Dry) {
 			e.Logger.Errf(logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
 		}
 
@@ -422,12 +535,21 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 		if t.Interactive {
 			outputWrapper = output.Interleaved{}
 		}
+		stdOutBase, stdErrBase := e.listenerWriters(e.invocationOf(call, t.Name()))
+		if e.ownsScreen() {
+			// The listener renders raw command output in its own panes, so
+			// --output styling applies to runs it does not host instead.
+			outputWrapper = output.Interleaved{}
+		}
 		vars, err := e.Compiler.FastGetVariables(t, call)
 		outputTemplater := &templater.Cache{Vars: vars}
 		if err != nil {
 			return fmt.Errorf("task: failed to get variables: %w", err)
 		}
-		stdOut, stdErr, closer := outputWrapper.WrapWriter(e.Stdout, e.Stderr, t.Prefix, outputTemplater)
+		stdOut, stdErr, closer := outputWrapper.WrapWriter(stdOutBase, stdErrBase, t.Prefix, outputTemplater)
+		if logCommand && e.ownsScreen() {
+			e.Logger.FOutf(stdErr, logger.Green, "task: [%s] %s\n", t.Name(), cmd.LogCmd)
+		}
 
 		err = execext.RunCommand(ctx, &execext.RunCommandOptions{
 			Command:   cmd.Cmd,
@@ -474,11 +596,12 @@ func timedOut(ctx context.Context, timeout *errors.TaskTimeoutError) bool {
 // executionState is the outcome of a task execution, shared with the callers
 // that join it. err is written before done is closed; read it only once closed.
 type executionState struct {
-	done chan struct{}
-	err  error
+	done    chan struct{}
+	err     error
+	ownerID uint64
 }
 
-func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func(ctx context.Context) error) error {
+func (e *Executor) startExecution(ctx context.Context, t *ast.Task, invocation Invocation, execute func(ctx context.Context) error) error {
 	h, err := e.GetHash(t)
 	if err != nil {
 		return err
@@ -493,6 +616,7 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 	if other, ok := e.executionHashes[h]; ok {
 		e.executionHashesMutex.Unlock()
 		e.Logger.VerboseErrf(logger.Magenta, "task: skipping execution of task: %s\n", h)
+		e.notifyJoined(invocation, other.ownerID)
 
 		// Release our execution slot to avoid blocking other tasks while we wait
 		reacquire := e.releaseConcurrencyLimit()
@@ -518,7 +642,7 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 		}
 	}
 
-	state := &executionState{done: make(chan struct{})}
+	state := &executionState{done: make(chan struct{}), ownerID: invocation.ID}
 	e.executionHashes[h] = state
 	e.executionHashesMutex.Unlock()
 
