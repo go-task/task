@@ -41,16 +41,19 @@ type saveState struct {
 // usable in a file name on Windows, so the ISO form is spelled with dashes.
 const savedAtLayout = "2006-01-02T15-04-05"
 
-// generatedFileName is what a single saved output is called: when it was saved,
-// then which task it came from, so a folder of logs sorts by run.
+// generatedFileName is what a single saved output is called.
 func generatedFileName(stamp, taskName string) string {
 	return generatedName(stamp, taskName) + ".log"
 }
 
-// generatedName is the timestamped name of one run, used for a single file and
-// for the folder a whole run is saved into.
+// generatedName is the name of one run: which task, then when. Used for a
+// single file and for the folder a whole run is saved into.
+//
+// The task leads because time ordering is already free from ls -t, while
+// nothing but the name groups a task's logs together. It also lets shell
+// completion narrow on a task without having to know the date.
 func generatedName(stamp, taskName string) string {
-	return stamp + "." + fileNameFor(taskName)
+	return fileNameFor(taskName) + "." + stamp
 }
 
 // defaultSaveDir is where logs go unless the user says otherwise.

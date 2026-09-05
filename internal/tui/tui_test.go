@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -1579,7 +1580,8 @@ func TestSaveAsksWhereToPutTheOutput(t *testing.T) { // nolint:paralleltest // t
 	// The field is filled in, so Enter alone is enough.
 	view := ansi.Strip(m.View().Content)
 	assert.Contains(t, view, "Save to:")
-	assert.Contains(t, view, "build.log")
+	assert.Contains(t, view, "build.", "the suggestion leads with the task")
+	assert.Contains(t, view, ".log")
 	assert.Contains(t, view, "logs", "the default is a logs folder, not the working directory")
 	assert.Contains(t, view, "enter save")
 	// The dashboard stays visible: this is a footer field, not a dialog.
@@ -1656,7 +1658,7 @@ func TestSaveAllWritesOneFilePerTask(t *testing.T) { // nolint:paralleltest // t
 	suggestion := ansi.Strip(m.View().Content)
 	assert.Contains(t, suggestion, "Save all to folder:")
 	assert.NotContains(t, suggestion, ".log", "saving all asks for a folder, not a file")
-	assert.Contains(t, suggestion, ".build", "the folder is named for the task that was run")
+	assert.Contains(t, suggestion, "build.", "the folder is named for the task that was run")
 	assert.NotContains(t, suggestion, "test-unit")
 	m = clearField(t, m)
 
@@ -1698,14 +1700,23 @@ func TestFileNameForATaskName(t *testing.T) {
 	assert.Equal(t, "task", fileNameFor("///"))
 }
 
-func TestGeneratedFileNameSortsByRun(t *testing.T) {
+func TestGeneratedFileNameGroupsByTask(t *testing.T) {
 	t.Parallel()
 
 	name := generatedFileName("2026-09-05T14-30-22", "test:unit")
-	assert.Equal(t, "2026-09-05T14-30-22.test-unit.log", name)
+	assert.Equal(t, "test-unit.2026-09-05T14-30-22.log", name)
 
-	// The timestamp leads so a folder of logs sorts by run, and carries no
-	// colons, which a file name cannot hold on Windows.
+	// The task leads, so a folder of logs groups by task and a shell can
+	// complete on one without knowing the date. Time ordering is free from
+	// ls -t either way.
+	older := generatedFileName("2026-09-05T09-00-00", "test:unit")
+	other := generatedFileName("2026-09-05T10-00-00", "build")
+	sorted := []string{name, older, other}
+	slices.Sort(sorted)
+	assert.Equal(t, []string{other, older, name}, sorted,
+		"a task's logs sort together, oldest first")
+
+	// A timestamp carries no colons, which a file name cannot hold on Windows.
 	assert.NotContains(t, name, ":")
 
 	// Two tasks whose names clean up the same way keep separate files.
