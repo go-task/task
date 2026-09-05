@@ -2892,9 +2892,10 @@ is a repaint. Three controls get the text out instead:
 - `s` saves the selected task's output, and `S` saves every task's output to a
   folder, one file per task. Both ask where in the footer: `s` suggests a full
   path and `S` only a folder, since the files inside are named for you. The
-  suggestions are `~/logs/<task>.<timestamp>.log` and
-  `~/logs/<task>.<timestamp>/`, named for the task you ran, so a folder of logs
-  groups a task's runs together and `ls -t` still orders them by time. Any missing directories are created, and saved output keeps its
+  suggestions are `logs/<task>.<timestamp>.log` and `logs/<task>.<timestamp>/`,
+  beside the project and named for the task you ran, so a folder of logs groups
+  a task's runs together and `ls -t` still orders them by time. You may want
+  `logs/` in your `.gitignore`. Any missing directories are created, and saved output keeps its
   escape sequences, so `cat` and `less -R` show the colour.
 
 All three work whether or not the task has finished. A snapshot of a running

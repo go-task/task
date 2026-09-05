@@ -1582,7 +1582,8 @@ func TestSaveAsksWhereToPutTheOutput(t *testing.T) { // nolint:paralleltest // t
 	assert.Contains(t, view, "Save to:")
 	assert.Contains(t, view, "build.", "the suggestion leads with the task")
 	assert.Contains(t, view, ".log")
-	assert.Contains(t, view, "logs", "the default is a logs folder, not the working directory")
+	assert.Contains(t, view, "logs", "the default is a logs folder beside the project")
+	assert.NotContains(t, view, "~", "not a folder shared by every project")
 	assert.Contains(t, view, "enter save")
 	// The dashboard stays visible: this is a footer field, not a dialog.
 	assert.Contains(t, view, "TASKS")

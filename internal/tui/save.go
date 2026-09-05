@@ -57,8 +57,13 @@ func generatedName(stamp, taskName string) string {
 }
 
 // defaultSaveDir is where logs go unless the user says otherwise.
+//
+// A logs directory beside the project, rather than one shared by every project
+// in the home directory, where a "build" log from four repositories would be
+// indistinguishable. Visible rather than inside .task, which is Task's own and
+// gets deleted when checksums go stale.
 func defaultSaveDir() string {
-	return filepath.Join("~", "logs")
+	return "logs"
 }
 
 // askWhereToSave puts a path field in the footer, filled in with a default so
