@@ -104,8 +104,13 @@ type Listener struct {
 
 	// OwnsScreen says the client is drawing the display, so the Executor's own
 	// Stdout, Stderr and Stdin are not usable. Task routes what it would have
-	// printed through OutputFor, and refuses to run anything that needs the
-	// terminal: interactive tasks, confirmation prompts and watch mode.
+	// printed through OutputFor, and refuses to run what needs the terminal
+	// itself: interactive tasks and watch mode.
+	//
+	// Questions are not refused outright. A client that sets a Prompter is
+	// asked through it, wherever it likes; one that does not gets an error for
+	// the task that had a question, rather than a prompt to a terminal the
+	// client is drawing over.
 	OwnsScreen bool
 }
 
