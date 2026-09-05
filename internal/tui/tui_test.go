@@ -1537,44 +1537,101 @@ func TestFinishedDashboardIsOnlyClosedByADocumentedKey(t *testing.T) {
 	assert.NotNil(t, cmd, "q, which the footer lists, does")
 }
 
-func TestSaveWritesTheSelectedOutput(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
-	dir := t.TempDir()
-	t.Chdir(dir)
-
-	m := newTUIModel(func() {})
-	m = updateTUIModel(t, m, started(1, 0, "build"))
-	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "\x1b[31mFAILED\x1b[0m\n"})
-
-	next, cmd := m.Update(tea.KeyPressMsg{Code: 's', Text: "s"})
+// typePath enters a path into the footer field and presses Enter.
+func typePath(t *testing.T, m tuiModel, path string) (tuiModel, savedMsg) {
+	t.Helper()
+	for _, r := range path {
+		next, _ := m.Update(tea.KeyPressMsg{Code: r, Text: string(r)})
+		m = next.(tuiModel)
+	}
+	next, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter, Text: "enter"})
 	m = next.(tuiModel)
+	require.Nil(t, m.save, "the field closes once a path is given")
 	require.NotNil(t, cmd)
 	saved, ok := cmd().(savedMsg)
 	require.True(t, ok)
-	require.NoError(t, saved.err)
-
-	content, err := os.ReadFile(saved.path)
-	require.NoError(t, err)
-	// Written as the command produced it: what is not stripped can still be
-	// stripped later, and cat renders the colour.
-	assert.Equal(t, "\x1b[31mFAILED\x1b[0m\n", string(content))
-
-	m = updateTUIModel(t, m, saved)
-	assert.Contains(t, ansi.Strip(m.View().Content), "saved")
+	return m, saved
 }
 
-func TestSaveDoesNotOverwriteAnEarlierSave(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
+func withOutput(t *testing.T) tuiModel {
+	t.Helper()
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 90, Height: 20})
+	m = updateTUIModel(t, m, started(1, 0, "build"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "\x1b[31mFAILED\x1b[0m\n"})
+	return m
+}
+
+// clearField empties the pre-filled suggestion so a test can type its own path.
+func clearField(t *testing.T, m tuiModel) tuiModel {
+	t.Helper()
+	m.save.input.SetValue("")
+	return m
+}
+
+func TestSaveAsksWhereToPutTheOutput(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
+	t.Chdir(t.TempDir())
+
+	m := withOutput(t)
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 's', Text: "s"})
+	require.NotNil(t, m.save, "s asks where rather than choosing for the user")
+
+	// The field is filled in from the task's name, so Enter alone is enough.
+	view := ansi.Strip(m.View().Content)
+	assert.Contains(t, view, "Save to:")
+	assert.Contains(t, view, "build.log")
+	assert.Contains(t, view, "enter save")
+	// The dashboard stays visible: this is a footer field, not a dialog.
+	assert.Contains(t, view, "TASKS")
+
+	m, saved := typePath(t, m, "")
+	require.NoError(t, saved.err)
+	content, err := os.ReadFile(saved.path)
+	require.NoError(t, err)
+	assert.Equal(t, "\x1b[31mFAILED\x1b[0m\n", string(content))
+}
+
+func TestSaveCreatesMissingDirectories(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
 	dir := t.TempDir()
 	t.Chdir(dir)
 
-	m := newTUIModel(func() {})
-	m = updateTUIModel(t, m, started(1, 0, "build"))
-	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "first\n"})
+	m := withOutput(t)
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 's', Text: "s"})
+	m = clearField(t, m)
 
-	first := m.saveSelected()().(savedMsg)
-	second := m.saveSelected()().(savedMsg)
-	require.NoError(t, first.err)
-	require.NoError(t, second.err)
-	assert.NotEqual(t, first.path, second.path, "saving twice keeps both files")
+	m, saved := typePath(t, m, "logs/today/build.log")
+	require.NoError(t, saved.err)
+	assert.FileExists(t, filepath.Join(dir, "logs", "today", "build.log"))
+}
+
+func TestSaveReportsAPathItCannotWrite(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
+	dir := t.TempDir()
+	t.Chdir(dir)
+	readOnly := filepath.Join(dir, "read-only")
+	require.NoError(t, os.Mkdir(readOnly, 0o500))
+
+	m := withOutput(t)
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 's', Text: "s"})
+	m = clearField(t, m)
+
+	m, saved := typePath(t, m, filepath.Join(readOnly, "nested", "build.log"))
+	require.Error(t, saved.err, "a directory that cannot be written is reported, not ignored")
+
+	m = updateTUIModel(t, m, saved)
+	assert.Contains(t, ansi.Strip(m.View().Content), "save failed")
+	assert.Contains(t, ansi.Strip(m.View().Content), "permission denied")
+}
+
+func TestSaveCanBeCancelled(t *testing.T) {
+	t.Parallel()
+
+	m := withOutput(t)
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 's', Text: "s"})
+	require.NotNil(t, m.save)
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyEsc, Text: "esc"})
+	assert.Nil(t, m.save)
+	assert.Contains(t, ansi.Strip(m.View().Content), "? help", "the keys come back")
 }
 
 func TestSaveAllWritesOneFilePerTask(t *testing.T) { // nolint:paralleltest // t.Chdir cannot be used in a parallel test
@@ -1582,17 +1639,23 @@ func TestSaveAllWritesOneFilePerTask(t *testing.T) { // nolint:paralleltest // t
 	t.Chdir(dir)
 
 	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 90, Height: 20})
 	m = updateTUIModel(t, m, started(1, 0, "build"))
 	m = updateTUIModel(t, m, startedUnder(2, 1, 1, "test:unit"))
 	m = updateTUIModel(t, m, startedUnder(3, 1, 1, "silent"))
 	m = updateTUIModel(t, m, taskOutputMsg{id: 1, name: "build", data: "building\n"})
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "test:unit", data: "testing\n"})
 
-	saved := m.saveAll()().(savedMsg)
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'S', Text: "S"})
+	require.NotNil(t, m.save)
+	assert.Contains(t, ansi.Strip(m.View().Content), "Save all to folder:")
+	m = clearField(t, m)
+
+	m, saved := typePath(t, m, "logs/run-1")
 	require.NoError(t, saved.err)
 	assert.Equal(t, 2, saved.count, "a task with no output is not written")
 
-	entries, err := os.ReadDir(saved.path)
+	entries, err := os.ReadDir(filepath.Join(dir, "logs", "run-1"))
 	require.NoError(t, err)
 	var names []string
 	for _, entry := range entries {
@@ -1609,6 +1672,7 @@ func TestSaveReportsWhenThereIsNothingToSave(t *testing.T) {
 	m = updateTUIModel(t, m, started(1, 0, "build"))
 
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 's', Text: "s"})
+	assert.Nil(t, m.save, "nothing to save means nothing to ask about")
 	assert.Contains(t, ansi.Strip(m.View().Content), "nothing to save")
 }
 

@@ -125,6 +125,7 @@ type tuiModel struct {
 	showHelp           bool
 	help               help.Model
 	prompt             *promptState
+	save               *saveState
 	ticking            bool
 
 	// notice is transient feedback shown in place of the controls, such as the
@@ -218,7 +219,7 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.beginPrompt(msg.state)
 	case savedMsg:
 		if msg.err != nil {
-			return m, m.showNotice("save failed: " + msg.err.Error())
+			return m, m.showNotice("save failed: " + saveError(msg.err))
 		}
 		if msg.count == 1 {
 			return m, m.showNotice("saved " + msg.path)
@@ -336,6 +337,10 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		// A task is blocked waiting for this answer, so nothing else can act.
 		return m.handlePromptKey(msg)
 	}
+	if m.save != nil {
+		// The footer is a path field; every key belongs to it.
+		return m.handleSaveKey(msg)
+	}
 	if m.showHelp {
 		// Any key leaves the key list; it is a reference, not a mode.
 		m.showHelp = false
@@ -363,9 +368,9 @@ func (m *tuiModel) handleFullscreenKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd)
 	case key.Matches(msg, keys.Snapshot):
 		return *m, m.snapshotSelectedOutput()
 	case key.Matches(msg, keys.Save):
-		return *m, m.saveSelected()
+		return *m, m.askWhereToSave(false)
 	case key.Matches(msg, keys.SaveAll):
-		return *m, m.saveAll()
+		return *m, m.askWhereToSave(true)
 	case key.Matches(msg, keys.Move):
 		if msg.String() == "up" || msg.String() == "k" {
 			m.fullscreenViewport.ScrollUp(1)
@@ -411,9 +416,9 @@ func (m *tuiModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) 
 	case key.Matches(msg, keys.Snapshot):
 		return *m, m.snapshotSelectedOutput()
 	case key.Matches(msg, keys.Save):
-		return *m, m.saveSelected()
+		return *m, m.askWhereToSave(false)
 	case key.Matches(msg, keys.SaveAll):
-		return *m, m.saveAll()
+		return *m, m.askWhereToSave(true)
 	case key.Matches(msg, keys.Page):
 		m.focus = outputPane
 		return *m, m.updateViewport(msg)

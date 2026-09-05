@@ -2,11 +2,16 @@ package tui
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+
+	"github.com/go-task/task/v3/errors"
 )
 
 // savedMsg reports the outcome of writing output to disk.
@@ -23,58 +28,117 @@ type savedOutput struct {
 	content string
 }
 
-// saveSelected writes the selected task's output to a file.
-func (m *tuiModel) saveSelected() tea.Cmd {
-	task := m.selectedTask()
-	if task == nil || task.output == "" {
-		return m.showNotice("nothing to save")
-	}
-	output := savedOutput{name: m.taskName(task), content: task.output}
-	return func() tea.Msg {
-		path, err := writeOutputFile(".", output)
-		return savedMsg{path: path, count: 1, err: err}
-	}
+// saveState is a pending save, waiting for the user to say where.
+type saveState struct {
+	all     bool
+	outputs []savedOutput
+	input   textinput.Model
 }
 
-// saveAll writes every task's output to its own file in a new directory.
-func (m *tuiModel) saveAll() tea.Cmd {
+// askWhereToSave puts a path field in the footer, filled in with a default so
+// that Enter alone is enough.
+func (m *tuiModel) askWhereToSave(all bool) tea.Cmd {
 	var outputs []savedOutput
-	for _, task := range m.tasks {
-		if task.output == "" {
-			continue
+	if all {
+		for _, task := range m.tasks {
+			if task.output != "" {
+				outputs = append(outputs, savedOutput{name: m.taskName(task), content: task.output})
+			}
 		}
+	} else if task := m.selectedTask(); task != nil && task.output != "" {
 		outputs = append(outputs, savedOutput{name: m.taskName(task), content: task.output})
 	}
 	if len(outputs) == 0 {
 		return m.showNotice("nothing to save")
 	}
+
+	suggestion := "task-output"
+	if !all {
+		suggestion = fileNameFor(outputs[0].name) + ".log"
+	}
+	input := textinput.New()
+	input.Prompt = ""
+	input.SetValue(suggestion)
+	input.Focus()
+
+	m.save = &saveState{all: all, outputs: outputs, input: input}
+	return textinput.Blink
+}
+
+func (m *tuiModel) handleSaveKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		state := m.save
+		m.save = nil
+		return *m, saveOutputs(state, strings.TrimSpace(state.input.Value()))
+	case "esc", "ctrl+c":
+		m.save = nil
+		return *m, nil
+	}
+	var cmd tea.Cmd
+	m.save.input, cmd = m.save.input.Update(msg)
+	return *m, cmd
+}
+
+// saveOutputs writes to the path the user gave, creating any directories it
+// needs. The path was typed deliberately, so an existing file is replaced, as
+// a shell redirect would.
+func saveOutputs(state *saveState, target string) tea.Cmd {
 	return func() tea.Msg {
-		dir, err := makeUnusedDir(".", "task-output")
+		if target == "" {
+			return savedMsg{err: errors.New("no path given")}
+		}
+		path, err := expandHome(target)
 		if err != nil {
 			return savedMsg{err: err}
 		}
-		for _, output := range outputs {
-			if _, err := writeOutputFile(dir, output); err != nil {
+
+		if !state.all {
+			if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+				return savedMsg{err: err}
+			}
+			if err := os.WriteFile(path, []byte(state.outputs[0].content), 0o600); err != nil {
+				return savedMsg{err: err}
+			}
+			return savedMsg{path: path, count: 1}
+		}
+
+		if err := os.MkdirAll(path, 0o750); err != nil {
+			return savedMsg{err: err}
+		}
+		used := make(map[string]bool, len(state.outputs))
+		for _, output := range state.outputs {
+			name := unusedName(fileNameFor(output.name), used)
+			file := filepath.Join(path, name+".log")
+			if err := os.WriteFile(file, []byte(output.content), 0o600); err != nil {
 				return savedMsg{err: err}
 			}
 		}
-		return savedMsg{path: dir, count: len(outputs)}
+		return savedMsg{path: path, count: len(state.outputs)}
 	}
 }
 
-// writeOutputFile writes one task's output, keeping its escape sequences.
-//
-// A log is written as the command produced it: cat and less -R render the
-// colour, and what is not stripped can still be stripped later.
-func writeOutputFile(dir string, output savedOutput) (string, error) {
-	path, err := unusedPath(dir, fileNameFor(output.name), ".log")
+// unusedName keeps two tasks whose names clean up to the same thing from
+// writing over each other.
+func unusedName(name string, used map[string]bool) string {
+	candidate := name
+	for attempt := 1; used[candidate]; attempt++ {
+		candidate = fmt.Sprintf("%s-%d", name, attempt)
+	}
+	used[candidate] = true
+	return candidate
+}
+
+// expandHome resolves a leading ~, which a user typing a path will expect.
+func expandHome(path string) (string, error) {
+	if path != "~" && !strings.HasPrefix(path, "~/") {
+		return path, nil
+	}
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	if err := os.WriteFile(path, []byte(output.content), 0o600); err != nil {
-		return "", err
-	}
-	return path, nil
+	return filepath.Join(home, strings.TrimPrefix(path, "~")), nil
 }
 
 // fileNameFor makes a task name safe to use as a file name. Task names carry
@@ -103,35 +167,30 @@ func collapseDashes(s string) string {
 	return s
 }
 
-// unusedPath returns a path that does not exist yet, so saving twice does not
-// overwrite the first result.
-func unusedPath(dir, name, extension string) (string, error) {
-	for attempt := range 100 {
-		candidate := filepath.Join(dir, name+extension)
-		if attempt > 0 {
-			candidate = filepath.Join(dir, fmt.Sprintf("%s-%d%s", name, attempt, extension))
-		}
-		if _, err := os.Stat(candidate); os.IsNotExist(err) {
-			return candidate, nil
-		}
+// saveFooter renders the path field in place of the key hints.
+func (m tuiModel) saveFooter(width int) string {
+	label := "Save to: "
+	if m.save.all {
+		label = "Save all to folder: "
 	}
-	return "", fmt.Errorf("no unused name for %q", name)
+	keys := renderPromptKeys(m, width, []helpBinding{{"enter", "save"}, {"esc", "cancel"}})
+
+	room := max(width-lipgloss.Width(label)-lipgloss.Width(keys)-3, 8)
+	input := m.save.input
+	input.SetWidth(room)
+	line := tuiTitleStyle.Render(label) + input.View() + "  " + keys
+	return truncateText(line, max(width, 1))
 }
 
-// makeUnusedDir creates a directory that did not exist yet.
-func makeUnusedDir(parent, name string) (string, error) {
-	for attempt := range 100 {
-		candidate := filepath.Join(parent, name)
-		if attempt > 0 {
-			candidate = filepath.Join(parent, fmt.Sprintf("%s-%d", name, attempt))
-		}
-		// Mkdir rather than MkdirAll: an existing directory must move us on to
-		// the next name rather than have us write into it.
-		if err := os.Mkdir(candidate, 0o750); err == nil {
-			return candidate, nil
-		} else if !os.IsExist(err) {
-			return "", err
-		}
+// saveError is what to tell the user when a save fails.
+//
+// A filesystem error repeats the path, which the user typed a moment ago and
+// can still see. Keeping it pushes the reason, the only part they do not know,
+// off the end of the footer.
+func saveError(err error) string {
+	var pathErr *fs.PathError
+	if errors.As(err, &pathErr) {
+		return pathErr.Err.Error()
 	}
-	return "", fmt.Errorf("no unused name for %q", name)
+	return err.Error()
 }

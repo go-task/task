@@ -48,6 +48,8 @@ func (m tuiModel) renderContent() string {
 		footer = renderStatus(layout.width, "stopping tasks… waiting for processes to exit", tuiHelpStyle)
 	case m.returning && !m.done:
 		footer = renderStatus(layout.width, "stopping tasks… returning to launcher after processes exit", tuiHelpStyle)
+	case m.save != nil:
+		footer = m.saveFooter(layout.width)
 	case m.notice != "":
 		footer = renderStatus(layout.width, m.notice, tuiTitleStyle)
 	}
