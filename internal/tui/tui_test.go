@@ -1444,3 +1444,73 @@ func TestPromptWrapsALongMessage(t *testing.T) {
 	// Wrapping breaks between words, not through them.
 	assert.Equal(t, strings.Fields(long), strings.Fields(wrapped))
 }
+
+func TestConfirmationShowsAndUsesItsDefault(t *testing.T) {
+	t.Parallel()
+
+	newConfirm := func() (tuiModel, *promptState) {
+		m := newTUIModel(func() {})
+		m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 14})
+		state := &promptState{kind: promptConfirm, task: "release", message: "Continue?", done: make(chan promptAnswer, 1)}
+		m.beginPrompt(state)
+		return m, state
+	}
+	press := func(m tuiModel, code rune, text string) tuiModel {
+		next, _ := m.Update(tea.KeyPressMsg{Code: code, Text: text})
+		return next.(tuiModel)
+	}
+
+	t.Run("the default is marked rather than encoded", func(t *testing.T) {
+		t.Parallel()
+		_, state := newConfirm()
+
+		lines := strings.Split(strings.TrimPrefix(promptOptions(state, 20), "\n"), "\n")
+		require.Len(t, lines, 2)
+		assert.Equal(t, []string{"yes", "no"}, []string{
+			strings.TrimSpace(ansi.Strip(lines[0])),
+			strings.TrimSpace(ansi.Strip(lines[1])),
+		})
+
+		// "no" is highlighted, so the answer Enter would give can be seen,
+		// rather than hidden in the capitalisation of "[y/N]".
+		assert.Equal(t, "  yes", lines[0], "the answer that is not the default is plain")
+		assert.NotEqual(t, ansi.Strip(lines[1]), lines[1], "the default is styled")
+	})
+
+	t.Run("enter takes the default", func(t *testing.T) {
+		t.Parallel()
+		m, state := newConfirm()
+		press(m, tea.KeyEnter, "enter")
+		answer := <-state.done
+		assert.False(t, answer.confirmed, "the default is no, as it is on the terminal")
+		assert.NoError(t, answer.err)
+	})
+
+	t.Run("enter takes yes once it is chosen", func(t *testing.T) {
+		t.Parallel()
+		m, state := newConfirm()
+		m = press(m, 'k', "k")
+		press(m, tea.KeyEnter, "enter")
+		assert.True(t, (<-state.done).confirmed)
+	})
+
+	t.Run("y and n still answer directly", func(t *testing.T) {
+		t.Parallel()
+		m, state := newConfirm()
+		press(m, 'y', "y")
+		assert.True(t, (<-state.done).confirmed)
+
+		m, state = newConfirm()
+		press(m, 'n', "n")
+		assert.False(t, (<-state.done).confirmed)
+	})
+
+	t.Run("every key that answers is listed", func(t *testing.T) {
+		t.Parallel()
+		m, _ := newConfirm()
+		view := ansi.Strip(m.View().Content)
+		for _, expected := range []string{"enter confirm", "y/n answer", "esc no"} {
+			assert.Contains(t, view, expected)
+		}
+	})
+}

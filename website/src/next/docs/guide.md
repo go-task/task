@@ -2921,7 +2921,9 @@ a task requiring a variable could not be run from the launcher at all, as there
 is nowhere to pass one.
 
 A question appears as a dialog over the dashboard, and names the task that is
-asking. It can arrive partway through a run, because a task reached through
+asking. A confirmation lists its answers with the default marked, so pressing
+Enter gives you what you can see rather than what a `[y/N]` would have implied;
+`y` and `n` still answer directly. It can arrive partway through a run, because a task reached through
 `cmds` is only compiled when the run gets to it. Nothing else can proceed until
 you answer.
 

@@ -89,7 +89,17 @@ func (t *UI) ask(state *promptState) promptAnswer {
 }
 
 // beginPrompt puts a question on screen.
+// confirmOptions are the answers to a confirmation. No is the default, which is
+// what Task offers on the terminal when it renders "[y/N]".
+var confirmOptions = []string{"yes", "no"}
+
+const confirmDefault = 1 // "no"
+
 func (m *tuiModel) beginPrompt(state *promptState) tea.Cmd {
+	if state.kind == promptConfirm {
+		state.options = confirmOptions
+		state.cursor = confirmDefault
+	}
 	if state.kind == promptText {
 		input := textinput.New()
 		input.Prompt = ""
@@ -124,9 +134,15 @@ func (m *tuiModel) handlePromptKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch state.kind {
 	case promptConfirm:
 		switch msg.String() {
+		case "up", "k":
+			state.cursor = max(state.cursor-1, 0)
+		case "down", "j":
+			state.cursor = min(state.cursor+1, len(state.options)-1)
+		case "enter":
+			m.answerPrompt(promptAnswer{confirmed: state.options[state.cursor] == "yes"})
 		case "y", "Y":
 			m.answerPrompt(promptAnswer{confirmed: true})
-		case "n", "N", "esc", "enter":
+		case "n", "N", "esc":
 			m.answerPrompt(promptAnswer{})
 		}
 	case promptChoice:
@@ -194,6 +210,8 @@ func (m tuiModel) promptBox(screenWidth, screenHeight int) string {
 	switch state.kind {
 	case promptConfirm:
 		body.WriteString(wrapText(state.message, inner))
+		body.WriteString("\n")
+		body.WriteString(promptOptions(state, inner))
 	case promptText:
 		body.WriteString(wrapText(state.name, inner))
 		body.WriteString("\n\n")
@@ -202,14 +220,7 @@ func (m tuiModel) promptBox(screenWidth, screenHeight int) string {
 	case promptChoice:
 		body.WriteString(wrapText(state.name, inner))
 		body.WriteString("\n")
-		for i, option := range state.options {
-			line := truncateText("  "+option, inner)
-			if i == state.cursor {
-				// Highlight the whole row, as the launcher does.
-				line = tuiSelectedStyle.Width(inner).Render(line)
-			}
-			body.WriteString("\n" + line)
-		}
+		body.WriteString(promptOptions(state, inner))
 	}
 
 	// The keys belong to the dialog, not to the interface behind it, which
@@ -225,11 +236,29 @@ func (m tuiModel) promptBox(screenWidth, screenHeight int) string {
 		Render(body.String())
 }
 
+// promptOptions lists the answers, marking the one Enter would pick. Showing
+// the default rather than encoding it, as "[y/N]" does, means it cannot be
+// misread.
+func promptOptions(state *promptState, width int) string {
+	var out strings.Builder
+	for i, option := range state.options {
+		line := truncateText("  "+option, width)
+		if i == state.cursor {
+			// Highlight the whole row, as the launcher does.
+			line = tuiSelectedStyle.Width(width).Render(line)
+		}
+		out.WriteString("\n" + line)
+	}
+	return out.String()
+}
+
 // promptKeys are the footer hints while a question is on screen.
 func (m tuiModel) promptKeys() []helpBinding {
 	switch m.prompt.kind {
 	case promptConfirm:
-		return []helpBinding{{"y", "yes"}, {"n/esc", "no"}, {"ctrl+c", "quit"}}
+		return []helpBinding{
+			{"↑/↓", "choose"}, {"enter", "confirm"}, {"y/n", "answer"}, {"esc", "no"},
+		}
 	case promptChoice:
 		return []helpBinding{{"↑/↓", "choose"}, {"enter", "confirm"}, {"esc", "cancel"}}
 	default:
