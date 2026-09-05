@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
@@ -32,7 +33,23 @@ type savedOutput struct {
 type saveState struct {
 	all     bool
 	outputs []savedOutput
+	stamp   string // shared by every file of one save, so a run stays together
 	input   textinput.Model
+}
+
+// savedAtLayout stamps a file name with when it was saved. Colons are not
+// usable in a file name on Windows, so the ISO form is spelled with dashes.
+const savedAtLayout = "2006-01-02T15-04-05"
+
+// generatedFileName is what a saved output is called: when it was saved, then
+// which task it came from, so a folder of logs sorts by run.
+func generatedFileName(stamp, taskName string) string {
+	return stamp + "." + fileNameFor(taskName) + ".log"
+}
+
+// defaultSaveDir is where logs go unless the user says otherwise.
+func defaultSaveDir() string {
+	return filepath.Join("~", "logs")
 }
 
 // askWhereToSave puts a path field in the footer, filled in with a default so
@@ -52,16 +69,17 @@ func (m *tuiModel) askWhereToSave(all bool) tea.Cmd {
 		return m.showNotice("nothing to save")
 	}
 
-	suggestion := "task-output"
+	stamp := time.Now().Format(savedAtLayout)
+	suggestion := defaultSaveDir()
 	if !all {
-		suggestion = fileNameFor(outputs[0].name) + ".log"
+		suggestion = filepath.Join(suggestion, generatedFileName(stamp, outputs[0].name))
 	}
 	input := textinput.New()
 	input.Prompt = ""
 	input.SetValue(suggestion)
 	input.Focus()
 
-	m.save = &saveState{all: all, outputs: outputs, input: input}
+	m.save = &saveState{all: all, outputs: outputs, stamp: stamp, input: input}
 	return textinput.Blink
 }
 
@@ -108,9 +126,10 @@ func saveOutputs(state *saveState, target string) tea.Cmd {
 		}
 		used := make(map[string]bool, len(state.outputs))
 		for _, output := range state.outputs {
-			name := unusedName(fileNameFor(output.name), used)
-			file := filepath.Join(path, name+".log")
-			if err := os.WriteFile(file, []byte(output.content), 0o600); err != nil {
+			// Only the folder was asked for, so the files are named the same
+			// way a single save names its own.
+			name := unusedName(generatedFileName(state.stamp, output.name), used)
+			if err := os.WriteFile(filepath.Join(path, name), []byte(output.content), 0o600); err != nil {
 				return savedMsg{err: err}
 			}
 		}
@@ -122,8 +141,9 @@ func saveOutputs(state *saveState, target string) tea.Cmd {
 // writing over each other.
 func unusedName(name string, used map[string]bool) string {
 	candidate := name
+	base, extension := strings.TrimSuffix(name, ".log"), ".log"
 	for attempt := 1; used[candidate]; attempt++ {
-		candidate = fmt.Sprintf("%s-%d", name, attempt)
+		candidate = fmt.Sprintf("%s-%d%s", base, attempt, extension)
 	}
 	used[candidate] = true
 	return candidate

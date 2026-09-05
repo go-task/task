@@ -1576,10 +1576,11 @@ func TestSaveAsksWhereToPutTheOutput(t *testing.T) { // nolint:paralleltest // t
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 's', Text: "s"})
 	require.NotNil(t, m.save, "s asks where rather than choosing for the user")
 
-	// The field is filled in from the task's name, so Enter alone is enough.
+	// The field is filled in, so Enter alone is enough.
 	view := ansi.Strip(m.View().Content)
 	assert.Contains(t, view, "Save to:")
 	assert.Contains(t, view, "build.log")
+	assert.Contains(t, view, "logs", "the default is a logs folder, not the working directory")
 	assert.Contains(t, view, "enter save")
 	// The dashboard stays visible: this is a footer field, not a dialog.
 	assert.Contains(t, view, "TASKS")
@@ -1599,7 +1600,7 @@ func TestSaveCreatesMissingDirectories(t *testing.T) { // nolint:paralleltest //
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 's', Text: "s"})
 	m = clearField(t, m)
 
-	m, saved := typePath(t, m, "logs/today/build.log")
+	_, saved := typePath(t, m, "logs/today/build.log")
 	require.NoError(t, saved.err)
 	assert.FileExists(t, filepath.Join(dir, "logs", "today", "build.log"))
 }
@@ -1649,6 +1650,8 @@ func TestSaveAllWritesOneFilePerTask(t *testing.T) { // nolint:paralleltest // t
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'S', Text: "S"})
 	require.NotNil(t, m.save)
 	assert.Contains(t, ansi.Strip(m.View().Content), "Save all to folder:")
+	assert.NotContains(t, ansi.Strip(m.View().Content), ".log",
+		"saving all asks for a folder, not a file")
 	m = clearField(t, m)
 
 	m, saved := typePath(t, m, "logs/run-1")
@@ -1661,8 +1664,15 @@ func TestSaveAllWritesOneFilePerTask(t *testing.T) { // nolint:paralleltest // t
 	for _, entry := range entries {
 		names = append(names, entry.Name())
 	}
+	// The folder was the only thing asked for, so the files are named the way a
+	// single save names its own: when it was saved, then which task it was.
+	require.Len(t, names, 2)
+	for _, name := range names {
+		assert.Regexp(t, `^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.`, name)
+	}
 	// A namespaced task name is not a usable file name.
-	assert.ElementsMatch(t, []string{"build.log", "test-unit.log"}, names)
+	assert.True(t, strings.HasSuffix(names[0], ".build.log") || strings.HasSuffix(names[1], ".build.log"), names)
+	assert.True(t, strings.HasSuffix(names[0], ".test-unit.log") || strings.HasSuffix(names[1], ".test-unit.log"), names)
 }
 
 func TestSaveReportsWhenThereIsNothingToSave(t *testing.T) {
@@ -1685,4 +1695,22 @@ func TestFileNameForATaskName(t *testing.T) {
 	assert.Equal(t, "build-foo", fileNameFor("build:*:foo"))
 	// A label can be anything, including nothing usable.
 	assert.Equal(t, "task", fileNameFor("///"))
+}
+
+func TestGeneratedFileNameSortsByRun(t *testing.T) {
+	t.Parallel()
+
+	name := generatedFileName("2026-09-05T14-30-22", "test:unit")
+	assert.Equal(t, "2026-09-05T14-30-22.test-unit.log", name)
+
+	// The timestamp leads so a folder of logs sorts by run, and carries no
+	// colons, which a file name cannot hold on Windows.
+	assert.NotContains(t, name, ":")
+
+	// Two tasks whose names clean up the same way keep separate files.
+	used := map[string]bool{}
+	first := unusedName(generatedFileName("t", "a:b"), used)
+	second := unusedName(generatedFileName("t", "a/b"), used)
+	assert.NotEqual(t, first, second)
+	assert.True(t, strings.HasSuffix(second, ".log"), second)
 }
