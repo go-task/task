@@ -141,7 +141,10 @@ type fullscreenKeys struct {
 // newFullscreenKeys describes the single-pane output view. What the copy keys
 // do depends on whether lines are selected, so the help says which.
 func newFullscreenKeys(selecting bool) fullscreenKeys {
-	selectHelp := key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "select lines"))
+	// v is vim's visual mode, V its line-wise form, which is what this is; tmux
+	// copy-mode uses V for a line too. Both are bound so that neither habit
+	// meets a key that does nothing.
+	selectHelp := key.NewBinding(key.WithKeys("v", "V"), key.WithHelp("v", "select lines"))
 	copyHelp := key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy output without ANSI codes"))
 	copyRawHelp := key.NewBinding(key.WithKeys("Y"), key.WithHelp("Y", "copy output with ANSI codes"))
 	cancel := key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "clear the selection"))

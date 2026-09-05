@@ -2169,3 +2169,13 @@ func TestFullscreenSelectionClearedWhenOutputIsTrimmed(t *testing.T) {
 	assert.False(t, m.fullscreenSelecting, "a selection cannot survive its lines being renumbered")
 	assert.Less(t, m.fullscreenCursor, len(m.fullscreenLines))
 }
+
+func TestFullscreenSelectionAcceptsBothVisualKeys(t *testing.T) {
+	t.Parallel()
+
+	for _, key := range []rune{'v', 'V'} {
+		m := fullscreenWith(t, numberedLines(20), 80, 12)
+		m = press(t, m, key)
+		assert.True(t, m.fullscreenSelecting, "%q starts a selection", string(key))
+	}
+}

@@ -2885,7 +2885,7 @@ position after you scroll up. Press `f` again or Escape to return to the
 two-pane view.
 
 Fullscreen is where lines are picked out of the output. A cursor marks one line,
-and the controls above move it, scrolling as needed. Press `v` to start
+and the controls above move it, scrolling as needed. Press `v` (or `V`) to start
 selecting: the lines between where you pressed it and where the cursor is now
 are selected, so moving up from that point selects upwards. Press `v` again to
 stop extending, which fixes the range and frees the cursor. Escape clears the
