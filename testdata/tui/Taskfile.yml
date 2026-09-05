@@ -22,9 +22,9 @@ tasks:
     silent: true
     cmds:
       - |
-        echo "shared-always START $(date +%H:%M:%S.%3N)"
+        echo "shared-always START $(date +%H:%M:%S)"
         sleep 2
-        echo "shared-always END   $(date +%H:%M:%S.%3N)"
+        echo "shared-always END   $(date +%H:%M:%S)"
 
   shared-dep-running-once:
     desc: Two parents call a shared dependency configured with run once
@@ -48,9 +48,9 @@ tasks:
     silent: true
     cmds:
       - |
-        echo "shared-once START $(date +%H:%M:%S.%3N)"
+        echo "shared-once START $(date +%H:%M:%S)"
         sleep 2
-        echo "shared-once END   $(date +%H:%M:%S.%3N)"
+        echo "shared-once END   $(date +%H:%M:%S)"
 
   fail-fast-example:
     desc: One task succeeds, one fails, and one is canceled by fail-fast
