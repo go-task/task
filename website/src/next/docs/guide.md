@@ -2843,7 +2843,7 @@ beneath the task that invoked them. Repeated executions have separate entries,
 while calls that join an existing `run: once` or `run: when_changed` execution
 remain visible at each location with a `↳` marker and share the owner's status
 and output. Pass `--tui-task-navigator list` to show all tasks reached from each
-root in a compact, single-level list instead. Press `v` during a run to switch
+root in a compact, single-level list instead. Press `n` during a run to switch
 between the two.
 
 Each task shows a status icon, including distinct canceled and skipped states.
@@ -2881,8 +2881,21 @@ a narrow terminal the durations are dropped so that task names keep their space.
 
 Press `f` to show the selected task's output fullscreen. Incoming output remains
 visible; the view follows it while at the bottom and preserves the current
-position after you scroll up. The keyboard scrolling controls above remain
-available. Press `f` again or Escape to return to the two-pane view.
+position after you scroll up. Press `f` again or Escape to return to the
+two-pane view.
+
+Fullscreen is where lines are picked out of the output. A cursor marks one line,
+and the controls above move it, scrolling as needed. Press `v` to start
+selecting: the lines between where you pressed it and where the cursor is now
+are selected, so moving up from that point selects upwards. Press `v` again to
+stop extending, which fixes the range and frees the cursor. Escape clears the
+selection, and a second Escape leaves fullscreen.
+
+With lines selected, `y` and `Y` copy those lines instead of the whole output.
+They are copied as they were written, so a line too long for the screen arrives
+whole rather than in the pieces it was folded into. Selected lines are drawn
+without their colours, because a highlight cannot survive the escape sequences
+inside them; the copy still carries those sequences for `Y`.
 
 ### Copying task output
 

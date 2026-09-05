@@ -483,7 +483,7 @@ func TestTUIModelFullscreenOutputScrollsWithKeyboard(t *testing.T) {
 	assert.Less(t, scrolledOffset, bottomOffset)
 	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "worker", data: "new output\n"})
 	assert.Equal(t, scrolledOffset, m.fullscreenViewport.YOffset())
-	assert.Contains(t, m.View().Content, "scroll")
+	assert.Contains(t, ansi.Strip(m.View().Content), "v select")
 
 	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'g', Text: "g"})
 	assert.True(t, m.fullscreenViewport.AtTop())
@@ -1177,7 +1177,7 @@ func TestFooterKeepsTheWayOutAtEightyColumns(t *testing.T) {
 		assert.Contains(t, dashboard, expected, "footer at 80 columns: %s", dashboard)
 	}
 
-	full := ansi.Strip(shortHelp(m.help, newFullscreenKeys().ShortHelp(), 80))
+	full := ansi.Strip(shortHelp(m.help, newFullscreenKeys(false).ShortHelp(), 80))
 	for _, expected := range []string{"? help", "q quit", "f/esc back"} {
 		assert.Contains(t, full, expected, "fullscreen footer at 80 columns: %s", full)
 	}
@@ -2032,10 +2032,140 @@ func TestNavigatorKeySwitchesTheTaskView(t *testing.T) {
 	require.Equal(t, taskNavigatorTree, m.taskNavigator)
 	assert.Greater(t, lipgloss.Width(prefixFor(m, 3)), 3, "the tree nests a grandchild under its parent")
 
-	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'v', Text: "v"})
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'n', Text: "n"})
 	assert.Equal(t, taskNavigatorList, m.taskNavigator)
 	assert.Equal(t, 3, lipgloss.Width(prefixFor(m, 3)), "the list puts every task under its root")
 
-	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'v', Text: "v"})
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'n', Text: "n"})
 	assert.Equal(t, taskNavigatorTree, m.taskNavigator, "the key toggles back")
+}
+
+// fullscreenWith opens the fullscreen output view on a task holding the given
+// output, with the cursor on its first line.
+func fullscreenWith(t *testing.T, output string, width, height int) tuiModel {
+	t.Helper()
+	m := newTUIModel(func() {})
+	m = updateTUIModel(t, m, tea.WindowSizeMsg{Width: width, Height: height})
+	m = updateTUIModel(t, m, started(1, 0, "root"))
+	m = updateTUIModel(t, m, started(2, 1, "build"))
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "build", data: output})
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'f', Text: "f"})
+	require.True(t, m.fullscreenOutput)
+	m.moveFullscreenCursor(-len(m.fullscreenLines))
+	return m
+}
+
+func press(t *testing.T, m tuiModel, key rune) tuiModel {
+	t.Helper()
+	return updateTUIModel(t, m, tea.KeyPressMsg{Code: key, Text: string(key)})
+}
+
+func TestFullscreenSelectionCopiesUnwrappedLines(t *testing.T) {
+	t.Parallel()
+
+	long := strings.Repeat("x", 95)
+	m := fullscreenWith(t, "first\n"+long+"\nthird\nfourth\n", 60, 12)
+
+	// The long line is folded across two rows, so a line and a row are not the
+	// same thing and the cursor has to count lines.
+	require.Equal(t, []int{0, 1, 3, 4, 5, 6}, m.fullscreenRowOf)
+
+	m = press(t, m, 'v')
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyDown})
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyDown})
+	require.True(t, m.fullscreenSelecting)
+
+	first, last := m.fullscreenSelectedLines()
+	assert.Equal(t, 0, first)
+	assert.Equal(t, 2, last, "three lines are selected, not three rows")
+	assert.Equal(t, "first\n"+long+"\nthird", m.fullscreenCopyText(false),
+		"the copy has the line as it was written, not as it was folded")
+
+	// Every row of every selected line is highlighted, and no row beyond them.
+	assert.Equal(t, [2]int{0, 4}, m.fullscreenPainted)
+}
+
+func TestFullscreenSelectionGrowsBothWays(t *testing.T) {
+	t.Parallel()
+
+	m := fullscreenWith(t, numberedLines(20), 80, 12)
+	for range 5 {
+		m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyDown})
+	}
+	m = press(t, m, 'v')
+	for range 2 {
+		m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyUp})
+	}
+
+	first, last := m.fullscreenSelectedLines()
+	assert.Equal(t, 3, first, "moving up from the anchor selects the lines above it")
+	assert.Equal(t, 5, last)
+
+	m = press(t, m, 'v')
+	assert.False(t, m.fullscreenSelecting, "v again stops extending")
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyDown})
+	first, last = m.fullscreenSelectedLines()
+	assert.Equal(t, first, last, "the cursor moves alone once selection has stopped")
+}
+
+func TestFullscreenCopyWithoutSelectionTakesEverything(t *testing.T) {
+	t.Parallel()
+
+	coloured := "\x1b[31mred\x1b[0m\nplain\n"
+	m := fullscreenWith(t, coloured, 80, 12)
+
+	require.False(t, m.fullscreenSelecting)
+	assert.Equal(t, "red\nplain\n", m.fullscreenCopyText(false),
+		"with nothing selected the key still takes the whole output")
+	assert.Equal(t, coloured, m.fullscreenCopyText(true))
+
+	m = press(t, m, 'v')
+	assert.Equal(t, "red", m.fullscreenCopyText(false), "y drops the escape sequences")
+	assert.Equal(t, "\x1b[31mred\x1b[0m", m.fullscreenCopyText(true), "Y keeps them")
+}
+
+func TestFullscreenEscapeClearsTheSelectionBeforeLeaving(t *testing.T) {
+	t.Parallel()
+
+	m := fullscreenWith(t, numberedLines(20), 80, 12)
+	m = press(t, m, 'v')
+	require.True(t, m.fullscreenSelecting)
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyEscape})
+	assert.False(t, m.fullscreenSelecting)
+	assert.True(t, m.fullscreenOutput, "the first escape clears, it does not leave")
+
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyEscape})
+	assert.False(t, m.fullscreenOutput, "the second escape leaves")
+}
+
+func TestFullscreenSelectionPinsTheView(t *testing.T) {
+	t.Parallel()
+
+	m := fullscreenWith(t, numberedLines(60), 80, 12)
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: 'G', Text: "G"})
+	require.True(t, m.fullscreenViewport.AtBottom())
+
+	m = press(t, m, 'v')
+	offset := m.fullscreenViewport.YOffset()
+	m = updateTUIModel(t, m, taskOutputMsg{id: 2, name: "build", data: "later\n"})
+	assert.Equal(t, offset, m.fullscreenViewport.YOffset(),
+		"new output must not drag the view away from lines being picked out")
+}
+
+func TestFullscreenSelectionClearedWhenOutputIsTrimmed(t *testing.T) {
+	t.Parallel()
+
+	m := fullscreenWith(t, numberedLines(40), 80, 12)
+	m = press(t, m, 'v')
+	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyDown})
+	require.True(t, m.fullscreenSelecting)
+
+	// Output is capped, and trimming it from the front renumbers every line the
+	// cursor and the anchor were holding.
+	m.byID[2].output = numberedLines(5)
+	m.syncFullscreenOutput()
+
+	assert.False(t, m.fullscreenSelecting, "a selection cannot survive its lines being renumbered")
+	assert.Less(t, m.fullscreenCursor, len(m.fullscreenLines))
 }

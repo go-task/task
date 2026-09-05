@@ -209,7 +209,7 @@ tui:
 - **Type**: `string`
 - **Default**: `tree`
 - **Description**: How tasks are arranged in the navigator, either `tree` or
-  `list`. Press `v` in the interface to switch between them during a run.
+  `list`. Press `n` in the interface to switch between them during a run.
 - **CLI equivalent**: [`--tui-task-navigator`](./cli.md#tui-task-navigator)
 - **Environment variable**:
   [`TASK_TUI_TASK_NAVIGATOR`](./environment.md#task-tui-task-navigator)

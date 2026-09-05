@@ -74,7 +74,7 @@ func newDashboardKeys(outputFocused, canReturnToLauncher bool) dashboardKeys {
 		Snapshot:   key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "print output to terminal")),
 		Save:       key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "save output to a file")),
 		SaveAll:    key.NewBinding(key.WithKeys("S"), key.WithHelp("S", "save every output to a folder")),
-		Navigator:  key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "switch task view: tree or list")),
+		Navigator:  key.NewBinding(key.WithKeys("n"), key.WithHelp("n", "switch task view: tree or list")),
 		Launcher:   key.NewBinding(key.WithKeys("esc", "b"), key.WithHelp("esc/b", "stop, open launcher")),
 		Quit:       key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "stop and quit")),
 		Help:       key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show this list")),
@@ -123,6 +123,8 @@ func (k dashboardKeys) allBindings() []key.Binding {
 // fullscreenKeys are the bindings of the single-pane output view.
 type fullscreenKeys struct {
 	Move     key.Binding
+	Select   key.Binding
+	Cancel   key.Binding
 	Page     key.Binding
 	Top      key.Binding
 	Bottom   key.Binding
@@ -136,14 +138,29 @@ type fullscreenKeys struct {
 	Help     key.Binding
 }
 
-func newFullscreenKeys() fullscreenKeys {
+// newFullscreenKeys describes the single-pane output view. What the copy keys
+// do depends on whether lines are selected, so the help says which.
+func newFullscreenKeys(selecting bool) fullscreenKeys {
+	selectHelp := key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "select lines"))
+	copyHelp := key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy output without ANSI codes"))
+	copyRawHelp := key.NewBinding(key.WithKeys("Y"), key.WithHelp("Y", "copy output with ANSI codes"))
+	cancel := key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "clear the selection"))
+	cancel.SetEnabled(false)
+	if selecting {
+		selectHelp.SetHelp("v", "stop extending the selection")
+		copyHelp.SetHelp("y", "copy the selected lines")
+		copyRawHelp.SetHelp("Y", "copy them with ANSI codes")
+		cancel.SetEnabled(true)
+	}
 	return fullscreenKeys{
-		Move:     key.NewBinding(key.WithKeys("up", "down", "k", "j"), key.WithHelp("↑/↓", "scroll the output")),
-		Page:     key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdn", "scroll a page")),
+		Move:     key.NewBinding(key.WithKeys("up", "down", "k", "j"), key.WithHelp("↑/↓", "move the line cursor")),
+		Select:   selectHelp,
+		Cancel:   cancel,
+		Page:     key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdn", "move a page")),
 		Top:      key.NewBinding(key.WithKeys("home", "g"), key.WithHelp("g", "jump to start")),
 		Bottom:   key.NewBinding(key.WithKeys("end", "G"), key.WithHelp("G", "jump to end")),
-		Copy:     key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy output without ANSI codes")),
-		CopyRaw:  key.NewBinding(key.WithKeys("Y"), key.WithHelp("Y", "copy output with ANSI codes")),
+		Copy:     copyHelp,
+		CopyRaw:  copyRawHelp,
 		Snapshot: key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "print output to terminal")),
 		Save:     key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "save output to a file")),
 		SaveAll:  key.NewBinding(key.WithKeys("S"), key.WithHelp("S", "save every output to a folder")),
@@ -154,20 +171,25 @@ func newFullscreenKeys() fullscreenKeys {
 }
 
 func (k fullscreenKeys) ShortHelp() []key.Binding {
+	selectLabel, copyLabel := "select", "copy all"
+	if k.Cancel.Enabled() {
+		selectLabel, copyLabel = "stop", "copy lines"
+	}
 	return []key.Binding{
 		terse(k.Help, "?", "help"),
 		terse(k.Quit, "q", "quit"),
 		terse(k.Return, "f/esc", "back"),
-		terse(k.Copy, "y", "copy"),
+		terse(k.Select, "v", selectLabel),
+		terse(k.Copy, "y", copyLabel),
 		terse(k.Snapshot, "t", "to terminal"),
-		terse(k.Move, "↑/↓", "scroll"),
+		terse(k.Move, "↑/↓", "cursor"),
 	}
 }
 
 func (k fullscreenKeys) allBindings() []key.Binding {
 	return []key.Binding{
 		k.Move, k.Page, k.Top, k.Bottom,
-		k.Copy, k.CopyRaw, k.Snapshot, k.Save, k.SaveAll,
+		k.Select, k.Cancel, k.Copy, k.CopyRaw, k.Snapshot, k.Save, k.SaveAll,
 		k.Return, k.Quit, k.Help,
 	}
 }

@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -68,9 +69,13 @@ func (m *tuiModel) enterFullscreenOutput() {
 		viewport.WithWidth(max(m.width, 1)),
 		viewport.WithHeight(max(m.height-1, 1)),
 	)
-	view.SoftWrap = true
+	// The output is wrapped before it reaches the viewport, so that one
+	// viewport row is one screen row and the line cursor can be placed exactly.
+	view.SoftWrap = false
 	m.fullscreenViewport = view
-	m.fullscreenViewport.SetContent(m.fullscreenOutputContent())
+	m.fullscreenSelecting = false
+	m.wrapFullscreenOutput()
+	m.fullscreenCursor = 0
 	if m.viewport.AtBottom() {
 		m.fullscreenViewport.GotoBottom()
 	} else if !m.viewport.AtTop() {
@@ -78,6 +83,22 @@ func (m *tuiModel) enterFullscreenOutput() {
 		m.fullscreenViewport.GotoBottom()
 		m.fullscreenViewport.SetYOffset(int(position * float64(m.fullscreenViewport.YOffset())))
 	}
+	// The cursor starts on the first line in view, so that it is where the
+	// reader is already looking.
+	m.fullscreenCursor = m.fullscreenLineAtRow(m.fullscreenViewport.YOffset())
+	m.paintFullscreenSelection()
+}
+
+// fullscreenLineAtRow is the logical line a viewport row belongs to.
+func (m tuiModel) fullscreenLineAtRow(row int) int {
+	if len(m.fullscreenLines) == 0 {
+		return 0
+	}
+	line, found := slices.BinarySearch(m.fullscreenRowOf, row)
+	if !found {
+		line--
+	}
+	return min(max(line, 0), len(m.fullscreenLines)-1)
 }
 
 func (m *tuiModel) leaveFullscreenOutput() {
@@ -86,6 +107,8 @@ func (m *tuiModel) leaveFullscreenOutput() {
 	position := m.fullscreenViewport.ScrollPercent()
 	m.fullscreenOutput = false
 	m.fullscreenViewport = viewport.Model{}
+	m.fullscreenLines, m.fullscreenRows, m.fullscreenShown, m.fullscreenRowOf = nil, nil, nil, nil
+	m.fullscreenSelecting = false
 	m.loadViewport()
 	if atTop {
 		m.viewport.GotoTop()
@@ -99,14 +122,78 @@ func (m *tuiModel) leaveFullscreenOutput() {
 }
 
 func (m *tuiModel) syncFullscreenOutput() {
-	atBottom := m.fullscreenViewport.AtBottom()
+	// Following new output would drag the view away from lines being picked
+	// out, so a selection pins it.
+	atBottom := m.fullscreenViewport.AtBottom() && !m.fullscreenSelecting
 	offset := m.fullscreenViewport.YOffset()
-	m.fullscreenViewport.SetContent(m.fullscreenOutputContent())
+	lines := len(m.fullscreenLines)
+	m.wrapFullscreenOutput()
+	if len(m.fullscreenLines) < lines {
+		// Output was trimmed from the front, so every index the cursor and the
+		// anchor held now names a different line.
+		m.clearFullscreenSelection()
+	}
 	if atBottom {
 		m.fullscreenViewport.GotoBottom()
 	} else {
 		m.fullscreenViewport.SetYOffset(offset)
 	}
+}
+
+// wrapFullscreenOutput folds the selected task's output to the pane's width and
+// gives the result to the viewport, keeping the map from logical lines to rows
+// that the cursor is placed with.
+func (m *tuiModel) wrapFullscreenOutput() {
+	width := max(m.fullscreenViewport.Width(), 1)
+	m.fullscreenLines = strings.Split(m.fullscreenOutputContent(), "\n")
+	m.fullscreenRows = make([]string, 0, len(m.fullscreenLines))
+	m.fullscreenRowOf = make([]int, len(m.fullscreenLines)+1)
+	for i, line := range m.fullscreenLines {
+		m.fullscreenRowOf[i] = len(m.fullscreenRows)
+		m.fullscreenRows = append(m.fullscreenRows, strings.Split(ansi.Hardwrap(line, width, false), "\n")...)
+	}
+	m.fullscreenRowOf[len(m.fullscreenLines)] = len(m.fullscreenRows)
+	m.fullscreenShown = slices.Clone(m.fullscreenRows)
+	m.fullscreenPainted = [2]int{0, 0}
+	m.fullscreenCursor = min(m.fullscreenCursor, max(len(m.fullscreenLines)-1, 0))
+	m.fullscreenAnchor = min(m.fullscreenAnchor, max(len(m.fullscreenLines)-1, 0))
+	m.paintFullscreenSelection()
+}
+
+// paintFullscreenSelection highlights the rows of the lines under the cursor.
+// Only the rows whose highlighting changes are rebuilt, so that moving the
+// cursor costs nothing on a large output.
+func (m *tuiModel) paintFullscreenSelection() {
+	first, last := m.fullscreenSelectedLines()
+	span := [2]int{0, 0}
+	if len(m.fullscreenRows) > 0 {
+		span = [2]int{m.fullscreenRowOf[first], m.fullscreenRowOf[last+1]}
+	}
+	if span == m.fullscreenPainted {
+		return
+	}
+	for row := m.fullscreenPainted[0]; row < m.fullscreenPainted[1]; row++ {
+		m.fullscreenShown[row] = m.fullscreenRows[row]
+	}
+	width := max(m.fullscreenViewport.Width(), 1)
+	for row := span[0]; row < span[1]; row++ {
+		// The selection is drawn over text that sets colours of its own, and a
+		// background cannot survive the resets inside it. Selected rows show
+		// their text plainly; a copy still takes the sequences along.
+		m.fullscreenShown[row] = tuiSelectedStyle.Width(width).Render(ansi.Strip(m.fullscreenRows[row]))
+	}
+	m.fullscreenPainted = span
+	m.fullscreenViewport.SetContentLines(m.fullscreenShown)
+}
+
+// fullscreenSelectedLines is the range of logical lines a copy would take: the
+// span between the cursor and the anchor while selecting, and the cursor's own
+// line otherwise.
+func (m tuiModel) fullscreenSelectedLines() (first, last int) {
+	if !m.fullscreenSelecting {
+		return m.fullscreenCursor, m.fullscreenCursor
+	}
+	return min(m.fullscreenCursor, m.fullscreenAnchor), max(m.fullscreenCursor, m.fullscreenAnchor)
 }
 
 func (m *tuiModel) fullscreenOutputContent() string {
@@ -123,7 +210,7 @@ func (m *tuiModel) fullscreenOutputContent() string {
 func (m tuiModel) fullscreenOutputView() string {
 	footer := renderStatus(m.width, m.notice, tuiTitleStyle)
 	if m.notice == "" {
-		footer = shortHelp(m.help, newFullscreenKeys().ShortHelp(), m.width)
+		footer = shortHelp(m.help, newFullscreenKeys(m.fullscreenSelecting).ShortHelp(), m.width)
 	}
 	return m.fullscreenViewport.View() + "\n" + footer
 }
@@ -134,7 +221,7 @@ func (m tuiModel) helpView() string {
 	bindings := newDashboardKeys(m.focus == outputPane, m.canReturnToLauncher).allBindings()
 	title := "KEYS"
 	if m.fullscreenOutput {
-		bindings = newFullscreenKeys().allBindings()
+		bindings = newFullscreenKeys(m.fullscreenSelecting).allBindings()
 		title = "KEYS · fullscreen"
 	}
 	inner := max(m.width-tuiPanelStyle.GetHorizontalFrameSize(), 1)

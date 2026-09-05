@@ -342,7 +342,7 @@ Set how tasks are organized in the TUI task navigator. Available modes: `list`,
 task --tui --tui-task-navigator list test
 ```
 
-Press `v` in the interface to switch between the two during a run.
+Press `n` in the interface to switch between the two during a run.
 
 ### Task Information
 

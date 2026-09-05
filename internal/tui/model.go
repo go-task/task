@@ -128,11 +128,26 @@ type tuiModel struct {
 
 	fullscreenOutput   bool
 	fullscreenViewport viewport.Model
-	showHelp           bool
-	help               help.Model
-	prompt             *promptState
-	save               *saveState
-	ticking            bool
+
+	// Fullscreen output is browsed a line at a time. The output is wrapped
+	// once into fullscreenRows and handed to the viewport pre-wrapped, so that
+	// a viewport row and a screen row are the same thing; fullscreenRowOf maps
+	// a logical line to its first row. The cursor and the anchor a selection
+	// grows from are logical line indices into fullscreenLines, which is what
+	// a copy takes its text from.
+	fullscreenLines     []string
+	fullscreenRows      []string
+	fullscreenShown     []string
+	fullscreenRowOf     []int
+	fullscreenCursor    int
+	fullscreenAnchor    int
+	fullscreenSelecting bool
+	fullscreenPainted   [2]int
+	showHelp            bool
+	help                help.Model
+	prompt              *promptState
+	save                *saveState
+	ticking             bool
 
 	// notice is transient feedback shown in place of the controls, such as the
 	// result of a copy. noticeID lets a later notice cancel an earlier timer.
@@ -360,18 +375,22 @@ func (m *tuiModel) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *tuiModel) handleFullscreenKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	keys := newFullscreenKeys()
+	keys := newFullscreenKeys(m.fullscreenSelecting)
 	switch {
+	case key.Matches(msg, keys.Cancel):
+		m.clearFullscreenSelection()
 	case key.Matches(msg, keys.Return):
 		m.leaveFullscreenOutput()
 	case key.Matches(msg, keys.Quit):
 		return *m, m.requestQuit()
 	case key.Matches(msg, keys.Help):
 		m.showHelp = true
+	case key.Matches(msg, keys.Select):
+		m.toggleFullscreenSelection()
 	case key.Matches(msg, keys.Copy):
-		return *m, m.copyOutput(false)
+		return *m, m.copyFullscreenLines(false)
 	case key.Matches(msg, keys.CopyRaw):
-		return *m, m.copyOutput(true)
+		return *m, m.copyFullscreenLines(true)
 	case key.Matches(msg, keys.Snapshot):
 		return *m, m.snapshotSelectedOutput()
 	case key.Matches(msg, keys.Save):
@@ -380,22 +399,103 @@ func (m *tuiModel) handleFullscreenKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd)
 		return *m, m.askWhereToSave(true)
 	case key.Matches(msg, keys.Move):
 		if msg.String() == "up" || msg.String() == "k" {
-			m.fullscreenViewport.ScrollUp(1)
+			m.moveFullscreenCursor(-1)
 		} else {
-			m.fullscreenViewport.ScrollDown(1)
+			m.moveFullscreenCursor(1)
 		}
 	case key.Matches(msg, keys.Page):
+		page := max(m.fullscreenViewport.Height(), 1)
 		if msg.String() == "pgup" {
-			m.fullscreenViewport.PageUp()
+			m.moveFullscreenCursor(-page)
 		} else {
-			m.fullscreenViewport.PageDown()
+			m.moveFullscreenCursor(page)
 		}
 	case key.Matches(msg, keys.Top):
-		m.fullscreenViewport.GotoTop()
+		m.moveFullscreenCursor(-len(m.fullscreenLines))
 	case key.Matches(msg, keys.Bottom):
-		m.fullscreenViewport.GotoBottom()
+		m.moveFullscreenCursor(len(m.fullscreenLines))
 	}
 	return *m, nil
+}
+
+// moveFullscreenCursor moves the line cursor and brings it into view, taking
+// the selection with it when one is being extended.
+func (m *tuiModel) moveFullscreenCursor(delta int) {
+	if len(m.fullscreenLines) == 0 {
+		return
+	}
+	m.fullscreenCursor = min(max(m.fullscreenCursor+delta, 0), len(m.fullscreenLines)-1)
+	m.keepFullscreenCursorVisible()
+	m.paintFullscreenSelection()
+}
+
+// keepFullscreenCursorVisible scrolls by as little as it takes to show every
+// row of the cursor's line, or its first rows when the line is taller than the
+// screen.
+func (m *tuiModel) keepFullscreenCursorVisible() {
+	first := m.fullscreenRowOf[m.fullscreenCursor]
+	last := m.fullscreenRowOf[m.fullscreenCursor+1] - 1
+	height := max(m.fullscreenViewport.Height(), 1)
+	offset := m.fullscreenViewport.YOffset()
+	switch {
+	case first < offset:
+		offset = first
+	case last >= offset+height:
+		offset = max(last-height+1, first)
+	}
+	m.fullscreenViewport.SetYOffset(offset)
+}
+
+// toggleFullscreenSelection starts a selection at the cursor, or ends one that
+// is already growing. The lines stay selected either way: stopping fixes the
+// range so that the cursor can be moved without changing it.
+func (m *tuiModel) toggleFullscreenSelection() {
+	if len(m.fullscreenLines) == 0 {
+		return
+	}
+	if m.fullscreenSelecting {
+		m.fullscreenSelecting = false
+	} else {
+		m.fullscreenAnchor = m.fullscreenCursor
+		m.fullscreenSelecting = true
+	}
+	m.paintFullscreenSelection()
+}
+
+func (m *tuiModel) clearFullscreenSelection() {
+	m.fullscreenSelecting = false
+	m.fullscreenAnchor = m.fullscreenCursor
+	m.paintFullscreenSelection()
+}
+
+// fullscreenCopyText is what a copy puts on the clipboard: the selected lines
+// as they were written rather than as they were folded to the screen, or the
+// whole output when nothing is selected, so that the key keeps the meaning it
+// has on the dashboard.
+func (m tuiModel) fullscreenCopyText(keepColours bool) string {
+	if !m.fullscreenSelecting {
+		task := m.selectedTask()
+		if task == nil {
+			return ""
+		}
+		return copyText(task.output, keepColours)
+	}
+	if len(m.fullscreenLines) == 0 {
+		return ""
+	}
+	first, last := m.fullscreenSelectedLines()
+	return copyText(strings.Join(m.fullscreenLines[first:last+1], "\n"), keepColours)
+}
+
+func (m *tuiModel) copyFullscreenLines(keepColours bool) tea.Cmd {
+	text := m.fullscreenCopyText(keepColours)
+	if text == "" {
+		return m.showNotice("nothing to copy")
+	}
+	return tea.Batch(
+		tea.SetClipboard(text),
+		copyToSystemClipboard(text, keepColours),
+	)
 }
 
 func (m *tuiModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
