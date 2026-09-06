@@ -2054,11 +2054,13 @@ func TestFullscreenSelectionGrowsBothWays(t *testing.T) {
 	assert.Equal(t, 3, first, "moving up from the anchor selects the lines above it")
 	assert.Equal(t, 5, last)
 
+	// v again cancels, as leaving Vim's visual mode does: a later copy takes
+	// the whole output again, which is why the two states have to look
+	// different.
 	m = press(t, m, 'v')
-	assert.False(t, m.fullscreenSelecting, "v again stops extending")
-	m = updateTUIModel(t, m, tea.KeyPressMsg{Code: tea.KeyDown})
+	assert.False(t, m.fullscreenSelecting, "v again cancels the selection")
 	first, last = m.fullscreenSelectedLines()
-	assert.Equal(t, first, last, "the cursor moves alone once selection has stopped")
+	assert.Equal(t, first, last, "only the cursor's own line is left marked")
 }
 
 func TestFullscreenCopyWithoutSelectionTakesEverything(t *testing.T) {
@@ -2131,4 +2133,28 @@ func TestFullscreenSelectionAcceptsBothVisualKeys(t *testing.T) {
 		m = press(t, m, key)
 		assert.True(t, m.fullscreenSelecting, "%q starts a selection", string(key))
 	}
+}
+
+func TestFullscreenSelectionLooksDifferentFromTheCursor(t *testing.T) {
+	t.Parallel()
+
+	m := fullscreenWith(t, numberedLines(20), 40, 12)
+	width := m.fullscreenViewport.Width()
+	plain := ansi.Strip(m.fullscreenRows[0])
+	cursorRow := func(m tuiModel) string {
+		return m.fullscreenShown[m.fullscreenRowOf[m.fullscreenCursor]]
+	}
+
+	assert.Equal(t, tuiSelectedStyle.Width(width).Render(plain), cursorRow(m),
+		"a resting cursor is drawn quietly")
+
+	// The span does not change when a selection starts on a single line, so
+	// only the style says that anything happened. It has to.
+	m = press(t, m, 'v')
+	assert.Equal(t, tuiSelectionStyle.Width(width).Render(plain), cursorRow(m),
+		"starting a selection changes how the same line is drawn")
+
+	m = press(t, m, 'v')
+	assert.Equal(t, tuiSelectedStyle.Width(width).Render(plain), cursorRow(m),
+		"leaving selection restores the quiet cursor")
 }

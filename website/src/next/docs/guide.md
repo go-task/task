@@ -2885,17 +2885,20 @@ position after you scroll up. Press `f` again or Escape to return to the
 two-pane view.
 
 Fullscreen is where lines are picked out of the output. A cursor marks one line,
-and the controls above move it, scrolling as needed. Press `v` (or `V`) to start
-selecting: the lines between where you pressed it and where the cursor is now
-are selected, so moving up from that point selects upwards. Press `v` again to
-stop extending, which fixes the range and frees the cursor. Escape clears the
-selection, and a second Escape leaves fullscreen.
+and the controls above move it, scrolling as needed. Press `v` (or `V`, after
+Vim's visual mode) to start selecting: the lines between where you pressed it and
+where the cursor is now are selected, so moving up from that point selects
+upwards. Press `v` again, or Escape, to cancel the selection; a second Escape
+leaves fullscreen.
+
+The two states look different, so that being in one is never a guess. A resting
+cursor is marked quietly; a live selection is drawn in the accent colour.
 
 With lines selected, `y` and `Y` copy those lines instead of the whole output.
 They are copied as they were written, so a line too long for the screen arrives
-whole rather than in the pieces it was folded into. Selected lines are drawn
-without their colours, because a highlight cannot survive the escape sequences
-inside them; the copy still carries those sequences for `Y`.
+whole rather than in the pieces it was folded into. Highlighted lines are drawn
+without their own colours, because a highlight cannot survive the escape
+sequences inside them; the copy still carries those sequences for `Y`.
 
 ### Copying task output
 

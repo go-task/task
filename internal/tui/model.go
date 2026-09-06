@@ -143,11 +143,14 @@ type tuiModel struct {
 	fullscreenAnchor    int
 	fullscreenSelecting bool
 	fullscreenPainted   [2]int
-	showHelp            bool
-	help                help.Model
-	prompt              *promptState
-	save                *saveState
-	ticking             bool
+	// fullscreenPaintedSelecting is which of the two highlights the painted
+	// span is currently drawn in.
+	fullscreenPaintedSelecting bool
+	showHelp                   bool
+	help                       help.Model
+	prompt                     *promptState
+	save                       *saveState
+	ticking                    bool
 
 	// notice is transient feedback shown in place of the controls, such as the
 	// result of a copy. noticeID lets a later notice cancel an earlier timer.
@@ -444,9 +447,10 @@ func (m *tuiModel) keepFullscreenCursorVisible() {
 	m.fullscreenViewport.SetYOffset(offset)
 }
 
-// toggleFullscreenSelection starts a selection at the cursor, or ends one that
-// is already growing. The lines stay selected either way: stopping fixes the
-// range so that the cursor can be moved without changing it.
+// toggleFullscreenSelection starts a selection at the cursor, or cancels one
+// that is growing, as leaving Vim's visual mode does. The two states are drawn
+// differently, so that pressing this twice by mistake is visible rather than
+// silently leaving a copy about to take the whole output.
 func (m *tuiModel) toggleFullscreenSelection() {
 	if len(m.fullscreenLines) == 0 {
 		return

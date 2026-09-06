@@ -154,7 +154,8 @@ func (m *tuiModel) wrapFullscreenOutput() {
 	}
 	m.fullscreenRowOf[len(m.fullscreenLines)] = len(m.fullscreenRows)
 	m.fullscreenShown = slices.Clone(m.fullscreenRows)
-	m.fullscreenPainted = [2]int{0, 0}
+	// The clone carries no highlight, so nothing is painted yet.
+	m.fullscreenPainted, m.fullscreenPaintedSelecting = [2]int{0, 0}, false
 	m.fullscreenCursor = min(m.fullscreenCursor, max(len(m.fullscreenLines)-1, 0))
 	m.fullscreenAnchor = min(m.fullscreenAnchor, max(len(m.fullscreenLines)-1, 0))
 	m.paintFullscreenSelection()
@@ -169,21 +170,36 @@ func (m *tuiModel) paintFullscreenSelection() {
 	if len(m.fullscreenRows) > 0 {
 		span = [2]int{m.fullscreenRowOf[first], m.fullscreenRowOf[last+1]}
 	}
-	if span == m.fullscreenPainted {
+	// The style is part of what is painted, not only the span: pressing v with
+	// the cursor on a single line leaves the span alone and changes only how
+	// that line is drawn, which is the whole point of the two styles.
+	if span == m.fullscreenPainted && m.fullscreenSelecting == m.fullscreenPaintedSelecting {
 		return
 	}
 	for row := m.fullscreenPainted[0]; row < m.fullscreenPainted[1]; row++ {
 		m.fullscreenShown[row] = m.fullscreenRows[row]
 	}
 	width := max(m.fullscreenViewport.Width(), 1)
+	style := m.fullscreenHighlight()
 	for row := span[0]; row < span[1]; row++ {
-		// The selection is drawn over text that sets colours of its own, and a
-		// background cannot survive the resets inside it. Selected rows show
+		// The highlight is drawn over text that sets colours of its own, and a
+		// background cannot survive the resets inside it. Highlighted rows show
 		// their text plainly; a copy still takes the sequences along.
-		m.fullscreenShown[row] = tuiSelectedStyle.Width(width).Render(ansi.Strip(m.fullscreenRows[row]))
+		m.fullscreenShown[row] = style.Width(width).Render(ansi.Strip(m.fullscreenRows[row]))
 	}
-	m.fullscreenPainted = span
+	m.fullscreenPainted, m.fullscreenPaintedSelecting = span, m.fullscreenSelecting
 	m.fullscreenViewport.SetContentLines(m.fullscreenShown)
+}
+
+// fullscreenHighlight distinguishes the two things the highlight can mean. The
+// cursor marks where you are and is quiet about it; a selection is a mode you
+// can leave by mistake, so it says so loudly enough to be noticed away from the
+// footer.
+func (m tuiModel) fullscreenHighlight() lipgloss.Style {
+	if m.fullscreenSelecting {
+		return tuiSelectionStyle
+	}
+	return tuiSelectedStyle
 }
 
 // fullscreenSelectedLines is the range of logical lines a copy would take: the
@@ -726,6 +742,13 @@ var (
 				Bold(true).
 				Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#10212B"), Dark: lipgloss.Color("#F4F7FA")}).
 				Background(compat.AdaptiveColor{Light: lipgloss.Color("#D9E8ED"), Dark: lipgloss.Color("#34444D")})
+	// tuiSelectionStyle marks a live selection, against tuiSelectedStyle for a
+	// cursor resting on a line. The accent colour carries it, so the two differ
+	// in weight rather than in hue.
+	tuiSelectionStyle = lipgloss.NewStyle().
+				Bold(true).
+				Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#F4F7FA"), Dark: lipgloss.Color("#10212B")}).
+				Background(tuiAccentColor)
 	tuiTreeStyle     = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#77818A"), Dark: lipgloss.Color("#697580")})
 	tuiRunningStyle  = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#8A6500"), Dark: lipgloss.Color("#FFD75F")})
 	tuiSuccessStyle  = lipgloss.NewStyle().Foreground(compat.AdaptiveColor{Light: lipgloss.Color("#257A3E"), Dark: lipgloss.Color("#5FD787")})
