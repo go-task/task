@@ -385,6 +385,12 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 
+/* Compact commands leave no room for the overlaid language label. */
+.installation-methods
+  :deep(.install-method div[class*='language-'] > span.lang) {
+  display: none;
+}
+
 .installation-methods :deep(.install-method div[class*='language-'] pre) {
   padding: 14px 0;
   overflow-x: auto;
