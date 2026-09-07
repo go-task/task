@@ -526,15 +526,14 @@ sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d v3.42.1
 ```
 
-:::
-
-Use `-b` to set the destination and a
-[release tag](https://github.com/go-task/task/releases) to choose the version.
-To combine them, put the directory option before the tag:
-
-```shell
+```shell [Directory + version]
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin v3.42.1
 ```
+
+:::
+
+When combining options, keep the
+[release tag](https://github.com/go-task/task/releases) last.
 
 ::: tip Make Task available in your shell
 
