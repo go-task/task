@@ -32,12 +32,22 @@ var knownAbsDirs = []string{
 }
 
 func isSpecialDir(dir string) bool {
-	for _, d := range knownAbsDirs {
-		if strings.Contains(dir, d) {
-			return true
+	for {
+		_, action, ok := strings.Cut(dir, "{{")
+		if !ok {
+			return false
+		}
+		action, dir, ok = strings.Cut(action, "}}")
+		if !ok {
+			return false
+		}
+		// Only inspect template actions, not literal path components.
+		for _, d := range knownAbsDirs {
+			if strings.Contains(action, d) {
+				return true
+			}
 		}
 	}
-	return false
 }
 
 // TryAbsToRel tries to convert an absolute path to relative based on the
