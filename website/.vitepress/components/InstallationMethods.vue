@@ -132,16 +132,18 @@ onUnmounted(() => {
 
 :global(.installation-page .installation-shortcuts a) {
   padding: 4px 0;
-  color: var(--vp-c-text-2);
+  color: color-mix(in srgb, var(--vp-c-brand-1) 45%, var(--vp-c-text-1));
   font-size: 13px;
+  font-weight: 500;
   line-height: 20px;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+  text-underline-offset: 4px;
 }
 
 :global(.installation-page .installation-shortcuts a:hover) {
-  color: var(--vp-c-brand-1);
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  color: var(--vp-c-text-1);
+  text-decoration-color: currentColor;
 }
 
 :global(.installation-page .installation-shortcuts a:focus-visible) {
