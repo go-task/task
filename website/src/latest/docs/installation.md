@@ -11,21 +11,19 @@ import InstallationMethods from '../../../.vitepress/components/InstallationMeth
 
 # Installation
 
-Install Task with your preferred package manager, download a binary, or set it
-up in CI. Then add shell completions and you're ready to go.
-
-<nav class="installation-shortcuts" aria-label="Installation shortcuts">
-  <a href="#official-package-managers"><span>01</span><strong>Package managers</strong><small>Find your preferred method</small></a>
-  <a href="#get-the-binary"><span>02</span><strong>Binaries &amp; CI</strong><small>Downloads, scripts and actions</small></a>
-  <a href="#setup-completions"><span>03</span><strong>Shell completions</strong><small>Finish your setup</small></a>
-</nav>
+Choose a package manager for your system, or install Task from a binary.
 
 <InstallationMethods>
 
+<nav class="installation-shortcuts" aria-label="Installation shortcuts">
+  <a href="#get-the-binary">Binaries &amp; CI</a>
+  <a href="#verify-installation">Verify installation</a>
+  <a href="#setup-completions">Shell completions</a>
+</nav>
+
 ## Official packages {#official-package-managers}
 
-These installation methods are maintained by the Task team and are always
-up-to-date.
+Maintained by the Task team and kept up-to-date.
 
 <div class="install-method" data-platforms="macos">
 
@@ -45,14 +43,11 @@ up-to-date.
 
 </div>
 
-Task is available via our official Homebrew tap:
-
 ```shell
 brew install go-task/tap/go-task
 ```
 
-Alternatively it can be installed from the official Homebrew repository by
-running:
+Or use the Homebrew core formula:
 
 ```shell
 brew install go-task
@@ -82,7 +77,7 @@ Set up the repository:
 curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.rpm.sh' | sudo -E bash
 ```
 
-Then you can install Task with:
+Install Task:
 
 ```shell
 dnf install task
@@ -112,7 +107,7 @@ Set up the repository:
 curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.deb.sh' | sudo -E bash
 ```
 
-Then you can install Task with:
+Install Task:
 
 ```shell
 apt install task
@@ -136,13 +131,13 @@ apt install task
 
 </div>
 
-Set up the repository by running:
+Set up the repository:
 
 ```shell
 curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.alpine.sh' | sudo -E bash
 ```
 
-Then you can install Task with:
+Install Task:
 
 ```shell
 apk add task
@@ -166,13 +161,11 @@ apk add task
 
 </div>
 
-Task is available on [Snapcraft](https://snapcraft.io/task), but keep in mind
-that your Linux distribution should allow classic confinement for Snaps to Task
-work correctly:
-
 ```shell
 sudo snap install task --classic
 ```
+
+Requires a Linux distribution with classic confinement support.
 
 </div>
 
@@ -193,12 +186,11 @@ sudo snap install task --classic
 
 </div>
 
-Npm can be used as cross-platform way to install Task globally or as a
-dependency of your project:
-
 ```shell
 npm install -g @go-task/cli
 ```
+
+Task is also available as a project dependency.
 
 </div>
 
@@ -218,12 +210,12 @@ npm install -g @go-task/cli
 
 </div>
 
-Task is available via the
-[community repository](https://github.com/microsoft/winget-pkgs):
-
 ```shell
 winget install Task.Task
 ```
+
+Available through the
+[WinGet community repository](https://github.com/microsoft/winget-pkgs).
 
 </div>
 
@@ -231,9 +223,8 @@ winget install Task.Task
 
 ## Community packages {#community-maintained-package-managers}
 
-These installation methods are maintained by the community and may not always be
-up-to-date with the latest Task version. The Task team does not directly control
-these packages.
+Maintained by the community, outside the Task team's control. These packages may
+lag behind the latest release.
 
 <div class="install-method" data-platforms="macos linux windows">
 
@@ -251,14 +242,12 @@ these packages.
 
 </div>
 
-Install and activate Task globally with Mise:
-
 ```shell
 mise use -g task
 ```
 
-To use Task in the current project instead, run `mise use task`. This installs
-Task and adds it to your project's `mise.toml`.
+For a project-local installation, use `mise use task` instead. This adds Task to
+your project's `mise.toml`.
 
 </div>
 
@@ -278,8 +267,6 @@ Task and adds it to your project's `mise.toml`.
 </div>
 
 </div>
-
-Task repository is tracked by Macports:
 
 ```shell
 port install go-task
@@ -303,8 +290,6 @@ port install go-task
 </div>
 
 </div>
-
-Like npm, pip can be used as a cross-platform way to install Task:
 
 ```shell
 pip install go-task-bin
@@ -615,6 +600,19 @@ demand before calling it.
 ```bash
 go tool task {arguments...}
 ```
+
+## Verify installation
+
+After installing, open a terminal and check that Task is available:
+
+```shell
+task --version
+```
+
+If you installed Task with `go tool`, run `go tool task --version` instead.
+
+You're ready to [create your first Taskfile](./getting-started.md). You can also
+enable shell completions below.
 
 ## Shell completions {#setup-completions}
 

@@ -2,7 +2,7 @@
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 
 const platforms = [
-  { id: 'all', label: 'All systems' },
+  { id: 'all', label: 'All' },
   { id: 'macos', label: 'macOS' },
   { id: 'linux', label: 'Linux' },
   { id: 'windows', label: 'Windows' }
@@ -84,6 +84,33 @@ onUnmounted(() => {
           :aria-pressed="selected === platform.id"
           @click="selectPlatform(platform.id)"
         >
+          <svg
+            class="install-platform-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <template v-if="platform.id === 'all'">
+              <rect x="3" y="4" width="18" height="13" rx="2" />
+              <path d="M8 21h8m-4-4v4" />
+            </template>
+            <path
+              v-else-if="platform.id === 'macos'"
+              d="M9 9V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V9"
+            />
+            <template v-else-if="platform.id === 'linux'">
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <path d="m7 9 3 3-3 3m6 0h4" />
+            </template>
+            <template v-else>
+              <rect x="3" y="3" width="18" height="18" rx="1" />
+              <path d="M12 3v18M3 12h18" />
+            </template>
+          </svg>
           {{ platform.label }}
         </button>
       </div>
@@ -97,26 +124,24 @@ onUnmounted(() => {
 
 <style scoped>
 :global(.installation-page .installation-shortcuts) {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 28px 0 32px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 12px 0 24px;
 }
 
 :global(.installation-page .installation-shortcuts a) {
-  display: flex;
-  flex-direction: column;
-  padding: 18px 16px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 12px;
-  background: var(--vp-c-bg-soft);
-  color: var(--vp-c-text-1);
+  padding: 4px 0;
+  color: var(--vp-c-text-2);
+  font-size: 13px;
+  line-height: 20px;
   text-decoration: none;
-  transition: border-color 0.15s;
 }
 
 :global(.installation-page .installation-shortcuts a:hover) {
-  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 :global(.installation-page .installation-shortcuts a:focus-visible) {
@@ -124,33 +149,13 @@ onUnmounted(() => {
   outline-offset: 3px;
 }
 
-:global(.installation-page .installation-shortcuts span) {
-  margin-bottom: 12px;
-  color: var(--vp-c-text-2);
-  font-family: var(--vp-font-family-mono);
-  font-size: 12px;
-}
-
-:global(.installation-page .installation-shortcuts strong) {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 22px;
-}
-
-:global(.installation-page .installation-shortcuts small) {
-  margin-top: 4px;
-  color: var(--vp-c-text-2);
-  font-size: 12px;
-  line-height: 20px;
-}
-
 .install-picker {
-  margin: 28px 0 32px;
+  margin: 24px 0 0;
 }
 
 .install-picker-label {
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   color: var(--vp-c-text-2);
   font-size: 13px;
   font-weight: 600;
@@ -158,18 +163,22 @@ onUnmounted(() => {
 
 .install-platform-buttons {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  gap: 3px;
   width: fit-content;
-  padding: 5px;
+  max-width: 100%;
+  padding: 4px;
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
   background: var(--vp-c-bg-soft);
 }
 
 .install-platform-buttons button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: 40px;
-  padding: 8px 18px;
+  padding: 8px 16px;
   border-radius: 8px;
   color: var(--vp-c-text-2);
   font-size: 14px;
@@ -185,9 +194,16 @@ onUnmounted(() => {
 }
 
 .install-platform-buttons button[aria-pressed='true'] {
-  color: var(--vp-c-text-1);
-  background: var(--vp-c-bg);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 10%);
+  color: color-mix(in srgb, var(--vp-c-brand-1) 40%, var(--vp-c-text-1));
+  background: color-mix(in srgb, var(--vp-c-brand-1) 18%, var(--vp-c-bg));
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--vp-c-brand-1) 40%, transparent);
+}
+
+.install-platform-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .install-platform-buttons button:focus-visible {
@@ -207,7 +223,7 @@ onUnmounted(() => {
 .installation-methods :deep(.install-method) {
   position: relative;
   margin: 16px 0;
-  padding: 24px;
+  padding: 20px;
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
   background: var(--vp-c-bg);
@@ -216,8 +232,8 @@ onUnmounted(() => {
 .installation-methods :deep(.install-method h3) {
   margin: 0 0 4px;
   padding: 0;
-  font-size: 19px;
-  line-height: 28px;
+  font-size: 18px;
+  line-height: 26px;
 }
 
 .installation-methods :deep(.install-method h3 a:not(.header-anchor)) {
@@ -235,7 +251,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 8px 16px;
-  margin: 8px 0 20px;
+  margin: 4px 0 12px;
 }
 
 .installation-methods :deep(.install-method .install-platforms) {
@@ -246,7 +262,7 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-.installation-methods :deep(.install-links p) {
+.installation-methods :deep(.install-method .install-links p) {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -275,8 +291,15 @@ onUnmounted(() => {
 }
 
 .installation-methods :deep(.install-method p) {
+  margin: 12px 0;
   font-size: 14px;
-  line-height: 24px;
+  line-height: 22px;
+}
+
+.installation-methods :deep(.installation-shortcuts + h2) {
+  margin-top: 24px;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .installation-methods :deep(.install-method > :last-child) {
@@ -284,18 +307,21 @@ onUnmounted(() => {
 }
 
 .installation-methods :deep(.install-method div[class*='language-']) {
-  margin: 16px 0;
+  margin: 12px 0;
   border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
 }
 
 .installation-methods :deep(.install-method div[class*='language-'] pre) {
-  padding: 16px 0;
+  padding: 14px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .installation-methods :deep(.install-method div[class*='language-'] code) {
   padding: 0 18px;
   font-size: 13px;
+  line-height: 22px;
 }
 
 .installation-methods :deep(.install-method .vp-code-group) {
@@ -330,36 +356,24 @@ onUnmounted(() => {
 }
 
 @media (max-width: 639px) {
-  :global(.installation-page .installation-shortcuts) {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  :global(.installation-page .installation-shortcuts a) {
-    display: grid;
-    grid-template-columns: 24px 1fr;
-    column-gap: 12px;
-    padding: 12px 16px;
-  }
-
-  :global(.installation-page .installation-shortcuts span) {
-    grid-row: span 2;
-    align-self: center;
-    margin: 0;
-  }
-
-  :global(.installation-page .installation-shortcuts small) {
-    margin-top: 0;
-  }
-
   .install-platform-buttons {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
   }
 
+  .install-platform-buttons button {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
   .installation-methods :deep(.install-method) {
-    padding: 20px 16px;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 379px) {
+  .install-platform-icon {
+    display: none;
   }
 }
 
