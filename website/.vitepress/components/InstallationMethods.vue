@@ -393,42 +393,48 @@ onUnmounted(() => {
 
 .installation-methods :deep(.install-method div[class*='language-'] pre) {
   padding: 14px 0;
+}
+
+:global(.installation-page div[class*='language-'] pre) {
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
 
-.installation-methods :deep(.install-method div[class*='language-']:hover pre),
-.installation-methods
-  :deep(.install-method div[class*='language-']:focus-within pre) {
+:global(.installation-page div[class*='language-']:hover pre),
+:global(.installation-page div[class*='language-']:focus-within pre) {
   scrollbar-color: var(--vp-c-text-3) transparent;
 }
 
 /* Fallback for browsers without scrollbar-color support. */
-.installation-methods :deep(.install-method pre::-webkit-scrollbar) {
+:global(.installation-page div[class*='language-'] pre::-webkit-scrollbar) {
   height: 6px;
 }
 
-.installation-methods :deep(.install-method pre::-webkit-scrollbar-track),
-.installation-methods :deep(.install-method pre::-webkit-scrollbar-thumb) {
+:global(
+  .installation-page div[class*='language-'] pre::-webkit-scrollbar-track
+),
+:global(
+  .installation-page div[class*='language-'] pre::-webkit-scrollbar-thumb
+) {
   background: transparent;
 }
 
-.installation-methods :deep(.install-method pre::-webkit-scrollbar-thumb) {
+:global(
+  .installation-page div[class*='language-'] pre::-webkit-scrollbar-thumb
+) {
   border-radius: 3px;
 }
 
-.installation-methods
-  :deep(
-    .install-method div[class*='language-']:hover pre::-webkit-scrollbar-thumb
-  ),
-.installation-methods
-  :deep(
-    .install-method
-      div[class*='language-']:focus-within
-      pre::-webkit-scrollbar-thumb
-  ) {
+:global(
+  .installation-page div[class*='language-']:hover pre::-webkit-scrollbar-thumb
+),
+:global(
+  .installation-page
+    div[class*='language-']:focus-within
+    pre::-webkit-scrollbar-thumb
+) {
   background: var(--vp-c-text-3);
 }
 
@@ -499,11 +505,13 @@ onUnmounted(() => {
 }
 
 @media (hover: none), (forced-colors: active) {
-  .installation-methods :deep(.install-method div[class*='language-'] pre) {
+  :global(.installation-page div[class*='language-'] pre) {
     scrollbar-color: auto;
   }
 
-  .installation-methods :deep(.install-method pre::-webkit-scrollbar-thumb) {
+  :global(
+    .installation-page div[class*='language-'] pre::-webkit-scrollbar-thumb
+  ) {
     background: var(--vp-c-text-3);
   }
 }
