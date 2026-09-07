@@ -489,71 +489,81 @@ task
 
 ## Binaries & CI {#get-the-binary}
 
-### Binary
+Install Task without a package manager: download a binary, use the install
+script, or add the setup action to your GitHub workflow.
 
-You can download the binary from the
-[releases page on GitHub](https://github.com/go-task/task/releases) and add to
-your `$PATH`.
+### Download a binary {#binary}
 
-DEB, RPM and APK packages are also available.
+1. Open the [GitHub releases](https://github.com/go-task/task/releases) and
+   download the archive for your operating system and architecture.
+2. Extract `task` (`task.exe` on Windows).
+3. Move the executable to a directory on your `PATH`.
 
-The `task_checksums.txt` file contains the SHA-256 checksum for each file.
+Each release also includes DEB, RPM and APK packages, plus `task_checksums.txt`
+with SHA-256 checksums for the release files.
 
-### Install Script
+### Install with a script {#install-script}
 
-We also have an
-[install script](https://github.com/go-task/task/blob/main/install-task.sh)
-which is very useful in scenarios like CI. Many thanks to
-[GoDownloader](https://github.com/goreleaser/godownloader) for enabling the easy
-generation of this script.
+Use the
+[install script](https://github.com/go-task/task/blob/main/install-task.sh) for
+a shell-based installation, including CI environments. It downloads a prebuilt
+binary and verifies its checksum; no Go installation is needed.
 
-By default, it installs on the `./bin` directory relative to the working
-directory:
+By default, the script installs the latest release into `./bin`, relative to
+your current directory. Choose a different directory or pin a release:
 
-```shell
+::: code-group
+
+```shell [Latest release]
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
 ```
 
-It is possible to override the installation directory with the `-b` parameter.
-On Linux, common choices are `~/.local/bin` and `~/bin` to install for the
-current user or `/usr/local/bin` to install for all users:
-
-```shell
+```shell [Custom directory]
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 ```
 
-::: warning
-
-On macOS and Windows, `~/.local/bin` and `~/bin` are not added to `$PATH` by
-default.
+```shell [Pinned version]
+sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d v3.42.1
+```
 
 :::
 
-By default, it installs the latest version available. You can also specify a tag
-(available in [releases](https://github.com/go-task/task/releases)) to install a
-specific version:
-
-```shell
-sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d v3.36.0
-```
-
-Parameters are order specific, to set both installation directory and version:
+Use `-b` to set the destination and a
+[release tag](https://github.com/go-task/task/releases) to choose the version.
+To combine them, put the directory option before the tag:
 
 ```shell
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin v3.42.1
 ```
 
+::: tip Make Task available in your shell
+
+Add the installation directory to your `PATH` to run `task` from anywhere. With
+the default location, you can also run `./bin/task` directly.
+
+On Linux, `~/.local/bin` and `~/bin` are common per-user locations;
+`/usr/local/bin` is a system-wide location and may require elevated permissions.
+Do not assume these directories are already on your `PATH`, especially on macOS
+and Windows.
+
+:::
+
 ### GitHub Actions
 
-We have an [official GitHub Action](https://github.com/go-task/setup-task) to
-install Task in your GitHub workflows. This repository is forked from the
-fantastic project by the Arduino team. Check out the repository for more
-examples and configuration.
+Add the [official setup action](https://github.com/go-task/setup-task) to your
+job's `steps` before running Task:
 
 ```yaml
 - name: Install Task
-  uses: go-task/setup-task@v1
+  uses: go-task/setup-task@v2
+
+- name: Verify Task
+  run: task --version
 ```
+
+Use the action's `version` input to pin a Task release. See the
+[action documentation](https://github.com/go-task/setup-task#usage) for examples
+and configuration.
 
 ## Build from source
 
