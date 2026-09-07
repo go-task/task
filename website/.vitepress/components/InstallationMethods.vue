@@ -324,6 +324,13 @@ onUnmounted(() => {
   line-height: 22px;
 }
 
+/* Keep the 40px copy control inside the compact, 50px single-line block. */
+.installation-methods
+  :deep(.install-method div[class*='language-'] > button.copy) {
+  top: 5px;
+  right: 6px;
+}
+
 .installation-methods :deep(.install-method .vp-code-group) {
   margin-top: 16px;
 }
