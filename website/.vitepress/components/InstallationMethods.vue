@@ -232,10 +232,81 @@ onUnmounted(() => {
 }
 
 .installation-methods :deep(.install-method h3) {
+  position: relative;
   margin: 0 0 4px;
-  padding: 0;
+  padding: 0 0 0 30px;
   font-size: 18px;
   line-height: 26px;
+}
+
+/* Decorative CSS masks keep logos out of heading names and the page outline. */
+.installation-methods :deep(.install-method h3::before) {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  background-color: var(--install-icon-color, var(--vp-c-text-2));
+  content: '';
+  -webkit-mask: var(--install-icon, url('../theme/icons/install/package.svg'))
+    center / contain no-repeat;
+  mask: var(--install-icon, url('../theme/icons/install/package.svg')) center /
+    contain no-repeat;
+}
+
+.installation-methods :deep(#homebrew) {
+  --install-icon: url('../theme/icons/install/homebrew.svg');
+  --install-icon-color: #fbb040;
+}
+
+.installation-methods :deep(#apk) {
+  --install-icon: url('../theme/icons/install/alpinelinux.svg');
+  --install-icon-color: #0d597f;
+}
+
+.installation-methods :deep(#snap) {
+  --install-icon: url('../theme/icons/install/snapcraft.svg');
+  --install-icon-color: #e95420;
+}
+
+.installation-methods :deep(#npm) {
+  --install-icon: url('../theme/icons/install/npm.svg');
+  --install-icon-color: #cb3837;
+}
+
+.installation-methods :deep(#mise) {
+  --install-icon: url('../theme/icons/install/mise.svg');
+  --install-icon-color: var(--vp-c-text-1);
+}
+
+.installation-methods :deep(#pip) {
+  --install-icon: url('../theme/icons/install/python.svg');
+  --install-icon-color: #3776ab;
+}
+
+.installation-methods :deep(#chocolatey) {
+  --install-icon: url('../theme/icons/install/chocolatey.svg');
+  --install-icon-color: #80b5e3;
+}
+
+.installation-methods :deep(#arch) {
+  --install-icon: url('../theme/icons/install/archlinux.svg');
+  --install-icon-color: #1793d1;
+}
+
+.installation-methods :deep(#fedora-community) {
+  --install-icon: url('../theme/icons/install/fedora.svg');
+  --install-icon-color: #51a2da;
+}
+
+.installation-methods :deep(#freebsd) {
+  --install-icon: url('../theme/icons/install/freebsd.svg');
+  --install-icon-color: #ab2b28;
+}
+
+.installation-methods :deep(#nix) {
+  --install-icon: url('../theme/icons/install/nixos.svg');
+  --install-icon-color: #5277c3;
 }
 
 .installation-methods :deep(.install-method h3 a:not(.header-anchor)) {
