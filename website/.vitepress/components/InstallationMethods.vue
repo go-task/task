@@ -318,6 +318,41 @@ onUnmounted(() => {
   padding: 14px 0;
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.installation-methods :deep(.install-method div[class*='language-']:hover pre),
+.installation-methods
+  :deep(.install-method div[class*='language-']:focus-within pre) {
+  scrollbar-color: var(--vp-c-text-3) transparent;
+}
+
+/* Fallback for browsers without scrollbar-color support. */
+.installation-methods :deep(.install-method pre::-webkit-scrollbar) {
+  height: 6px;
+}
+
+.installation-methods :deep(.install-method pre::-webkit-scrollbar-track),
+.installation-methods :deep(.install-method pre::-webkit-scrollbar-thumb) {
+  background: transparent;
+}
+
+.installation-methods :deep(.install-method pre::-webkit-scrollbar-thumb) {
+  border-radius: 3px;
+}
+
+.installation-methods
+  :deep(
+    .install-method div[class*='language-']:hover pre::-webkit-scrollbar-thumb
+  ),
+.installation-methods
+  :deep(
+    .install-method
+      div[class*='language-']:focus-within
+      pre::-webkit-scrollbar-thumb
+  ) {
+  background: var(--vp-c-text-3);
 }
 
 .installation-methods :deep(.install-method div[class*='language-'] code) {
@@ -383,6 +418,16 @@ onUnmounted(() => {
 @media (max-width: 379px) {
   .install-platform-icon {
     display: none;
+  }
+}
+
+@media (hover: none), (forced-colors: active) {
+  .installation-methods :deep(.install-method div[class*='language-'] pre) {
+    scrollbar-color: auto;
+  }
+
+  .installation-methods :deep(.install-method pre::-webkit-scrollbar-thumb) {
+    background: var(--vp-c-text-3);
   }
 }
 
