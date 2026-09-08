@@ -102,6 +102,8 @@ snapcrafts:
 
 homebrew_casks:
   - name: go-task
+    alternative_names:
+      - 'go-task@{{ .Major }}.{{ .Minor }}'
     description: A fast, cross-platform build tool inspired by Make, designed for modern workflows.
     homepage: https://taskfile.dev
     binaries:
