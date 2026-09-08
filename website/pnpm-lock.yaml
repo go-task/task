@@ -105,6 +105,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  vitepress-plugin-llms@1.13.5: ae6a1186264da15a064640854a7a787a686b961b925a91295187f9debf6bc245
+
 importers:
 
   .:
@@ -135,7 +138,7 @@ importers:
         version: 1.7.6(vite@5.4.21(@types/node@24.13.3))
       vitepress-plugin-llms:
         specifier: ^1.9.1
-        version: 1.13.5(supports-color@11.0.0)
+        version: 1.13.5(patch_hash=ae6a1186264da15a064640854a7a787a686b961b925a91295187f9debf6bc245)(supports-color@11.0.0)
       vitepress-plugin-tabs:
         specifier: ^0.9.0
         version: 0.9.1(vitepress@1.6.4(@algolia/client-search@5.35.0)(@types/node@24.13.3)(jwt-decode@4.0.0)(postcss@8.5.26)(search-insights@2.17.3)(typescript@5.9.3))(vue@3.5.42(typescript@5.9.3))
@@ -10642,7 +10645,7 @@ snapshots:
     optionalDependencies:
       vite: 5.4.21(@types/node@24.13.3)
 
-  vitepress-plugin-llms@1.13.5(supports-color@11.0.0):
+  vitepress-plugin-llms@1.13.5(patch_hash=ae6a1186264da15a064640854a7a787a686b961b925a91295187f9debf6bc245)(supports-color@11.0.0):
     dependencies:
       '@11ty/gray-matter': 2.1.0
       markdown-it: 14.3.0

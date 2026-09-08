@@ -135,6 +135,12 @@ change one, change the other. A page's `section:` frontmatter is what the
 crawler shows as the breadcrumb on a search result, while `docType:` powers its
 search facet, so a new page needs both.
 
+After building the site, run `pnpm check:links` from `website/` to check links
+in the generated Markdown pages and LLM indexes. The LLM plugin is patched in
+`website/patches/` to resolve links before it moves directory indexes such as
+`docs/guide/index.md` to `docs/guide.md`. When upgrading the plugin, retain the
+patch until upstream handles those links, and check both documentation channels.
+
 When making a change, consider whether a change to the [Usage
 Guide][usage-guide] is necessary. This document contains descriptions and
 examples of how to use Task features. If you're adding a new feature, try to
@@ -149,13 +155,16 @@ for fields in the docs and the schema should match.
 
 #### Documentation channels
 
-The docs and the blog exist in two copies, so that taskfile.dev never announces
-a feature that is not in the released binary yet:
+The docs, the blog and the coding-agent guide exist in two copies, so that
+taskfile.dev never announces a feature that is not in the released binary yet:
 
 | Directory                        | Channel  | Published on      |
 | -------------------------------- | -------- | ----------------- |
 | `website/src/next/{docs,blog}`   | `next`   | next.taskfile.dev |
 | `website/src/latest/{docs,blog}` | `latest` | taskfile.dev      |
+
+The coding-agent guide follows the same channels as `src/next/agents.md` and
+`src/latest/agents.md`, and is promoted at release time too.
 
 Everything else - the homepage, the team, adopters, images - is shared by both
 channels and goes live as soon as the site is deployed.

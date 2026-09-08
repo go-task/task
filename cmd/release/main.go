@@ -32,6 +32,7 @@ var (
 	}
 
 	promotedFiles = []promotion{
+		{"website/src/next/agents.md", "website/src/latest/agents.md"},
 		{"website/.vitepress/sidebar/next.ts", "website/.vitepress/sidebar/latest.ts"},
 		{"website/src/public/next-schema.json", "website/src/public/schema.json"},
 		{"website/src/public/next-schema-taskrc.json", "website/src/public/schema-taskrc.json"},
