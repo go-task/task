@@ -2,476 +2,243 @@
 title: Installation
 description: Installation methods for Task
 outline: deep
-pageClass: installation-page
 ---
-
-<script setup>
-import InstallationMethods from '../../../.vitepress/components/InstallationMethods.vue';
-</script>
 
 # Installation
 
-Choose a package manager for your system, or install Task from a binary.
+Task offers many installation methods. Check out the available methods below.
 
-<InstallationMethods>
+## Official Package Managers
 
-<nav class="installation-shortcuts" aria-label="Installation shortcuts">
-  <a href="#get-the-binary">Binaries &amp; CI</a>
-  <a href="#verify-installation">Verify installation</a>
-  <a href="#setup-completions">Shell completions</a>
-</nav>
+These installation methods are maintained by the Task team and are always
+up-to-date.
 
-## Official packages {#official-package-managers}
+:::info Package Repository Hosting
 
-Maintained by the Task team and kept up-to-date.
+[![Hosted By: Cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&style=for-the-badge)](https://cloudsmith.com)
 
-<div class="install-method" data-platforms="macos">
+Package repository hosting for deb/rpm/apk is graciously provided by [Cloudsmith](https://cloudsmith.com).
+Cloudsmith is the only fully hosted, cloud-native, universal package management solution, that
+enables your organization to create, store and share packages in any format, to any place, with total
+confidence.
 
-### [Homebrew](https://brew.sh) {#homebrew}
+:::
 
-<div class="install-meta">
+### [dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) ![CentOS](https://img.shields.io/badge/CentOS-002260?logo=centos&logoColor=F0F0F0) ![Fedora](https://img.shields.io/badge/Red_Hat-EE0000?logo=redhat&logoColor=white) {#dnf}
 
-<p class="install-platforms">macOS</p>
+[[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Arpm)]
 
-<div class="install-links">
-
-[Tap source](https://github.com/go-task/homebrew-tap/blob/main/Casks/go-task.rb)
-[Homebrew package](https://formulae.brew.sh/formula/go-task)
-[Formula source](https://github.com/Homebrew/homebrew-core/blob/master/Formula/g/go-task.rb)
-
-</div>
-
-</div>
-
-```shell
-brew install go-task/tap/go-task
-```
-
-Or use the Homebrew core formula:
-
-```shell
-brew install go-task
-```
-
-</div>
-
-<div class="install-method" data-platforms="linux">
-
-### [dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf) {#dnf}
-
-<div class="install-meta">
-
-<p class="install-platforms">Fedora · CentOS · Red Hat</p>
-
-<div class="install-links">
-
-[View package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Arpm)
-
-</div>
-
-</div>
-
-Set up the repository:
+If you Set up the repository by running :
 
 ```shell
 curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.rpm.sh' | sudo -E bash
 ```
 
-Install Task:
+Then you can install Task with:
 
 ```shell
 dnf install task
 ```
 
-</div>
+### [apt](https://doc.ubuntu-fr.org/apt) ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=Ubuntu&logoColor=white) ![Debian](https://img.shields.io/badge/debian-red?logo=debian&logoColor=orange&color=darkred) ![Linux Mint](https://img.shields.io/badge/Linux%20Mint-87CF3E?logo=linuxmint&logoColor=fff) {#apt}
 
-<div class="install-method" data-platforms="linux">
+[[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Adeb)]
 
-### [apt](https://doc.ubuntu-fr.org/apt) {#apt}
-
-<div class="install-meta">
-
-<p class="install-platforms">Ubuntu · Debian · Linux Mint</p>
-
-<div class="install-links">
-
-[View package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Adeb)
-
-</div>
-
-</div>
-
-Set up the repository:
+If you Set up the repository by running:
 
 ```shell
 curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.deb.sh' | sudo -E bash
 ```
 
-Install Task:
+Then you can install Task with:
 
 ```shell
 apt install task
 ```
 
-</div>
+### [apk](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper) ![Alpine Linux](https://img.shields.io/badge/Alpine_Linux-0D597F?logo=alpinelinux&logoColor=fff) {#apk}
 
-<div class="install-method" data-platforms="linux">
+[[package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Aalpine)]
 
-### [apk](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper) {#apk}
-
-<div class="install-meta">
-
-<p class="install-platforms">Alpine Linux</p>
-
-<div class="install-links">
-
-[View package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Aalpine)
-
-</div>
-
-</div>
-
-Set up the repository:
+Set up the repository by running:
 
 ```shell
 curl -1sLf 'https://dl.cloudsmith.io/public/task/task/setup.alpine.sh' | sudo -E bash
 ```
 
-Install Task:
+Then you can install Task with:
 
 ```shell
 apk add task
 ```
 
-</div>
+### [Homebrew](https://brew.sh) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) {#homebrew}
 
-<div class="install-method" data-platforms="linux">
+Task is available via our official Homebrew tap
+[[source](https://github.com/go-task/homebrew-tap/blob/main/Casks/go-task.rb)]:
 
-### [Snap](https://snapcraft.io/task) {#snap}
+```shell
+brew install go-task/tap/go-task
+```
 
-<div class="install-meta">
+Alternatively it can be installed from the official Homebrew repository
+[[package](https://formulae.brew.sh/formula/go-task)]
+[[source](https://github.com/Homebrew/homebrew-core/blob/master/Formula/g/go-task.rb)]
+by running:
 
-<p class="install-platforms">Linux</p>
+```shell
+brew install go-task
+```
 
-<div class="install-links">
+### [Snap](https://snapcraft.io/task) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#snap}
 
-[Source](https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml)
-
-</div>
-
-</div>
+Task is available on [Snapcraft](https://snapcraft.io/task)
+[[source](https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml)], but
+keep in mind that your Linux distribution should allow classic confinement for
+Snaps to Task work correctly:
 
 ```shell
 sudo snap install task --classic
 ```
 
-Requires a Linux distribution with classic confinement support.
+### [npm](https://www.npmjs.com) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#npm}
 
-</div>
-
-<div class="install-method" data-platforms="macos linux windows">
-
-### [npm](https://www.npmjs.com) {#npm}
-
-<div class="install-meta">
-
-<p class="install-platforms">macOS · Linux · Windows</p>
-
-<div class="install-links">
-
-[View package](https://www.npmjs.com/package/@go-task/cli)
-[Source](https://github.com/go-task/task/blob/main/package.json)
-
-</div>
-
-</div>
+Npm can be used as cross-platform way to install Task globally or as a
+dependency of your project
+[[package](https://www.npmjs.com/package/@go-task/cli)]
+[[source](https://github.com/go-task/task/blob/main/package.json)]:
 
 ```shell
 npm install -g @go-task/cli
 ```
 
-Task is also available as a project dependency.
+### [WinGet](https://github.com/microsoft/winget-cli) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#winget}
 
-</div>
-
-<div class="install-method" data-platforms="windows">
-
-### [WinGet](https://github.com/microsoft/winget-cli) {#winget}
-
-<div class="install-meta">
-
-<p class="install-platforms">Windows</p>
-
-<div class="install-links">
-
-[Source](https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/Task/Task)
-
-</div>
-
-</div>
+Task is available via the
+[community repository](https://github.com/microsoft/winget-pkgs)
+[[source](https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/Task/Task)]:
 
 ```shell
 winget install Task.Task
 ```
 
-Available through the
-[WinGet community repository](https://github.com/microsoft/winget-pkgs).
+## Community-Maintained Package Managers
 
-</div>
+::: warning Community Maintained
 
-<p class="install-hosting">Package repository hosting for deb/rpm/apk is graciously provided by <a href="https://cloudsmith.com">Cloudsmith</a>.</p>
+These installation methods are maintained by the community and may not always be
+up-to-date with the latest Task version. The Task team does not directly control
+these packages.
 
-## Community packages {#community-maintained-package-managers}
+:::
 
-Maintained by the community, outside the Task team's control. These packages may
-lag behind the latest release.
+### [Mise](https://mise.jdx.dev/) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#mise}
 
-<div class="install-method" data-platforms="macos linux windows">
+Mise is a cross-platform package manager that acts as a "frontend" to a variety
+of other package managers "backends" such as `asdf`, `aqua` and `ubi`.
 
-### [Mise](https://mise.jdx.dev/) {#mise}
+If using Mise, we recommend using the `aqua` or `ubi` backends to install Task
+as these install directly from our GitHub releases.
 
-<div class="install-meta">
+::: code-group
 
-<p class="install-platforms">macOS · Linux · Windows</p>
-
-<div class="install-links">
-
-[View package](https://mise-tools.jdx.dev/tools/task)
-
-</div>
-
-</div>
-
-```shell
-mise use -g task
+```shell [aqua]
+mise use -g aqua:go-task/task@latest
+mise install
 ```
 
-For a project-local installation, use `mise use task` instead. This adds Task to
-your project's `mise.toml`.
+```shell [ubi]
+mise use -g ubi:go-task/task
+mise install
+```
 
-</div>
+:::
 
-<div class="install-method" data-platforms="macos">
+### [Macports](https://macports.org) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) {#macports}
 
-### [Macports](https://macports.org) {#macports}
-
-<div class="install-meta">
-
-<p class="install-platforms">macOS</p>
-
-<div class="install-links">
-
-[View package](https://ports.macports.org/port/go-task/details/)
-[Source](https://github.com/macports/macports-ports/blob/master/devel/go-task/Portfile)
-
-</div>
-
-</div>
+Task repository is tracked by Macports
+[[package](https://ports.macports.org/port/go-task/details/)]
+[[source](https://github.com/macports/macports-ports/blob/master/devel/go-task/Portfile)]:
 
 ```shell
 port install go-task
 ```
 
-</div>
+### [pip](https://pip.pypa.io) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#pip}
 
-<div class="install-method" data-platforms="macos linux windows">
-
-### [pip](https://pip.pypa.io) {#pip}
-
-<div class="install-meta">
-
-<p class="install-platforms">macOS · Linux · Windows</p>
-
-<div class="install-links">
-
-[View package](https://pypi.org/project/go-task-bin)
-[Source](https://github.com/Bing-su/pip-binary-factory/tree/main/task)
-
-</div>
-
-</div>
+Like npm, pip can be used as a cross-platform way to install Task
+[[package](https://pypi.org/project/go-task-bin)]
+[[source](https://github.com/Bing-su/pip-binary-factory/tree/main/task)]:
 
 ```shell
 pip install go-task-bin
 ```
 
-</div>
+### [Chocolatey](https://chocolatey.org) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#chocolatey}
 
-<div class="install-method" data-platforms="windows">
-
-### [Chocolatey](https://chocolatey.org) {#chocolatey}
-
-<div class="install-meta">
-
-<p class="install-platforms">Windows</p>
-
-<div class="install-links">
-
-[View package](https://community.chocolatey.org/packages/go-task)
-[Source](https://github.com/Starz0r/ChocolateyPackagingScripts/blob/master/src/go-task_gh_build.py)
-
-</div>
-
-</div>
+[[package](https://community.chocolatey.org/packages/go-task)]
+[[source](https://github.com/Starz0r/ChocolateyPackagingScripts/blob/master/src/go-task_gh_build.py)]
 
 ```shell
 choco install go-task
 ```
 
-</div>
+### [Scoop](https://scoop.sh) ![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white) {#scoop}
 
-<div class="install-method" data-platforms="windows">
-
-### [Scoop](https://scoop.sh) {#scoop}
-
-<div class="install-meta">
-
-<p class="install-platforms">Windows</p>
-
-<div class="install-links">
-
-[Source](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)
-
-</div>
-
-</div>
+[[source](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)]
 
 ```shell
 scoop install task
 ```
 
-</div>
+### Arch ([pacman](https://wiki.archlinux.org/title/Pacman)) ![Arch Linux](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff) {#arch}
 
-<div class="install-method" data-platforms="linux">
-
-### Arch ([pacman](https://wiki.archlinux.org/title/Pacman)) {#arch}
-
-<div class="install-meta">
-
-<p class="install-platforms">Arch Linux</p>
-
-<div class="install-links">
-
-[View package](https://archlinux.org/packages/extra/x86_64/go-task/)
-[Source](https://gitlab.archlinux.org/archlinux/packaging/packages/go-task)
-
-</div>
-
-</div>
+[[package](https://archlinux.org/packages/extra/x86_64/go-task/)]
+[[source](https://gitlab.archlinux.org/archlinux/packaging/packages/go-task)]
 
 ```shell
 pacman -S go-task
 ```
 
-</div>
+### Fedora ([dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) ![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff) {#fedora-community}
 
-<div class="install-method" data-platforms="linux">
-
-### Fedora ([dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) {#fedora-community}
-
-<div class="install-meta">
-
-<p class="install-platforms">Fedora</p>
-
-<div class="install-links">
-
-[View package](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
-[Source](https://src.fedoraproject.org/rpms/golang-github-task)
-
-</div>
-
-</div>
+[[package](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)]
+[[source](https://src.fedoraproject.org/rpms/golang-github-task)]
 
 ```shell
 dnf install go-task
 ```
 
-</div>
+### FreeBSD ([Ports](https://ports.freebsd.org/cgi/ports.cgi)) ![FreeBSD](https://img.shields.io/badge/FreeBSD-990000?logo=freebsd&logoColor=fff) {#freebsd}
 
-<div class="install-method" data-platforms="freebsd">
-
-### FreeBSD ([Ports](https://ports.freebsd.org/cgi/ports.cgi)) {#freebsd}
-
-<div class="install-meta">
-
-<p class="install-platforms">FreeBSD</p>
-
-<div class="install-links">
-
-[View package](https://cgit.freebsd.org/ports/tree/devel/task)
-[Source](https://cgit.freebsd.org/ports/tree/devel/task/Makefile)
-
-</div>
-
-</div>
+[[package](https://cgit.freebsd.org/ports/tree/devel/task)]
+[[source](https://cgit.freebsd.org/ports/tree/devel/task/Makefile)]
 
 ```shell
 pkg install task
 ```
 
-</div>
+### [Nix](https://nixos.org) ![Nix](https://img.shields.io/badge/Nix-5277C3?logo=nixos&logoColor=fff) ![NixOS](https://img.shields.io/badge/NixOS-5277C3?logo=nixos&logoColor=fff) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) {#nix}
 
-<div class="install-method" data-platforms="linux macos">
-
-### [Nix](https://nixos.org) {#nix}
-
-<div class="install-meta">
-
-<p class="install-platforms">Nix · NixOS · Linux · macOS</p>
-
-<div class="install-links">
-
-[Source](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/go/go-task/package.nix)
-
-</div>
-
-</div>
+[[source](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/go/go-task/package.nix)]
 
 ```shell
 nix-env -iA nixpkgs.go-task
 ```
 
-</div>
+### [pacstall](https://github.com/pacstall/pacstall) ![Debian](https://img.shields.io/badge/Debian-A81D33?logo=debian&logoColor=fff) ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=fff) {#pacstall}
 
-<div class="install-method" data-platforms="linux">
-
-### [pacstall](https://github.com/pacstall/pacstall) {#pacstall}
-
-<div class="install-meta">
-
-<p class="install-platforms">Debian · Ubuntu</p>
-
-<div class="install-links">
-
-[View package](https://pacstall.dev/packages/go-task-deb)
-[Source](https://github.com/pacstall/pacstall-programs/blob/master/packages/go-task-deb/go-task-deb.pacscript)
-
-</div>
-
-</div>
+[[package](https://pacstall.dev/packages/go-task-deb)]
+[[source](https://github.com/pacstall/pacstall-programs/blob/master/packages/go-task-deb/go-task-deb.pacscript)]
 
 ```shell
 pacstall -I go-task-deb
 ```
 
-</div>
+### [pkgx](https://pkgx.sh) ![macOS](https://img.shields.io/badge/MacOS-000000?logo=apple&logoColor=F0F0F0) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) {#pkgx}
 
-<div class="install-method" data-platforms="macos linux">
-
-### [pkgx](https://pkgx.sh) {#pkgx}
-
-<div class="install-meta">
-
-<p class="install-platforms">macOS · Linux</p>
-
-<div class="install-links">
-
-[View package](https://pkgx.dev/pkgs/taskfile.dev)
-[Source](https://github.com/pkgxdev/pantry/blob/main/projects/taskfile.dev/package.yml)
-
-</div>
-
-</div>
+[[package](https://pkgx.dev/pkgs/taskfile.dev)]
+[[source](https://github.com/pkgxdev/pantry/blob/main/projects/taskfile.dev/package.yml)]
 
 ```shell
 pkgx task
@@ -483,88 +250,75 @@ or, if you have pkgx integration enabled:
 task
 ```
 
-</div>
+## Get The Binary
 
-</InstallationMethods>
+### Binary
 
-## Binaries & CI {#get-the-binary}
+You can download the binary from the
+[releases page on GitHub](https://github.com/go-task/task/releases) and add to
+your `$PATH`.
 
-Install Task without a package manager: download a binary, use the install
-script, or add the setup action to your GitHub workflow.
+DEB, RPM and APK packages are also available.
 
-### Download a binary {#binary}
+The `task_checksums.txt` file contains the SHA-256 checksum for each file.
 
-1. Open the [GitHub releases](https://github.com/go-task/task/releases) and
-   download the archive for your operating system and architecture.
-2. Extract `task` (`task.exe` on Windows).
-3. Move the executable to a directory on your `PATH`.
+### Install Script
 
-Each release also includes DEB, RPM and APK packages, plus `task_checksums.txt`
-with SHA-256 checksums for the release files.
+We also have an
+[install script](https://github.com/go-task/task/blob/main/install-task.sh)
+which is very useful in scenarios like CI. Many thanks to
+[GoDownloader](https://github.com/goreleaser/godownloader) for enabling the easy
+generation of this script.
 
-### Install with a script {#install-script}
+By default, it installs on the `./bin` directory relative to the working
+directory:
 
-Use the
-[install script](https://github.com/go-task/task/blob/main/install-task.sh) for
-a shell-based installation, including CI environments. It downloads a prebuilt
-binary and verifies its checksum; no Go installation is needed.
-
-By default, the script installs the latest release into `./bin`, relative to
-your current directory. Choose a different directory or pin a release:
-
-::: code-group
-
-```shell [Latest release]
+```shell
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
 ```
 
-```shell [Custom directory]
+It is possible to override the installation directory with the `-b` parameter.
+On Linux, common choices are `~/.local/bin` and `~/bin` to install for the
+current user or `/usr/local/bin` to install for all users:
+
+```shell
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 ```
 
-```shell [Pinned version]
-sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d v3.42.1
+::: warning
+
+On macOS and Windows, `~/.local/bin` and `~/bin` are not added to `$PATH` by
+default.
+
+:::
+
+By default, it installs the latest version available. You can also specify a tag
+(available in [releases](https://github.com/go-task/task/releases)) to install a
+specific version:
+
+```shell
+sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d v3.36.0
 ```
 
-```shell [Directory + version]
+Parameters are order specific, to set both installation directory and version:
+
+```shell
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin v3.42.1
 ```
 
-:::
-
-When combining options, keep the
-[release tag](https://github.com/go-task/task/releases) last.
-
-::: tip Make Task available in your shell
-
-Add the installation directory to your `PATH` to run `task` from anywhere. With
-the default location, you can also run `./bin/task` directly.
-
-On Linux, `~/.local/bin` and `~/bin` are common per-user locations;
-`/usr/local/bin` is a system-wide location and may require elevated permissions.
-Do not assume these directories are already on your `PATH`, especially on macOS
-and Windows.
-
-:::
-
 ### GitHub Actions
 
-Add the [official setup action](https://github.com/go-task/setup-task) to your
-job's `steps` before running Task:
+We have an [official GitHub Action](https://github.com/go-task/setup-task) to
+install Task in your GitHub workflows. This repository is forked from the
+fantastic project by the Arduino team. Check out the repository for more
+examples and configuration.
 
 ```yaml
 - name: Install Task
-  uses: go-task/setup-task@v2
-
-- name: Verify Task
-  run: task --version
+  uses: go-task/setup-task@v1
 ```
 
-Use the action's `version` input to pin a Task release. See the
-[action documentation](https://github.com/go-task/setup-task#usage) for examples
-and configuration.
-
-## Build from source
+## Build From Source
 
 Ensure that you have a supported version of [Go](https://golang.org) properly
 installed and setup. You can find the minimum required version of Go in the
@@ -610,20 +364,7 @@ demand before calling it.
 go tool task {arguments...}
 ```
 
-## Verify installation
-
-After installing, open a terminal and check that Task is available:
-
-```shell
-task --version
-```
-
-If you installed Task with `go tool`, run `go tool task --version` instead.
-
-You're ready to [create your first Taskfile](./getting-started.md). You can also
-enable shell completions below.
-
-## Shell completions {#setup-completions}
+## Setup completions
 
 Some installation methods will automatically install completions too, but if
 this isn't working for you or your chosen method doesn't include them, you can
@@ -635,8 +376,8 @@ config:
 
 This method loads the completion script from the currently installed version of
 task every time you create a new shell. This ensures that your completions are
-always up-to-date. If your executable isn’t named task, set the `TASK_EXE`
-environment variable before running eval.
+always up-to-date.
+If your executable isn’t named task, set the `TASK_EXE` environment variable before running eval.
 
 ::: code-group
 
@@ -705,10 +446,9 @@ task --completion nu | save --force ($nu.data-dir | path join "vendor/autoload/t
 
 ### Zsh customization
 
-The Zsh completion supports the standard `verbose` zstyle to control whether
-task descriptions are shown. By default, descriptions are displayed. To show
-only task names without descriptions, add this to your `~/.zshrc` (after the
-completion is loaded):
+The Zsh completion supports the standard `verbose` zstyle to control whether task
+descriptions are shown. By default, descriptions are displayed. To show only task
+names without descriptions, add this to your `~/.zshrc` (after the completion is loaded):
 
 ```shell
 zstyle ':completion:*:*:task:*' verbose false
@@ -723,19 +463,18 @@ zstyle ':completion:*:*:task:*' show-aliases false
 
 ### Nushell caveats
 
-Nushell cannot source a script from stdin, so both options above write the
-script to an autoload directory. Option 1 rewrites it at every startup, which
-keeps it in sync with the installed version of Task — the refreshed completions
-are picked up by the next shell. With option 2, re-run the command after
-upgrading Task.
+Nushell cannot source a script from stdin, so both options above write the script
+to an autoload directory. Option 1 rewrites it at every startup, which keeps it
+in sync with the installed version of Task — the refreshed completions are picked
+up by the next shell. With option 2, re-run the command after upgrading Task.
 
 The completions are attached to an `extern "task"` declaration, which Nushell
 requires to be static. Three consequences are worth knowing:
 
-- The experimental flags (`--force-all`, `--download`, `--offline`, …) are
-  always offered, even when the corresponding experiment is disabled. Their
-  description is prefixed with the experiment name, and `task --experiments`
-  lists the ones that are enabled.
+- The experimental flags (`--force-all`, `--download`, `--offline`, …) are always
+  offered, even when the corresponding experiment is disabled. Their description
+  is prefixed with the experiment name, and `task --experiments` lists the ones
+  that are enabled.
 - Passing a value to a boolean flag with `=` does not work: Nushell forwards
   `--color=false` as two arguments, so Task reads `false` as a task name. Use
   `NO_COLOR=1`, or bypass the declaration with `^task --color=false`.
