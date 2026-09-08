@@ -316,8 +316,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 	)
 }
 
-// remoteHeaders flattens the configured entries into a lookup by host, the last
-// entry winning as it does when configuration files are merged.
+// The last entry for each host wins, matching config file merging.
 func remoteHeaders(config *taskrcast.TaskRC) taskfile.HeadersByHost {
 	if config == nil || len(config.Remote.Headers) == 0 {
 		return nil

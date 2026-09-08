@@ -12,8 +12,8 @@ import (
 	"github.com/go-task/task/v3/internal/templater"
 )
 
-// HeadersByHost maps a host to the HTTP headers to send when fetching a remote
-// Taskfile from it. Values are templated, but no variables are available.
+// HeadersByHost configures HTTP headers per host for remote Taskfiles.
+// Values support template functions, but not Taskfile variables.
 type HeadersByHost map[string]map[string]string
 
 type headersTransport struct {
@@ -23,8 +23,7 @@ type headersTransport struct {
 }
 
 func (t *headersTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Re-checked per request: a redirect goes through this same transport, and
-	// Go only strips Authorization, WWW-Authenticate and Cookie on its own.
+	// Scope all configured headers to this host, including after redirects.
 	if !hostMatches(t.host, req.URL.Host) {
 		return t.base.RoundTrip(req)
 	}
@@ -35,8 +34,7 @@ func (t *headersTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	return t.base.RoundTrip(req)
 }
 
-// clientWithHeaders resolves on each read, not at build time, so a cached
-// run needs no credentials.
+// Resolve headers only when downloading, so cached runs need no credentials.
 func (node *HTTPNode) clientWithHeaders() (*http.Client, error) {
 	headers, err := resolveHeaders(node.headersByHost, node.url.Host)
 	if err != nil {
@@ -48,9 +46,8 @@ func (node *HTTPNode) clientWithHeaders() (*http.Client, error) {
 	return withHeaders(node.client, node.url.Host, headers), nil
 }
 
-// withHeaders copies rather than mutates: buildHTTPClient returns the
-// shared http.DefaultClient when no TLS option is set.
 func withHeaders(client *http.Client, host string, headers map[string]string) *http.Client {
+	// The client may be http.DefaultClient; leave it unchanged.
 	configured := *client
 	configured.Transport = &headersTransport{
 		base:    cmp.Or(client.Transport, http.DefaultTransport),
@@ -60,7 +57,6 @@ func withHeaders(client *http.Client, host string, headers map[string]string) *h
 	return &configured
 }
 
-// resolveHeaders returns the expanded headers for host, or nil if none.
 func resolveHeaders(headersByHost HeadersByHost, host string) (map[string]string, error) {
 	var headers map[string]string
 	for pattern, patternHeaders := range headersByHost {
@@ -87,8 +83,7 @@ func resolveHeaders(headersByHost HeadersByHost, host string) (map[string]string
 	return resolved, nil
 }
 
-// validateHeaderName names the offending header; ReadContext discards the
-// transport's own error.
+// Validate names here because ReadContext hides transport errors.
 func validateHeaderName(name string) error {
 	if !httpguts.ValidHeaderFieldName(name) {
 		return fmt.Errorf("invalid header name %q", name)
@@ -96,7 +91,7 @@ func validateHeaderName(name string) error {
 	return nil
 }
 
-// hostMatches compares exactly, port included, as trusted hosts do.
+// Match the host and port exactly for both headers and trusted hosts.
 func hostMatches(pattern, host string) bool {
 	return pattern == host
 }

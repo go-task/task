@@ -68,7 +68,6 @@ func TestResolveHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv cannot
 			want:          map[string]string{"Authorization": "Basic YWxpY2U6czNjcmV0"},
 		},
 		{
-			// The .taskrc is read before any Taskfile, so no variable exists.
 			name:          "a variable reference resolves to nothing",
 			headersByHost: HeadersByHost{"gitlab.com": {"PRIVATE-TOKEN": "{{.TASK_TEST_TOKEN}}"}}, //nolint:gosec // a template, not a credential
 			host:          "gitlab.com",
@@ -138,7 +137,6 @@ func TestHeadersTransport(t *testing.T) {
 		resp, err := transport.RoundTrip(req)
 		require.NoError(t, err)
 		assert.Equal(t, "token", resp.Request.Header.Get("PRIVATE-TOKEN"))
-		// The transport must leave the request it was given untouched.
 		assert.Empty(t, req.Header.Get("PRIVATE-TOKEN"))
 	})
 
@@ -161,8 +159,7 @@ func TestWithHeadersDoesNotMutateTheDefaultClient(t *testing.T) {
 	assert.IsType(t, &headersTransport{}, client.Transport)
 }
 
-// Both requests must carry the headers: RemoteExists probes with HEAD before
-// ReadContext issues the GET.
+// Downloads probe with HEAD before GET; both requests need the headers.
 func TestHTTPNodeHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
 	var methods []string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -198,7 +195,6 @@ func TestHTTPNodeHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv canno
 	assert.Equal(t, []string{"HEAD", "GET"}, methods)
 }
 
-// A redirect to another host must not forward any configured headers.
 func TestHTTPNodeHeadersNotSentOnRedirect(t *testing.T) {
 	t.Parallel()
 
@@ -234,8 +230,6 @@ func TestHTTPNodeHeadersNotSentOnRedirect(t *testing.T) {
 	}
 }
 
-// A node must build without the credentials it would need to download, so that
-// cached and offline runs do not require them.
 func TestHTTPNodeHeadersResolvedLazily(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
 	node, err := NewHTTPNode("https://gitlab.com/Taskfile.yml", "", false,
 		WithHeaders(HeadersByHost{
@@ -244,7 +238,7 @@ func TestHTTPNodeHeadersResolvedLazily(t *testing.T) { //nolint:paralleltest // 
 	)
 	require.NoError(t, err)
 
-	// Defined only after the node was built: the value must still be picked up.
+	// Set the value after construction to verify lazy resolution.
 	t.Setenv("TASK_TEST_LAZY", "s3cret")
 
 	headers, err := resolveHeaders(node.headersByHost, node.url.Host)
