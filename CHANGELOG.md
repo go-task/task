@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### 🚀 Features
+
+- Added official [pre-commit](https://pre-commit.com/) support via a
+  `.pre-commit-hooks.yaml` at the repository root (#2562).
+
 ### 📦 Package API
 
 - Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
