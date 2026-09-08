@@ -181,27 +181,29 @@ $ task greet NAME=from-cli
 from-cli
 ```
 
-### Variables on an `includes:` entry are defaults, not overrides
+### Let callers configure an included Taskfile
 
-Step 6 comes after step 5, so the included Taskfile's own `vars:` win over the
-values supplied where it is included. Passing `vars:` on an `includes:` entry
-only takes effect for names the included Taskfile does not define itself.
+Step 6 comes after step 5, so a constant declared in the included Taskfile's
+`vars:` overrides the value supplied by `includes.vars`.
 
-If you are writing a Taskfile meant to be included and configured, leave the
-configurable names out of `vars:` and give the default at the point of use
-instead:
+To keep a configurable default in the included Taskfile, use a template that
+reads the previously resolved value:
 
 ```yaml
 version: '3'
 
+vars:
+  DOCKER_IMAGE: '{{.DOCKER_IMAGE | default "app"}}'
+
 tasks:
   build:
     cmds:
-      - echo "building {{.DOCKER_IMAGE | default "app"}}"
+      - echo "building {{.DOCKER_IMAGE}}"
 ```
 
-Declaring `DOCKER_IMAGE` in that file's `vars:` would make every include site
-that sets it silently get the declared value instead.
+An inclusion that supplies `DOCKER_IMAGE: backend_image` now prints
+`building backend_image`; without a supplied value, it prints `building app`.
+The default stays in one place and applies to every task in the included file.
 
 ### Global variable names are shared across every Taskfile in the run
 
@@ -214,26 +216,48 @@ them onto the tasks that use them, where step 8 keeps them local.
 
 ### `env:` and `vars:` are not the same thing
 
-A `vars:` entry exists for templates only. `$FOO` in a command will not see it,
-whichever level it was declared at.
+A `vars:` entry is not exported to commands in `cmds`, whichever level it was
+declared at. Read it with a template instead of `$FOO`. Dynamic variables
+(`sh:`) have a different environment, described below.
 
 `env:` is exported to the environment of the commands Task runs, so `$FOO`
 works. Whether a template also sees it depends on where it was declared:
 
-| Declared at              | <span v-pre>`{{.FOO}}`</span> | `$FOO` |
-| ------------------------ | ----------------------------- | ------ |
-| the root of the Taskfile | yes, it is step 3 above       | yes    |
-| on a task                | **no, it renders empty**      | yes    |
+| Declared at              | <span v-pre>`{{.FOO}}`</span>              | `$FOO` |
+| ------------------------ | ------------------------------------------ | ------ |
+| the root of the Taskfile | yes, it is step 3 above                    | yes    |
+| on a task                | keeps the value from other sources, if any | yes    |
 
 A task's `env:` is assembled after the variable set has been resolved, so it
-never takes part in the order on this page. Read a task-level value with `$FOO`,
-or declare it in `vars:` if a template needs it.
+never takes part in the order on this page. If global `env:` sets `FOO: root`
+and a task's `env:` sets `FOO: task`, the template <span v-pre>`{{.FOO}}`</span>
+renders `root`, while `$FOO` in a command reads `task` (assuming the process
+environment does not already set `FOO`). The template only renders empty if no
+other source defines the variable. Read a task-level environment value with
+`$FOO`, or declare it in `vars:` if a template needs it.
 
 ## When values are computed
 
 Dynamic variables (`sh:`) are executed while the set is being built, in the
-order above. A `sh:` command can therefore only reference variables from an
-earlier step, never a later one.
+order above. Within a block, variables are resolved in declaration order, so a
+`sh:` command can also reference variables declared earlier in the same block:
+
+```yaml
+vars:
+  INPUT: hello
+  OUTPUT:
+    sh: echo {{.INPUT}}
+```
+
+Here `OUTPUT` resolves to `hello`. Variables from later declarations or later
+steps are not available yet.
+
+The shell used by `sh:` also receives previously resolved scalar variables, so
+`sh: echo $INPUT` works in this example too. The process environment takes
+precedence for shell lookups unless the
+[Env Precedence experiment](../experiments/env-precedence.md) is enabled.
+Commands in `cmds` only receive the process environment and Task's `env:` and
+`dotenv:` values; they do not inherit `vars:` this way.
 
 Results are cached for the run, keyed on the command string, so the same `sh:`
 command appearing twice runs once.

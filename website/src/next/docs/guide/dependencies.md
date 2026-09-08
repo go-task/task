@@ -121,8 +121,9 @@ different order between runs. That is not a bug, and it is why the default
 output mode can look scrambled on a parallel build.
 
 Set `output: prefixed` to label each line with the task it came from, or
-`output: group` to hold each task's output and print it in one block when it
-finishes. See [Output and logging](./output.md).
+`output: group` to hold each command's output and print it in one block when it
+finishes. Blocks from different tasks can still alternate between commands. See
+[Output and logging](./output.md).
 
 ### Limiting how much runs at once
 

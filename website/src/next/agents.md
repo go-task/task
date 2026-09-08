@@ -30,13 +30,18 @@ URL. The curated index is at [/llms.txt](/llms.txt) and the full corpus at
 
 ## Semantics that are easy to get wrong
 
-1. `vars` are template values only: `$FOO` in a command never sees one. `env` is
-   exported, so `$FOO` works. A template also sees `env` declared at the root of
-   the Taskfile, but **not** `env` declared on a task, which renders empty.
-2. A task's own `vars:` cannot be overridden from the command line. Put the
-   default in global `vars:` if the caller needs to supply a value.
-3. `vars:` given on an `includes:` entry are defaults, not overrides: the
-   included Taskfile's own `vars:` are applied after them and win.
+1. `vars` are not exported to `cmds`: use templates to read them there. Dynamic
+   variables (`sh:`) also receive previously resolved scalar variables in their
+   shell environment. `env` is exported to commands. Root-level `env` also
+   participates in templates; task-level `env` does not. A template keeps any
+   value resolved from other sources, or renders empty if none exists.
+2. A constant in a task's own `vars:` overrides the command line. Put the
+   default in global `vars:`, or use a template such as
+   <span v-pre>`NAME: '{{.NAME | default "World"}}'`</span> to preserve caller
+   input.
+3. The included Taskfile's own `vars:` are applied after `includes.vars`. A
+   constant overrides the include's value; a self-referencing template with
+   `default` can preserve it.
 4. Everything in `deps` may run concurrently and in any order. A `task:`
    reference inside `cmds` runs at its position and blocks the next command. If
    order matters, use `cmds`.
