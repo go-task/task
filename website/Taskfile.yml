@@ -75,7 +75,7 @@ tasks:
   clean:
     desc: Clean temp directories
     cmds:
-      - rm -rf ./vitepress/dist
+      - rm -rf ./.vitepress/dist
 
   # --no-build is what makes the channel stick: the CLI builds by default, and
   # that build would come from netlify.toml, which knows nothing about the

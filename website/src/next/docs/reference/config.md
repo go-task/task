@@ -2,6 +2,8 @@
 title: Configuration Reference
 description: Complete reference for the Task config files and env vars
 permalink: /reference/config/
+section: Reference
+docType: reference
 outline: deep
 ---
 

@@ -3,6 +3,8 @@ title: Community
 description:
   Task community contributions, installation methods, and integrations
   maintained by third parties
+section: Project
+docType: project
 outline: deep
 ---
 

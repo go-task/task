@@ -1,6 +1,8 @@
 ---
 title: Installation
 description: Installation methods for Task
+section: Getting Started
+docType: guide
 outline: deep
 ---
 
@@ -465,8 +467,9 @@ zstyle ':completion:*:*:task:*' show-aliases false
 
 Nushell cannot source a script from stdin, so both options above write the script
 to an autoload directory. Option 1 rewrites it at every startup, which keeps it
-in sync with the installed version of Task — the refreshed completions are picked
-up by the next shell. With option 2, re-run the command after upgrading Task.
+in sync with the installed version of Task, and the refreshed completions are
+picked up by the next shell. With option 2, re-run the command after upgrading
+Task.
 
 The completions are attached to an `extern "task"` declaration, which Nushell
 requires to be static. Three consequences are worth knowing:

@@ -1,6 +1,8 @@
 ---
 title: 'Completion Scripts'
 description: Deprecation of direct completion scripts in Task’s Git directory
+section: Project
+docType: project
 outline: deep
 ---
 
@@ -21,5 +23,5 @@ the future as the scripts may be moved or deleted entirely. Any configuration
 should be updated to use the [new method for generating shell
 completions][completions] instead.
 
-[completions]: /docs/installation#setup-completions
+[completions]: ../installation.md#setup-completions
 [task]: https://github.com/go-task/task

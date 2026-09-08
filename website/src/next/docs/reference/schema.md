@@ -1,6 +1,8 @@
 ---
 title: Taskfile Schema Reference
 description: A reference for the Taskfile schema
+section: Reference
+docType: reference
 outline: deep
 ---
 
@@ -420,7 +422,7 @@ value.
 
 For complete documentation on secret variables, including security
 considerations and best practices, see the
-[Secret variables](/docs/guide#secret-variables) section in the Guide.
+[Secret variables](../guide/variables.md#secret-variables) section in the Guide.
 
 :::
 
@@ -786,7 +788,8 @@ tasks:
     # …
 ```
 
-See [Prompting for missing variables interactively](/docs/guide#prompting-for-missing-variables-interactively)
+See
+[Prompting for missing variables interactively](../guide/required-variables.md#prompting-for-missing-variables-interactively)
 for information on enabling interactive prompts for missing required variables.
 
 #### `watch`
@@ -983,7 +986,7 @@ When a command exceeds its timeout, it is terminated and the task fails with an
 error, preventing commands from hanging indefinitely in a pipeline. The timeout
 bounds the whole step, so an [`if`](#command) condition that hangs is cut short
 too, and [`ignore_error`](#command) covers a timeout like any other failure. A
-timed-out command reports [`EXIT_CODE`](/docs/reference/templating#exit-code)
+timed-out command reports [`EXIT_CODE`](./templating.md#exit-code)
 `124`, following the convention of `timeout(1)`.
 
 A dependency takes the same key:

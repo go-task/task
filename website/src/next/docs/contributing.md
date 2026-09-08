@@ -3,6 +3,8 @@ title: Contributing
 description:
   Comprehensive guide for contributing to the Task project, including setup,
   development, testing, and submitting PRs
+section: Contributing
+docType: contributing
 outline: deep
 ---
 
@@ -125,6 +127,13 @@ this is located in the core Task repository. This can be setup and run locally
 by using `task website` (requires `nodejs` & `pnpm`). All content is written in
 Markdown and is located in the `website/src` directory. All Markdown documents
 should have an 80 character line wrap limit (enforced by Prettier).
+
+Search is provided by Algolia DocSearch. The crawler runs on Algolia's side and
+is configured through their dashboard, but `website/docsearch.config.js` holds
+the same configuration in the repository so it can be read and reviewed. If you
+change one, change the other. A page's `section:` frontmatter is what the
+crawler shows as the breadcrumb on a search result, while `docType:` powers its
+search facet, so a new page needs both.
 
 When making a change, consider whether a change to the [Usage
 Guide][usage-guide] is necessary. This document contains descriptions and
@@ -253,9 +262,9 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [discord-server]: https://discord.gg/6TY36E39UK
 [discussion]: https://github.com/go-task/task/discussions
 [conventional-commits]: https://www.conventionalcommits.org
-[experiments]: ./experiments/
-[experiments-workflow]: ./experiments/#workflow
-[styleguide]: ./styleguide
-[cli-reference]: ./reference/cli
-[schema-reference]: ./reference/schema
-[usage-guide]: ./guide
+[experiments]: ./experiments/index.md
+[experiments-workflow]: ./experiments/index.md#workflow
+[styleguide]: ./styleguide.md
+[cli-reference]: ./reference/cli.md
+[schema-reference]: ./reference/schema.md
+[usage-guide]: ./guide/index.md
