@@ -187,6 +187,20 @@ import { data as example } from './homeExample.data';
   font-weight: 700;
 }
 
+.example :deep(.terminal-command) {
+  color: var(--vp-c-text-1);
+  font-weight: 600;
+}
+
+.example :deep(.terminal-task) {
+  color: var(--vp-c-purple-1);
+}
+
+.example :deep(.terminal-success) {
+  color: var(--vp-c-green-1);
+  font-weight: 600;
+}
+
 .quick-start .section-heading {
   margin-bottom: 1.25rem;
 }

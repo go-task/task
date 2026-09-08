@@ -51,11 +51,22 @@ function renderTerminal(source: string): string {
   return source
     .trimEnd()
     .split('\n')
-    .map((line) =>
-      line.startsWith('$ ')
-        ? `<span class="terminal-prompt">$</span>${escapeHtml(line.slice(1))}`
-        : escapeHtml(line)
-    )
+    .map((line) => {
+      if (line.startsWith('$ ')) {
+        return `<span class="terminal-prompt">$</span> <span class="terminal-command">${escapeHtml(line.slice(2))}</span>`;
+      }
+
+      const task = line.match(/^(task: \[[^\]]+\]|\* [^:]+:)(.*)$/);
+      if (task) {
+        return `<span class="terminal-task">${escapeHtml(task[1])}</span>${escapeHtml(task[2])}`;
+      }
+
+      if (/^ok\s/.test(line)) {
+        return `<span class="terminal-success">ok</span>${escapeHtml(line.slice(2))}`;
+      }
+
+      return escapeHtml(line);
+    })
     .join('\n');
 }
 
