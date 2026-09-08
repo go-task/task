@@ -1,21 +1,19 @@
 version: '3'
 
 vars:
-  GREETING: Hello
+  APP: '{{.APP | default "my-app"}}'
 
 tasks:
+  build:
+    desc: Test and build {{.APP}}
+    aliases: [b]
+    deps: [test]
+    cmds:
+      - go build -o bin/{{.APP}} .
+
   test:
-    desc: Run the test suite
-    sources: ['**/*.go']
+    preconditions:
+      - sh: command -v go
+        msg: 'Install Go to test and build this project.'
     cmds:
       - go test ./...
-
-  build:
-    desc: Build the application
-    deps: [test]
-    sources: ['**/*.go']
-    generates: [bin/app]
-    cmds:
-      - mkdir -p bin
-      - echo "{{.GREETING}} from Task"
-      - go build -o bin/app ./cmd/app
