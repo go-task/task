@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### 🚀 Features
+
+- Added versioned Homebrew casks (`go-task@<major>.<minor>`) to install a specific
+  minor version of Task (#3023 by @vmaerten).
+
 ### 📦 Package API
 
 - Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
