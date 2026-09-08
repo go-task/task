@@ -58,6 +58,49 @@ jobs:
       - name: 🧪 Test
         run: task test --output group --output-group-begin '::group::{{.TASK}}' --output-group-end '::endgroup::'
 
+  completion:
+    name: 🐚 Completion (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: ⬇️ Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.26.x
+
+      - name: ⬇️ Setup Task
+        uses: go-task/setup-task@v2
+
+      # zsh and pwsh are preinstalled on the runners; only fish is missing
+      # (plus zsh on the Linux image).
+      - name: ⬇️ Install shells (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y zsh fish
+
+      - name: ⬇️ Install shells (macOS)
+        if: runner.os == 'macOS'
+        run: brew install fish
+
+      # Nushell ships in no runner image and is not packaged by apt, so it comes
+      # from its own release archives.
+      - name: ⬇️ Install Nushell
+        uses: hustcer/setup-nu@f3fd65374ffc4d60974c0dd2f7263c6c5c285f81 # v3.26
+        with:
+          version: "*"
+
+      - name: 🧪 Test completion
+        # Strict mode fails the run if any shell is missing, so we never get a
+        # false pass when a runner image stops shipping one (e.g. pwsh).
+        env:
+          TASK_COMPLETION_STRICT: "1"
+        run: task test:completion
+
   lint:
     name: 🔍 Lint (${{ matrix.go-version }})
     strategy:
