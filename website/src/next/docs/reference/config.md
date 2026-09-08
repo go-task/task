@@ -330,10 +330,10 @@ Each entry applies to a single host, matched exactly and including the port if
 the URL has one — the same rule as
 [`remote.trusted-hosts`](#remote-trusted-hosts). Header values may reference
 [templating functions](./templating.md), evaluated when Task contacts the host.
-Values starting with `{{` must be quoted, as YAML would otherwise read them as a
-mapping. An undefined environment variable expands to nothing, so the header is
-sent empty. For an authentication header, this may cause the server to reject
-the request with a `401`.
+Values starting with <span v-pre>`{{`</span> must be quoted, as YAML would
+otherwise read them as a mapping. An undefined environment variable expands to
+nothing, so the header is sent empty. For an authentication header, this may
+cause the server to reject the request with a `401`.
 
 Functions compose, so an `Authorization` header needs no manual encoding:
 
@@ -347,9 +347,10 @@ remote:
 
 ::: warning
 
-Only functions are available here — `{{.GITLAB_TOKEN}}` and other variable
-references resolve to nothing. The configuration file is read before any
-Taskfile, so no variable exists yet. Use `{{env "GITLAB_TOKEN"}}` instead.
+Only functions are available here — <span v-pre>`{{.GITLAB_TOKEN}}`</span> and
+other variable references resolve to nothing. The configuration file is read
+before any Taskfile, so no variable exists yet. Use
+<span v-pre>`{{env "GITLAB_TOKEN"}}`</span> instead.
 
 :::
 
