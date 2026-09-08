@@ -39,6 +39,8 @@ func TestSmartJoinAbsoluteAndTemplatePaths(t *testing.T) {
 		"{{ .TASKFILE_DIR }}/file.txt",
 		"{{- .USER_WORKING_DIR -}}/file.txt",
 		"{{.ROOT_DIR | toSlash}}/file.txt",
+		"{{.ROOT_DIR|toSlash}}/file.txt",
+		"{{(.ROOT_DIR)}}/file.txt",
 		"{{.PROJECT}}/{{.ROOT_DIR}}/file.txt",
 		"{{\n.TASKFILE_DIR\n}}/file.txt",
 		`{{joinPath .ROOT_DIR "src"}}/file.txt`,
@@ -60,5 +62,22 @@ func TestSmartJoinUnrelatedTemplatePaths(t *testing.T) {
 	} {
 		require.False(t, IsAbs(path), path)
 		require.Equal(t, filepath.Join(base, path), SmartJoin(base, path))
+	}
+}
+
+func TestSmartJoinTemplateVariableNameSuffixes(t *testing.T) {
+	t.Parallel()
+
+	base := t.TempDir()
+	for _, variable := range []string{".ROOT_DIR", ".TASKFILE_DIR", ".USER_WORKING_DIR"} {
+		for _, suffix := range []string{"_SUFFIX", "_EXTRA", "2", "suffix", "变量"} {
+			t.Run(variable+suffix, func(t *testing.T) {
+				t.Parallel()
+
+				path := "{{" + variable + suffix + "}}/file.txt"
+				require.False(t, IsAbs(path), path)
+				require.Equal(t, filepath.Join(base, path), SmartJoin(base, path))
+			})
+		}
 	}
 }

@@ -25,8 +25,9 @@ func IsAbs(path string) bool {
 	return filepath.IsAbs(path)
 }
 
-// Match special directory variables only within a template action.
-var specialDirRE = regexp.MustCompile(`\{\{[^{}]*\.(?:ROOT_DIR|TASKFILE_DIR|USER_WORKING_DIR)[^{}]*\}\}`)
+// Heuristically match special directory names within template actions, without
+// matching prefixes of longer identifiers. This does not parse template syntax.
+var specialDirRE = regexp.MustCompile(`\{\{[^{}]*\.(?:ROOT_DIR|TASKFILE_DIR|USER_WORKING_DIR)(?:[^\p{L}\p{Nd}_{}][^{}]*)?\}\}`)
 
 func isSpecialDir(dir string) bool {
 	return specialDirRE.MatchString(dir)
