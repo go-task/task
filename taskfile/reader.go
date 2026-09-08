@@ -51,7 +51,7 @@ type (
 		caCert              string
 		cert                string
 		certKey             string
-		authHeadersByHost   HeadersByHost
+		headersByHost       HeadersByHost
 		debugFunc           DebugFunc
 		promptFunc          PromptFunc
 		promptMutex         sync.Mutex
@@ -243,17 +243,17 @@ func (o *readerCertKeyOption) ApplyToReader(r *Reader) {
 	r.certKey = o.certKey
 }
 
-// WithReaderAuthHeaders sets the HTTP headers to send to each configured host.
-func WithReaderAuthHeaders(authHeadersByHost HeadersByHost) ReaderOption {
-	return &readerAuthHeadersOption{authHeadersByHost: authHeadersByHost}
+// WithReaderHeaders sets the HTTP headers to send to each configured host.
+func WithReaderHeaders(headersByHost HeadersByHost) ReaderOption {
+	return &readerHeadersOption{headersByHost: headersByHost}
 }
 
-type readerAuthHeadersOption struct {
-	authHeadersByHost HeadersByHost
+type readerHeadersOption struct {
+	headersByHost HeadersByHost
 }
 
-func (o *readerAuthHeadersOption) ApplyToReader(r *Reader) {
-	r.authHeadersByHost = o.authHeadersByHost
+func (o *readerHeadersOption) ApplyToReader(r *Reader) {
+	r.headersByHost = o.headersByHost
 }
 
 // Read will read the Taskfile defined by the [Reader]'s [Node] and recurse
@@ -371,7 +371,7 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 				WithCACert(r.caCert),
 				WithCert(r.cert),
 				WithCertKey(r.certKey),
-				WithAuthHeaders(r.authHeadersByHost),
+				WithHeaders(r.headersByHost),
 			)
 			if err != nil {
 				if include.Optional {

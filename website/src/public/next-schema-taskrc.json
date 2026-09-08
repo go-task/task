@@ -50,9 +50,9 @@
             "type": "string"
           }
         },
-        "auth": {
+        "headers": {
           "type": "array",
-          "description": "HTTP headers to send when downloading remote Taskfiles, per host.",
+          "description": "HTTP headers to send when downloading remote Taskfiles, per host, including authentication and custom headers.",
           "items": {
             "type": "object",
             "properties": {

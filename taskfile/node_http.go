@@ -106,7 +106,7 @@ func (node *HTTPNode) Read() ([]byte, error) {
 }
 
 func (node *HTTPNode) ReadContext(ctx context.Context) ([]byte, error) {
-	client, err := node.authenticatedClient()
+	client, err := node.clientWithHeaders()
 	if err != nil {
 		return nil, err
 	}
