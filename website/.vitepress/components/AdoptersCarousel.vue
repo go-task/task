@@ -1,25 +1,34 @@
 <script setup lang="ts">
 import { adopters } from '../adopters';
+import { data as stars } from '../githubStars.data';
 
 const loop = [...adopters, ...adopters];
 </script>
 
 <template>
   <section class="adopters-carousel" aria-labelledby="adopters-heading">
-    <h2 id="adopters-heading" class="label">
-      <span class="slashes">//</span>
-      Trusted by open source projects
-    </h2>
-    <p class="subline">
-      Adopted by <strong>Docker</strong>, <strong>Vercel</strong>,
-      <strong>HashiCorp</strong>, <strong>Microsoft</strong>,
-      <strong>Google Cloud</strong>, <strong>AWS</strong>,
-      <strong>Anthropic</strong> and more.
-      <a class="see-all" href="/adopters">
-        See all adopters
-        <span class="see-all-arrow" aria-hidden="true">&rarr;</span>
-      </a>
-    </p>
+    <div class="heading">
+      <h2 id="adopters-heading" class="label">
+        <span class="slashes" aria-hidden="true">//</span>
+        Trusted across open source
+      </h2>
+      <div class="heading-links">
+        <a
+          class="github-stars"
+          href="https://github.com/go-task/task"
+          target="_blank"
+          rel="noreferrer"
+          data-umami-event="home-adopters-github"
+        >
+          <span class="vpi-social-github" aria-hidden="true"></span>
+          {{ stars.label }} stars
+        </a>
+        <a class="see-all" href="/adopters">
+          See all adopters
+          <span class="see-all-arrow" aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </div>
 
     <div class="viewport">
       <div class="track">
@@ -51,9 +60,23 @@ const loop = [...adopters, ...adopters];
 
 <style scoped>
 .adopters-carousel {
-  max-width: 1248px;
-  margin: 5rem auto 2rem;
+  max-width: 1152px;
+  margin: 3rem auto 0;
   padding: 0 24px;
+}
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1rem;
+}
+
+.heading-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .label {
@@ -63,8 +86,7 @@ const loop = [...adopters, ...adopters];
   letter-spacing: 0.04em;
   color: var(--vp-c-text-2);
   text-transform: uppercase;
-  text-align: center;
-  margin: 0 0 0.75rem;
+  margin: 0;
 }
 
 .slashes {
@@ -72,27 +94,24 @@ const loop = [...adopters, ...adopters];
   margin-right: 0.4em;
 }
 
-.subline {
-  text-align: center;
-  font-size: 0.95rem;
-  color: var(--vp-c-text-2);
-  max-width: 640px;
-  margin: 0 auto 2rem;
-  line-height: 1.5;
-}
-
-.subline strong {
-  color: var(--vp-c-text-1);
-  font-weight: 600;
-}
-
+.github-stars,
 .see-all {
-  display: inline-block;
-  margin-left: 0.4em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--vp-c-brand-1);
+  font-size: 0.85rem;
   font-weight: 500;
   white-space: nowrap;
   text-decoration: none !important;
+}
+
+.github-stars {
+  color: var(--vp-c-text-2);
+}
+
+.github-stars:hover {
+  color: var(--vp-c-brand-1);
 }
 
 .see-all:hover {
@@ -209,7 +228,14 @@ const loop = [...adopters, ...adopters];
 
 @media (max-width: 640px) {
   .adopters-carousel {
-    margin-top: 3.5rem;
+    margin-top: 2.5rem;
+    padding: 0 16px;
+  }
+
+  .heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.65rem;
   }
 }
 

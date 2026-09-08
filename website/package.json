@@ -18,10 +18,11 @@
     "gray-matter": "^4.0.3",
     "netlify-cli": "^27.0.0",
     "prettier": "^3.6.2",
+    "shiki": "^2.5.0",
     "vitepress": "^1.6.3",
     "vitepress-plugin-group-icons": "^1.6.1",
-    "vitepress-plugin-tabs": "^0.9.0",
     "vitepress-plugin-llms": "^1.9.1",
+    "vitepress-plugin-tabs": "^0.9.0",
     "vue": "^3.5.18"
   },
   "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457"
