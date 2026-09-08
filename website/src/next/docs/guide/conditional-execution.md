@@ -13,7 +13,7 @@ outline: deep
 Where up-to-date checks ask whether the work is already done, these controls ask
 whether the work should happen in the first place.
 
-## Using programmatic checks to cancel the execution of a task and its dependencies
+## Preconditions {#using-programmatic-checks-to-cancel-the-execution-of-a-task-and-its-dependencies}
 
 In addition to `status` checks, `preconditions` checks are the logical inverse
 of `status` checks. That is, if you need a certain set of conditions to be

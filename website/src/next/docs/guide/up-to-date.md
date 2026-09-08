@@ -1,5 +1,5 @@
 ---
-title: Skipping work that is up to date
+title: Up-to-date checks
 description:
   Stop a task from running again when nothing has changed, using source and
   generated file fingerprints or your own `status` checks.
@@ -8,45 +8,34 @@ docType: guide
 outline: deep
 ---
 
-# Skipping work that is up to date
+# Up-to-date checks {#skipping-work-that-is-up-to-date}
 
 Task can skip a task entirely when its work is already done. There are two
 mechanisms: let Task compare files for you, or tell it yourself.
 
-## By fingerprinting locally generated files and their sources
+## File fingerprints {#by-fingerprinting-locally-generated-files-and-their-sources}
 
-If a task generates something, you can inform Task the source and generated
-files, so Task will prevent running them if not necessary.
+Declare the input files in `sources` and the output files in `generates`:
 
 ```yaml
 version: '3'
 
 tasks:
   build:
-    deps: [js, css]
+    sources: [main.go]
+    generates: ['app{{exeExt}}']
     cmds:
-      - go build -v -i main.go
-
-  js:
-    cmds:
-      - esbuild --bundle --minify js/index.js > public/bundle.js
-    sources:
-      - src/js/**/*.js
-    generates:
-      - public/bundle.js
-
-  css:
-    cmds:
-      - esbuild --bundle --minify css/index.css > public/bundle.css
-    sources:
-      - src/css/**/*.css
-    generates:
-      - public/bundle.css
+      - go build -o app{{exeExt}} main.go
 ```
 
-`sources` and `generates` can be files or glob patterns. When given, Task will
-compare the checksum of the source files to determine if it's necessary to run
-the task. If not, it will just print a message like `Task "js" is up to date`.
+Run `task build` once to create the executable. Run it again without changing
+`main.go`, and Task reports that `build` is up to date. Editing the source or
+deleting the output makes Task run the build again.
+
+`sources` and `generates` accept individual files or glob patterns. By default,
+Task compares source checksums. For checks that do not depend on local files,
+use
+[status checks](#using-programmatic-checks-to-indicate-a-task-is-up-to-date).
 
 `exclude:` can also be used to exclude files from fingerprinting. Sources are
 evaluated in order, so `exclude:` must come after the positive glob it is
@@ -163,7 +152,7 @@ precedence over the root value.
 
 :::
 
-## Using programmatic checks to indicate a task is up to date
+## Status checks {#using-programmatic-checks-to-indicate-a-task-is-up-to-date}
 
 Alternatively, you can inform a sequence of tests as `status`. If no error is
 returned (exit status 0), the task is considered up-to-date:

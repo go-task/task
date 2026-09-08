@@ -35,64 +35,52 @@ export const sidebar: DefaultTheme.SidebarItem[] = [
     link: '/docs/guide/',
     items: [
       {
-        text: 'Running tasks',
-        link: '/docs/guide/running-tasks'
+        text: 'Writing and running tasks',
+        collapsed: true,
+        items: [
+          { text: 'Running tasks', link: '/docs/guide/running-tasks' },
+          { text: 'Defining tasks', link: '/docs/guide/defining-tasks' },
+          { text: 'Passing arguments', link: '/docs/guide/arguments' }
+        ]
       },
       {
-        text: 'Defining tasks',
-        link: '/docs/guide/defining-tasks'
+        text: 'Variables and environment',
+        collapsed: true,
+        items: [
+          { text: 'Variables', link: '/docs/guide/variables' },
+          { text: 'Environment variables', link: '/docs/guide/environment' },
+          { text: 'Required variables', link: '/docs/guide/required-variables' }
+        ]
       },
       {
-        text: 'Passing arguments',
-        link: '/docs/guide/arguments'
+        text: 'Controlling what runs',
+        collapsed: true,
+        items: [
+          { text: 'Dependencies', link: '/docs/guide/dependencies' },
+          { text: 'Up-to-date checks', link: '/docs/guide/up-to-date' },
+          {
+            text: 'Conditional execution',
+            link: '/docs/guide/conditional-execution'
+          },
+          { text: 'Loops', link: '/docs/guide/loops' }
+        ]
       },
       {
-        text: 'Variables',
-        link: '/docs/guide/variables'
+        text: 'Composing Taskfiles',
+        collapsed: true,
+        items: [
+          { text: 'Including Taskfiles', link: '/docs/guide/includes' },
+          { text: 'Remote Taskfiles', link: '/docs/remote-taskfiles' }
+        ]
       },
       {
-        text: 'Environment variables',
-        link: '/docs/guide/environment'
-      },
-      {
-        text: 'Required variables and prompts',
-        link: '/docs/guide/required-variables'
-      },
-      {
-        text: 'Dependencies and task calls',
-        link: '/docs/guide/dependencies'
-      },
-      {
-        text: 'Skipping work that is up to date',
-        link: '/docs/guide/up-to-date'
-      },
-      {
-        text: 'Conditional execution',
-        link: '/docs/guide/conditional-execution'
-      },
-      {
-        text: 'Loops',
-        link: '/docs/guide/loops'
-      },
-      {
-        text: 'Including other Taskfiles',
-        link: '/docs/guide/includes'
-      },
-      {
-        text: 'Remote Taskfiles',
-        link: '/docs/remote-taskfiles'
-      },
-      {
-        text: 'Output and logging',
-        link: '/docs/guide/output'
-      },
-      {
-        text: 'Platform-specific behaviour',
-        link: '/docs/guide/platforms'
-      },
-      {
-        text: 'Watch mode',
-        link: '/docs/guide/watch'
+        text: 'Execution environment',
+        collapsed: true,
+        items: [
+          { text: 'Output and logging', link: '/docs/guide/output' },
+          { text: 'Platforms and shells', link: '/docs/guide/platforms' },
+          { text: 'Watch mode', link: '/docs/guide/watch' }
+        ]
       }
     ]
   },

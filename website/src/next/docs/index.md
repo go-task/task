@@ -5,38 +5,52 @@ description:
   than GNU Make. Start here to install it, learn it, or look something up.
 section: Overview
 docType: overview
-outline: deep
+aside: false
+outline: false
+pageClass: docs-overview
 ---
 
 # Documentation
 
-Task is a task runner and build tool that aims to be simpler and easier to use
-than [GNU Make](https://www.gnu.org/software/make/). You describe your tasks in
-a YAML file called a `Taskfile`, and Task runs them.
+Install Task, learn the basics, or look up syntax for your `Taskfile.yml`.
 
-## New to Task
+<div class="docs-start">
+<div class="docs-card">
 
-Install the binary, then write your first Taskfile. It takes about five minutes.
+## Start with Task {#new-to-task}
 
-- [Installation](./installation.md): package managers, prebuilt binaries,
-  building from source, and shell completions.
-- [Getting Started](./getting-started.md): your first Taskfile, run end to end.
+Install Task and run your first Taskfile.
 
-## Using Task
+- [Installation](./installation.md)
+- [Quick Start](./getting-started.md)
 
-The [Guide](./guide/index.md) covers everything Task can do, one topic per page:
-running and defining tasks, variables, dependencies, up-to-date checks,
-conditional execution, loops, includes, output modes and watch mode.
+</div>
+<div class="docs-card">
 
-## Looking something up
+## Use Task {#using-task}
 
-- [Taskfile Schema](./reference/schema.md): every key you can put in a
-  Taskfile.
-- [CLI](./reference/cli.md): commands, flags and exit codes.
-- [Templating](./reference/templating.md): template functions and special
-  variables.
-- [Configuration](./reference/config.md) and
-  [Environment](./reference/environment.md): settings outside the Taskfile.
+Find a guide for your everyday workflows.
+
+- [Browse the guide](./guide/index.md)
+- [Variables](./guide/variables.md)
+- [Dependencies](./guide/dependencies.md)
+
+</div>
+<div class="docs-card">
+
+## Reference {#looking-something-up}
+
+Look up syntax, flags and functions.
+
+- [Taskfile Schema](./reference/schema.md)
+- [CLI](./reference/cli.md)
+- [Templating](./reference/templating.md)
+
+</div>
+</div>
+
+For settings outside the Taskfile, see [Configuration](./reference/config.md)
+and [Environment](./reference/environment.md).
 
 ## Keeping up
 

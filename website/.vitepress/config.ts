@@ -1,7 +1,7 @@
 import { defineConfig, HeadConfig } from 'vitepress';
 import githubLinksPlugin from './plugins/github-links';
 import { renderSearchContent } from './plugins/local-search';
-import { readdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import matter from 'gray-matter';
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs';
@@ -85,6 +85,10 @@ const urlVersion =
         next: 'https://next.taskfile.dev/'
       };
 
+const hasDocsOverview = existsSync(
+  resolve(__dirname, `../src/${channel}/docs/index.md`)
+);
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: taskName,
@@ -153,13 +157,13 @@ export default defineConfig({
       head.push([
         'meta',
         { name: 'docsearch:section', content: pageData.frontmatter.section }
-      ])
+      ]);
     }
     if (pageData.frontmatter.docType) {
       head.push([
         'meta',
         { name: 'docsearch:doc_type', content: pageData.frontmatter.docType }
-      ])
+      ]);
     }
 
     // Dynamic Open Graph and Twitter meta tags
@@ -374,6 +378,7 @@ export default defineConfig({
 
   themeConfig: {
     logo: '/img/logo.svg',
+    sidebarMenuLabel: 'Documentation',
     carbonAds: {
       code: 'CESI65QJ',
       placement: 'taskfiledev'
@@ -390,8 +395,15 @@ export default defineConfig({
       : {
           provider: 'local',
           options: {
-            _render: renderSearchContent,
             detailedView: true,
+            // Match the public DocSearch scope: current docs, without release
+            // notes or blog posts competing with feature documentation.
+            _render(src, env, md) {
+              const path = env.relativePath.replace(/^(next|latest)\//, '');
+              if (!path.startsWith('docs/') || path === 'docs/changelog.md')
+                return '';
+              return renderSearchContent(src, env, md);
+            },
             miniSearch: {
               searchOptions: {
                 fuzzy: 0.2,
@@ -405,9 +417,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       {
         text: 'Docs',
-        // The landing page only exists on next until cmd/release promotes it;
-        // the released channel still has to enter the section at the guide.
-        link: isLatest ? '/docs/guide' : '/docs/',
+        link: hasDocsOverview ? '/docs/' : '/docs/guide',
         activeMatch: '^/docs'
       },
       { text: 'Blog', link: '/blog', activeMatch: '^/blog' },

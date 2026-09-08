@@ -10,119 +10,58 @@ outline: deep
 
 # Variables
 
-Task allows you to set variables using the `vars` keyword. The following
-variable types are supported:
-
-- `string`
-- `bool`
-- `int`
-- `float`
-- `array`
-- `map`
-
-::: info
-
-Defining a map requires that you use a special `map` subkey (see example below).
-
-:::
-
-```yaml
-version: 3
-
-tasks:
-  foo:
-    vars:
-      STRING: 'Hello, World!'
-      BOOL: true
-      INT: 42
-      FLOAT: 3.14
-      ARRAY: [1, 2, 3]
-      MAP:
-        map: { A: 1, B: 2, C: 3 }
-    cmds:
-      - 'echo {{.STRING}}' # Hello, World!
-      - 'echo {{.BOOL}}' # true
-      - 'echo {{.INT}}' # 42
-      - 'echo {{.FLOAT}}' # 3.14
-      - 'echo {{.ARRAY}}' # [1 2 3]
-      - 'echo {{index .ARRAY 0}}' # 1
-      - 'echo {{.MAP}}' # map[A:1 B:2 C:3]
-      - 'echo {{.MAP.A}}' # 1
-```
-
-Variables can be set in many places in a Taskfile, and when the same name is set
-twice, one of them wins. [Resolution order](#resolution-order) below settles
-that, once, for every case.
-
-Example of sending parameters with environment variables:
-
-```shell
-$ TASK_VARIABLE=a-value task do-something
-```
-
-::: tip
-
-A special variable `.TASK` is always available containing the task name.
-
-:::
-
-Since some shells do not support the above syntax to set environment variables
-(Windows) tasks also accept a similar style when not at the beginning of the
-command.
-
-```shell
-$ task write-file FILE=file.txt "CONTENT=Hello, World!" print "MESSAGE=All done!"
-```
-
-Example of locally declared vars:
-
-```yaml
-version: '3'
-
-tasks:
-  print-var:
-    cmds:
-      - echo "{{.VAR}}"
-    vars:
-      VAR: Hello!
-```
-
-Example of global vars in a `Taskfile.yml`:
+Declare variables with `vars`, then read them in a command with a template:
 
 ```yaml
 version: '3'
 
 vars:
-  GREETING: Hello from Taskfile!
+  NAME: World
 
 tasks:
   greet:
     cmds:
-      - echo "{{.GREETING}}"
+      - echo "Hello, {{.NAME}}!"
 ```
 
-Example of a `default` value to be overridden from CLI:
+Run `task greet` to print `Hello, World!`, or `task greet NAME=Bob` to print
+`Hello, Bob!`. This example puts the default at the root of the Taskfile so
+callers can override it.
 
-```yaml
-version: '3'
+Jump to [command line values](#command-line-values),
+[resolution order](#resolution-order), [dynamic variables](#dynamic-variables),
+[variable types](#variable-types) or [secrets](#secret-variables).
 
-tasks:
-  greet_user:
-    desc: 'Greet the user with a name.'
-    vars:
-      USER_NAME: '{{.USER_NAME| default "DefaultUser"}}'
-    cmds:
-      - echo "Hello, {{.USER_NAME}}!"
-```
+## Command line values
+
+Pass values after the task name. This works across shells, including Windows:
 
 ```shell
-$ task greet_user
-task: [greet_user] echo "Hello, DefaultUser!"
-Hello, DefaultUser!
-$ task greet_user USER_NAME="Bob"
-task: [greet_user] echo "Hello, Bob!"
-Hello, Bob!
+task greet NAME=Bob
 ```
+
+Command line values are shared by all tasks in the invocation. Quote values
+containing spaces:
+
+```shell
+task greet "NAME=Jane Doe"
+```
+
+On shells that support it, you can also supply an environment variable:
+
+```shell
+TASK_VARIABLE=a-value task do-something
+```
+
+Variables can be declared at the root of the Taskfile, on an include or call, or
+on a task itself. When the same name appears in several places, the
+[resolution order](#resolution-order) determines which value wins.
+
+::: tip
+
+The special variable `.TASK` contains the name of the task being run.
+
+:::
 
 ## Resolution order
 
@@ -141,7 +80,7 @@ Applied first to last. Later wins.
 
 ## What this means in practice
 
-### A task's own variables cannot be overridden from the command line
+### Task variables and CLI overrides {#a-task-s-own-variables-cannot-be-overridden-from-the-command-line}
 
 Step 8 comes after step 7, so a variable declared on the task always wins:
 
@@ -181,6 +120,13 @@ $ task greet NAME=from-cli
 from-cli
 ```
 
+To keep the default on the task itself, read the caller's value in a template:
+
+```yaml
+vars:
+  NAME: '{{.NAME | default "World"}}'
+```
+
 ### Let callers configure an included Taskfile
 
 Step 6 comes after step 5, so a constant declared in the included Taskfile's
@@ -205,7 +151,7 @@ An inclusion that supplies `DOCKER_IMAGE: backend_image` now prints
 `building backend_image`; without a supplied value, it prints `building app`.
 The default stays in one place and applies to every task in the included file.
 
-### Global variable names are shared across every Taskfile in the run
+### Shared global names {#global-variable-names-are-shared-across-every-taskfile-in-the-run}
 
 Global `vars:` are merged into one set before any task runs, so a name declared
 in both the entrypoint and an included Taskfile resolves to the included one,
@@ -285,6 +231,48 @@ tasks:
 ```
 
 This works for all types of variables.
+
+## Variable types
+
+Task allows you to set variables using the `vars` keyword. The following
+variable types are supported:
+
+- `string`
+- `bool`
+- `int`
+- `float`
+- `array`
+- `map`
+
+::: info
+
+Defining a map requires that you use a special `map` subkey (see example below).
+
+:::
+
+```yaml
+version: 3
+
+tasks:
+  foo:
+    vars:
+      STRING: 'Hello, World!'
+      BOOL: true
+      INT: 42
+      FLOAT: 3.14
+      ARRAY: [1, 2, 3]
+      MAP:
+        map: { A: 1, B: 2, C: 3 }
+    cmds:
+      - 'echo {{.STRING}}' # Hello, World!
+      - 'echo {{.BOOL}}' # true
+      - 'echo {{.INT}}' # 42
+      - 'echo {{.FLOAT}}' # 3.14
+      - 'echo {{.ARRAY}}' # [1 2 3]
+      - 'echo {{index .ARRAY 0}}' # 1
+      - 'echo {{.MAP}}' # map[A:1 B:2 C:3]
+      - 'echo {{.MAP.A}}' # 1
+```
 
 ## Referencing other variables
 

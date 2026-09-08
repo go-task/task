@@ -1,9 +1,9 @@
 :root {
   --ifm-color-primary: #43aba2;
   --vp-home-hero-name-color: var(--ifm-color-primary);
-  --vp-c-brand-1: var(--ifm-color-primary);
-  --vp-c-brand-2: var(--ifm-color-primary);
-  --vp-c-brand-3: var(--ifm-color-primary);
+  --vp-c-brand-1: #176e68;
+  --vp-c-brand-2: #1d7b74;
+  --vp-c-brand-3: #176e68;
 
   --vp-icon-info: #3b82f6;
   --vp-icon-tip: #10b981;
@@ -13,11 +13,97 @@
 }
 
 .dark {
+  --vp-c-brand-1: #63c7bd;
+  --vp-c-brand-2: #7dd8cf;
+  --vp-c-brand-3: #176e68;
+  --vp-button-brand-hover-bg: #1d7b74;
+  --vp-button-brand-active-bg: #135f59;
   --vp-icon-info: #93c5fd;
   --vp-icon-tip: #34d399;
   --vp-icon-warning: #fbbf24;
   --vp-icon-danger: #f87171;
   --vp-icon-details: #9ca3af;
+}
+
+/* Keep long headings inside the mobile/tablet outline, including nested lists. */
+.VPLocalNavOutlineDropdown .items {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.VPLocalNavOutlineDropdown .outline {
+  min-width: 0;
+}
+
+.VPLocalNavOutlineDropdown .outline-link {
+  padding-block: 10px;
+  min-height: 44px;
+  line-height: 24px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.docs-overview .docs-start {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-block: 24px 40px;
+}
+
+.docs-overview .docs-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  background: var(--vp-c-bg-soft);
+}
+
+.docs-overview .docs-card h2 {
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  font-size: 20px;
+  line-height: 28px;
+}
+
+.docs-overview .docs-card p {
+  margin: 8px 0;
+  font-size: 15px;
+  line-height: 24px;
+}
+
+.docs-overview .docs-card ul {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.docs-overview .docs-card li + li {
+  margin-top: 0;
+}
+
+.docs-overview .docs-card li a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+@media (min-width: 1200px) {
+  .docs-overview .docs-card p {
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 1199px) {
+  .docs-overview .docs-start {
+    grid-template-columns: 1fr;
+  }
+
+  .docs-overview .docs-card ul {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 20px;
+    margin-top: 4px;
+  }
 }
 
 img[src*='shields.io'] {
