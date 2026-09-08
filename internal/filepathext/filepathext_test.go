@@ -18,6 +18,8 @@ func TestSmartJoinRelativePathContainingSpecialVariableName(t *testing.T) {
 				filepath.Join("project"+variable, "file.txt"),
 				filepath.Join(variable, "file.txt"),
 				filepath.Join("{{.PROJECT}}"+variable, "file.txt"),
+				filepath.Join("{{.PROJECT}}"+variable+"{{.SUFFIX}}", "file.txt"),
+				filepath.Join("{{ "+variable, "file.txt"),
 			} {
 				require.False(t, IsAbs(relative), relative)
 				require.Equal(t, filepath.Join(base, relative), SmartJoin(base, relative))
@@ -38,8 +40,25 @@ func TestSmartJoinAbsoluteAndTemplatePaths(t *testing.T) {
 		"{{- .USER_WORKING_DIR -}}/file.txt",
 		"{{.ROOT_DIR | toSlash}}/file.txt",
 		"{{.PROJECT}}/{{.ROOT_DIR}}/file.txt",
+		"{{\n.TASKFILE_DIR\n}}/file.txt",
+		`{{joinPath .ROOT_DIR "src"}}/file.txt`,
 	} {
 		require.True(t, IsAbs(path), path)
 		require.Equal(t, path, SmartJoin(base, path))
+	}
+}
+
+func TestSmartJoinUnrelatedTemplatePaths(t *testing.T) {
+	t.Parallel()
+
+	base := t.TempDir()
+	for _, path := range []string{
+		"{{.PROJECT}}/file.txt",
+		"{{XROOT_DIR}}/file.txt",
+		"{{XTASKFILE_DIR}}/file.txt",
+		"{{XUSER_WORKING_DIR}}/file.txt",
+	} {
+		require.False(t, IsAbs(path), path)
+		require.Equal(t, filepath.Join(base, path), SmartJoin(base, path))
 	}
 }
