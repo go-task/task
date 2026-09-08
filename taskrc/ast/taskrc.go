@@ -36,8 +36,7 @@ type Remote struct {
 	CertKey      *string         `yaml:"cert-key"`
 }
 
-// RemoteHeaders holds the HTTP headers to send when fetching a remote Taskfile
-// from a given host.
+// RemoteHeaders configures HTTP headers for a single host.
 type RemoteHeaders struct {
 	Host    string            `yaml:"host"`
 	Headers map[string]string `yaml:"headers"`
@@ -83,9 +82,7 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.TempDir = cmp.Or(other.TempDir, t.TempDir)
 }
 
-// mergeHeaders unions both lists by host. An entry from other replaces the one
-// for the same host as a whole, so a closer file can drop a header rather than
-// inherit it.
+// Replace each host's headers as a whole so closer config files can drop headers.
 func mergeHeaders(base, other []RemoteHeaders) []RemoteHeaders {
 	if len(other) == 0 {
 		return base
