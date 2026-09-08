@@ -37,7 +37,7 @@ type (
 		Download            bool
 		Offline             bool
 		TrustedHosts        []string
-		RemoteAuth          taskfile.HeadersByHost
+		RemoteHeaders       taskfile.HeadersByHost
 		Timeout             time.Duration
 		CacheExpiryDuration time.Duration
 		RemoteCacheDir      string
@@ -279,18 +279,18 @@ func (o *trustedHostsOption) ApplyToExecutor(e *Executor) {
 	e.TrustedHosts = o.trustedHosts
 }
 
-// WithRemoteAuth configures the [Executor] with the HTTP headers to send when
+// WithRemoteHeaders configures the [Executor] with the HTTP headers to send when
 // fetching a remote Taskfile, keyed by host.
-func WithRemoteAuth(remoteAuth taskfile.HeadersByHost) ExecutorOption {
-	return &remoteAuthOption{remoteAuth}
+func WithRemoteHeaders(remoteHeaders taskfile.HeadersByHost) ExecutorOption {
+	return &remoteHeadersOption{remoteHeaders}
 }
 
-type remoteAuthOption struct {
-	remoteAuth taskfile.HeadersByHost
+type remoteHeadersOption struct {
+	remoteHeaders taskfile.HeadersByHost
 }
 
-func (o *remoteAuthOption) ApplyToExecutor(e *Executor) {
-	e.RemoteAuth = o.remoteAuth
+func (o *remoteHeadersOption) ApplyToExecutor(e *Executor) {
+	e.RemoteHeaders = o.remoteHeaders
 }
 
 // WithTimeout sets the [Executor]'s timeout for fetching remote taskfiles. By

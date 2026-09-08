@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestResolveAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
+func TestResolveHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
 	tests := []struct {
 		name          string
 		headersByHost HeadersByHost
@@ -85,25 +85,25 @@ func TestResolveAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv ca
 			name:          "malformed template",
 			headersByHost: HeadersByHost{"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_TOKEN"`}}, //nolint:gosec // a template, not a credential
 			host:          "gitlab.com",
-			wantErr:       `remote auth for host "gitlab.com": template: :1: unclosed action`,
+			wantErr:       `remote headers for host "gitlab.com": template: :1: unclosed action`,
 		},
 		{
 			name:          "header name with a space",
 			headersByHost: HeadersByHost{"gitlab.com": {"PRIVATE TOKEN": "token"}},
 			host:          "gitlab.com",
-			wantErr:       `remote auth for host "gitlab.com": invalid header name "PRIVATE TOKEN"`,
+			wantErr:       `remote headers for host "gitlab.com": invalid header name "PRIVATE TOKEN"`,
 		},
 		{
 			name:          "header name outside the HTTP token grammar",
 			headersByHost: HeadersByHost{"gitlab.com": {"X-Foo(bar)": "token"}},
 			host:          "gitlab.com",
-			wantErr:       `remote auth for host "gitlab.com": invalid header name "X-Foo(bar)"`,
+			wantErr:       `remote headers for host "gitlab.com": invalid header name "X-Foo(bar)"`,
 		},
 		{
 			name:          "empty header name",
 			headersByHost: HeadersByHost{"gitlab.com": {"": "token"}},
 			host:          "gitlab.com",
-			wantErr:       `remote auth for host "gitlab.com": invalid header name ""`,
+			wantErr:       `remote headers for host "gitlab.com": invalid header name ""`,
 		},
 	}
 
@@ -112,7 +112,7 @@ func TestResolveAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv ca
 			for name, value := range test.env {
 				t.Setenv(name, value)
 			}
-			headers, err := resolveAuthHeaders(test.headersByHost, test.host)
+			headers, err := resolveHeaders(test.headersByHost, test.host)
 			if test.wantErr != "" {
 				require.EqualError(t, err, test.wantErr)
 				return
@@ -123,10 +123,10 @@ func TestResolveAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv ca
 	}
 }
 
-func TestAuthTransport(t *testing.T) {
+func TestHeadersTransport(t *testing.T) {
 	t.Parallel()
 
-	transport := &authTransport{
+	transport := &headersTransport{
 		base:    roundTripperFunc(func(req *http.Request) (*http.Response, error) { return newResponse(req), nil }),
 		host:    "gitlab.com",
 		headers: map[string]string{"PRIVATE-TOKEN": "token"},
@@ -151,23 +151,27 @@ func TestAuthTransport(t *testing.T) {
 	})
 }
 
-func TestWithAuthHeadersDoesNotMutateTheDefaultClient(t *testing.T) {
+func TestWithHeadersDoesNotMutateTheDefaultClient(t *testing.T) {
 	t.Parallel()
 
-	client := withAuthHeaders(http.DefaultClient, "gitlab.com", map[string]string{"PRIVATE-TOKEN": "token"})
+	client := withHeaders(http.DefaultClient, "gitlab.com", map[string]string{"PRIVATE-TOKEN": "token"})
 
 	assert.NotSame(t, http.DefaultClient, client)
 	assert.Nil(t, http.DefaultClient.Transport)
-	assert.IsType(t, &authTransport{}, client.Transport)
+	assert.IsType(t, &headersTransport{}, client.Transport)
 }
 
 // Both requests must carry the headers: RemoteExists probes with HEAD before
 // ReadContext issues the GET.
-func TestHTTPNodeAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
+func TestHTTPNodeHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
 	var methods []string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("PRIVATE-TOKEN") != "s3cret" {
 			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		if r.Header.Get("Accept") != "application/yaml" || r.Header.Get("X-Custom-Header") != "custom-value" {
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		methods = append(methods, r.Method)
@@ -178,8 +182,12 @@ func TestHTTPNodeAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv c
 
 	t.Setenv("TASK_TEST_TOKEN", "s3cret")
 	node, err := NewHTTPNode(srv.URL+"/Taskfile.yml", "", true,
-		WithAuthHeaders(HeadersByHost{
-			mustHost(t, srv.URL): {"PRIVATE-TOKEN": `{{env "TASK_TEST_TOKEN"}}`}, //nolint:gosec // an env var reference, not a credential
+		WithHeaders(HeadersByHost{
+			mustHost(t, srv.URL): { //nolint:gosec // an env var reference, not a credential
+				"PRIVATE-TOKEN":   `{{env "TASK_TEST_TOKEN"}}`,
+				"Accept":          "application/yaml",
+				"X-Custom-Header": "custom-value",
+			},
 		}),
 	)
 	require.NoError(t, err)
@@ -190,13 +198,13 @@ func TestHTTPNodeAuthHeaders(t *testing.T) { //nolint:paralleltest // t.Setenv c
 	assert.Equal(t, []string{"HEAD", "GET"}, methods)
 }
 
-// A server bouncing the request must not get the credentials forwarded to it.
-func TestHTTPNodeAuthHeadersNotSentOnRedirect(t *testing.T) {
+// A redirect to another host must not forward any configured headers.
+func TestHTTPNodeHeadersNotSentOnRedirect(t *testing.T) {
 	t.Parallel()
 
 	var received []string
 	elsewhere := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		received = append(received, r.Header.Get("PRIVATE-TOKEN"))
+		received = append(received, r.Header.Get("PRIVATE-TOKEN"), r.Header.Get("Accept"), r.Header.Get("X-Custom-Header"))
 		w.Header().Set("Content-Type", "text/yaml")
 		_, _ = w.Write([]byte("version: '3'\n"))
 	}))
@@ -208,8 +216,12 @@ func TestHTTPNodeAuthHeadersNotSentOnRedirect(t *testing.T) {
 	defer srv.Close()
 
 	node, err := NewHTTPNode(srv.URL+"/Taskfile.yml", "", true,
-		WithAuthHeaders(HeadersByHost{
-			mustHost(t, srv.URL): {"PRIVATE-TOKEN": "s3cret"},
+		WithHeaders(HeadersByHost{
+			mustHost(t, srv.URL): {
+				"PRIVATE-TOKEN":   "s3cret",
+				"Accept":          "application/yaml",
+				"X-Custom-Header": "custom-value",
+			},
 		}),
 	)
 	require.NoError(t, err)
@@ -218,15 +230,15 @@ func TestHTTPNodeAuthHeadersNotSentOnRedirect(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, received)
 	for _, header := range received {
-		assert.Empty(t, header, "the token must not follow a redirect to another host")
+		assert.Empty(t, header, "configured headers must not follow a redirect to another host")
 	}
 }
 
 // A node must build without the credentials it would need to download, so that
 // cached and offline runs do not require them.
-func TestHTTPNodeAuthHeadersResolvedLazily(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
+func TestHTTPNodeHeadersResolvedLazily(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
 	node, err := NewHTTPNode("https://gitlab.com/Taskfile.yml", "", false,
-		WithAuthHeaders(HeadersByHost{
+		WithHeaders(HeadersByHost{
 			"gitlab.com": {"PRIVATE-TOKEN": `{{env "TASK_TEST_LAZY"}}`}, //nolint:gosec // an env var reference, not a credential
 		}),
 	)
@@ -235,7 +247,7 @@ func TestHTTPNodeAuthHeadersResolvedLazily(t *testing.T) { //nolint:paralleltest
 	// Defined only after the node was built: the value must still be picked up.
 	t.Setenv("TASK_TEST_LAZY", "s3cret")
 
-	headers, err := resolveAuthHeaders(node.authHeadersByHost, node.url.Host)
+	headers, err := resolveHeaders(node.headersByHost, node.url.Host)
 	require.NoError(t, err)
 	assert.Equal(t, map[string]string{"PRIVATE-TOKEN": "s3cret"}, headers)
 }

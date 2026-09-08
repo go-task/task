@@ -300,28 +300,31 @@ task --trusted-hosts github.com,gitlab.com -t https://github.com/user/repo.git//
 task --trusted-hosts example.com:8080 -t https://example.com:8080/Taskfile.yml
 ```
 
-#### `remote.auth`
+#### `remote.headers`
 
 - **Type**: `array of objects`
 - **Default**: `[]` (empty list)
 - **Description**: HTTP headers to send when downloading a remote Taskfile from
-  a given host
+  a given host, including authentication and custom headers
 
 ```yaml
 remote:
-  auth:
+  headers:
     - host: gitlab.com
       headers:
         PRIVATE-TOKEN: '{{env "GITLAB_TOKEN"}}'
     - host: artifacts.example.com:8443
       headers:
         Authorization: 'Bearer {{env "ARTIFACTS_TOKEN"}}'
+        Accept: application/yaml
+        X-Custom-Header: custom-value
 ```
 
-This is the recommended way to authenticate a remote Taskfile. Unlike a
-credential placed in the URL, the header never appears in your Taskfile, in the
-confirmation prompt or in an error message, so the include URL stays safe to
-commit.
+Use this option for authentication, content negotiation or other headers your
+server expects. For authentication, this is the recommended way to access a
+remote Taskfile. Unlike a credential placed in the URL, the header never appears
+in your Taskfile, in the confirmation prompt or in an error message, so the
+include URL stays safe to commit.
 
 Each entry applies to a single host, matched exactly and including the port if
 the URL has one — the same rule as
@@ -329,13 +332,14 @@ the URL has one — the same rule as
 [templating functions](./templating.md), evaluated when Task contacts the host.
 Values starting with `{{` must be quoted, as YAML would otherwise read them as a
 mapping. An undefined environment variable expands to nothing, so the header is
-sent empty and the server rejects it with a `401`.
+sent empty. For an authentication header, this may cause the server to reject
+the request with a `401`.
 
 Functions compose, so an `Authorization` header needs no manual encoding:
 
 ```yaml
 remote:
-  auth:
+  headers:
     - host: artifacts.example.com
       headers:
         Authorization: 'Basic {{ printf "%s:%s" (env "USER") (env "PASS") | b64enc }}'
@@ -424,7 +428,7 @@ remote:
   trusted-hosts:
     - github.com
     - gitlab.com
-  auth:
+  headers:
     - host: gitlab.com
       headers:
         PRIVATE-TOKEN: '{{env "GITLAB_TOKEN"}}'

@@ -16,13 +16,13 @@ import (
 // Taskfile from it. Values are templated, but no variables are available.
 type HeadersByHost map[string]map[string]string
 
-type authTransport struct {
+type headersTransport struct {
 	base    http.RoundTripper
 	host    string
 	headers map[string]string
 }
 
-func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *headersTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	// Re-checked per request: a redirect goes through this same transport, and
 	// Go only strips Authorization, WWW-Authenticate and Cookie on its own.
 	if !hostMatches(t.host, req.URL.Host) {
@@ -35,33 +35,33 @@ func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.base.RoundTrip(req)
 }
 
-// authenticatedClient resolves on each read, not at build time, so a cached
+// clientWithHeaders resolves on each read, not at build time, so a cached
 // run needs no credentials.
-func (node *HTTPNode) authenticatedClient() (*http.Client, error) {
-	headers, err := resolveAuthHeaders(node.authHeadersByHost, node.url.Host)
+func (node *HTTPNode) clientWithHeaders() (*http.Client, error) {
+	headers, err := resolveHeaders(node.headersByHost, node.url.Host)
 	if err != nil {
 		return nil, err
 	}
 	if len(headers) == 0 {
 		return node.client, nil
 	}
-	return withAuthHeaders(node.client, node.url.Host, headers), nil
+	return withHeaders(node.client, node.url.Host, headers), nil
 }
 
-// withAuthHeaders copies rather than mutates: buildHTTPClient returns the
+// withHeaders copies rather than mutates: buildHTTPClient returns the
 // shared http.DefaultClient when no TLS option is set.
-func withAuthHeaders(client *http.Client, host string, headers map[string]string) *http.Client {
-	authenticated := *client
-	authenticated.Transport = &authTransport{
+func withHeaders(client *http.Client, host string, headers map[string]string) *http.Client {
+	configured := *client
+	configured.Transport = &headersTransport{
 		base:    cmp.Or(client.Transport, http.DefaultTransport),
 		host:    host,
 		headers: headers,
 	}
-	return &authenticated
+	return &configured
 }
 
-// resolveAuthHeaders returns the expanded headers for host, or nil if none.
-func resolveAuthHeaders(headersByHost HeadersByHost, host string) (map[string]string, error) {
+// resolveHeaders returns the expanded headers for host, or nil if none.
+func resolveHeaders(headersByHost HeadersByHost, host string) (map[string]string, error) {
 	var headers map[string]string
 	for pattern, patternHeaders := range headersByHost {
 		if hostMatches(pattern, host) {
@@ -77,12 +77,12 @@ func resolveAuthHeaders(headersByHost HeadersByHost, host string) (map[string]st
 	resolved := make(map[string]string, len(headers))
 	for _, name := range slices.Sorted(maps.Keys(headers)) {
 		if err := validateHeaderName(name); err != nil {
-			return nil, fmt.Errorf(`remote auth for host %q: %w`, host, err)
+			return nil, fmt.Errorf(`remote headers for host %q: %w`, host, err)
 		}
 		resolved[name] = templater.Replace(headers[name], cache)
 	}
 	if err := cache.Err(); err != nil {
-		return nil, fmt.Errorf(`remote auth for host %q: %w`, host, err)
+		return nil, fmt.Errorf(`remote headers for host %q: %w`, host, err)
 	}
 	return resolved, nil
 }
