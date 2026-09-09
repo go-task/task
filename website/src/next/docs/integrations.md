@@ -6,9 +6,9 @@ description:
 outline: deep
 ---
 
-# Integrations
+## Integrations
 
-## Visual Studio Code Extension
+### Visual Studio Code Extension
 
 Task has an
 [official extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=task.vscode-task).
@@ -30,7 +30,7 @@ To get autocompletion and validation for your Taskfile, see the
 
 ![Task for Visual Studio Code](https://github.com/go-task/vscode-task/blob/main/res/preview.png?raw=true)
 
-### Configuration namespace change
+#### Configuration namespace change
 
 In v1.0.0 of the extension, the configuration namespace was changed from `task`
 to `taskfile` in order to fix
@@ -43,16 +43,16 @@ settings to use the new `taskfile` namespace instead:
 
 ![Configuration namespace diff](/img/config-namespace-diff.png)
 
-## Schema
+### Schema
 
 This was initially created by @KROSF in
 [this Gist](https://gist.github.com/KROSF/c5435acf590acd632f71bb720f685895) and
 is now officially maintained in
 [this file](https://github.com/go-task/task/blob/main/website/src/public/schema.json)
-and made available at https://taskfile.dev/schema.json. This schema can be used
+and made available at <https://taskfile.dev/schema.json>. This schema can be used
 to validate Taskfiles and provide autocompletion in many code editors:
 
-### Visual Studio Code
+#### Visual Studio Code
 
 To integrate the schema into VS Code, you need to install the
 [YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
@@ -84,7 +84,7 @@ version: '3'
 You can find more information on this in the
 [YAML language server project](https://github.com/redhat-developer/yaml-language-server).
 
-## AI/LLM Assistants
+### AI/LLM Assistants
 
 Task documentation is optimized for AI assistants like Claude Code, Cursor, and
 other LLM-powered development tools through the
@@ -106,7 +106,7 @@ These files are automatically generated and kept in sync with the documentation,
 ensuring AI assistants always have access to the latest Task features and usage
 patterns.
 
-## Community Integrations
+### Community Integrations
 
 In addition to our official integrations, there is an amazing community of
 developers who have created their own integrations for Task:
@@ -121,6 +121,7 @@ developers who have created their own integrations for Task:
   natively.
 - [fzf-make](https://github.com/kyu08/fzf-make) fuzzy finder with preview window
   for make, pnpm, yarn, just & task.
+- [taskfile-lsp](https://github.com/s0cks/task-lsp) A language-server-protocol (LSP) implementation for Taskfiles
 
 If you have made something that integrates with Task, please feel free to open a
 PR to add it to this list.
