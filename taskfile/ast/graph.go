@@ -67,7 +67,7 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 		if len(tf.Dotenv) == 0 {
 			continue
 		}
-		tf.dotenvScope = &DotenvScope{
+		scope := &DotenvScope{
 			Location:    tf.Location,
 			Files:       tf.Dotenv,
 			Vars:        tf.Vars.DeepCopy(),
@@ -75,7 +75,7 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 			IncludeVars: NewVars(),
 		}
 		for task := range tf.Tasks.Values(nil) {
-			task.DotenvScopes = []*DotenvScope{tf.dotenvScope.DeepCopy()}
+			task.DotenvScope = scope.DeepCopy()
 		}
 	}
 

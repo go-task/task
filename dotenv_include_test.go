@@ -56,19 +56,19 @@ tasks:
     dotenv: ['{{.TASKFILE_DIR}}/task.env']
     cmds: ['echo "$DOTENV_CHOICE"']
 `,
-		"app/override.env":        "DOTENV_CHOICE=app\nDOTENV_APP=app\nDOTENV_EXPLICIT=dotenv\nDOTENV_NEXT=child\n",
+		"app/override.env":        "DOTENV_CHOICE=app\nDOTENV_APP=app\nDOTENV_EXPLICIT=dotenv\n",
 		"app/config/base.env":     "DOTENV_CHOICE=base\nDOTENV_BASE=base\n",
 		"app/config/env-path.env": "DOTENV_ENV_PATH=env-path\n",
 		"app/task.env":            "DOTENV_CHOICE=task-dotenv\n",
 		"app/child/Taskfile.yml": `version: '3'
-dotenv: ['{{.DOTENV_NEXT}}.env']
+dotenv: [child.env]
 tasks:
   inspect: 'echo "{{.DOTENV_CHOICE}}|$DOTENV_CHOICE|$DOTENV_APP"'
 `,
 		"app/child/child.env": "DOTENV_CHOICE=child\n",
 		"common/Taskfile.yml": `version: '3'
 tasks:
-  inspect: 'echo "{{.DOTENV_CHOICE}}|$DOTENV_CHOICE|$DOTENV_APP"'
+  inspect: 'echo "{{.DOTENV_CHOICE | default ""}}|$DOTENV_CHOICE|$DOTENV_APP"'
 `,
 		"sibling/Taskfile.yml": `version: '3'
 env:
@@ -107,11 +107,13 @@ tasks:
 		{name: "root isolation", call: "inspect", want: "root|root|\n"},
 		{name: "include directory and file order", call: "app:inspect", want: "app|app|app\n"},
 		{name: "standalone", dir: "app", call: "inspect", want: "app|app|app\n"},
+		{name: "standalone root remains global", dir: "app", call: "common:inspect", want: "app|app|app\n"},
+		{name: "no dotenv inherited without root", entrypoint: "without-root.yml", call: "app:common:inspect", want: "||\n"},
 		{name: "without root dotenv", entrypoint: "without-root.yml", call: "app:inspect", want: "app|app|app\n"},
-		{name: "nested override", call: "app:child:inspect", want: "child|child|app\n"},
-		{name: "inherited by common", call: "app:common:inspect", want: "app|app|app\n"},
+		{name: "nested dotenv is independent", call: "app:child:inspect", want: "child|child|\n"},
+		{name: "common only inherits root", call: "app:common:inspect", want: "root|root|\n"},
 		{name: "sibling isolation", call: "sibling:inspect", want: "sibling|sibling|\n"},
-		{name: "common via another parent", call: "sibling:common:inspect", want: "sibling|sibling|\n"},
+		{name: "common via another parent", call: "sibling:common:inspect", want: "root|root|\n"},
 		{name: "include vars a", call: "a:inspect", want: "a|a|\n"},
 		{name: "include vars b", call: "b:inspect", want: "b|b|\n"},
 		{name: "flatten", call: "flattened", want: "flat|flat|\n"},
