@@ -3,7 +3,7 @@ package filepathext
 import (
 	"os"
 	"path/filepath"
-	"strings"
+	"regexp"
 )
 
 // SmartJoin joins two paths, but only if the second is not already an
@@ -25,19 +25,12 @@ func IsAbs(path string) bool {
 	return filepath.IsAbs(path)
 }
 
-var knownAbsDirs = []string{
-	".ROOT_DIR",
-	".TASKFILE_DIR",
-	".USER_WORKING_DIR",
-}
+// Heuristically match special directory names within template actions, without
+// matching prefixes of longer identifiers. This does not parse template syntax.
+var specialDirRE = regexp.MustCompile(`\{\{[^{}]*\.(?:ROOT_DIR|TASKFILE_DIR|USER_WORKING_DIR)(?:[^\p{L}\p{Nd}_{}][^{}]*)?\}\}`)
 
 func isSpecialDir(dir string) bool {
-	for _, d := range knownAbsDirs {
-		if strings.Contains(dir, d) {
-			return true
-		}
-	}
-	return false
+	return specialDirRE.MatchString(dir)
 }
 
 // TryAbsToRel tries to convert an absolute path to relative based on the
