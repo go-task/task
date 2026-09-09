@@ -32,8 +32,6 @@ type Taskfile struct {
 	Run          string
 	Interval     time.Duration
 	UseGitignore *bool
-
-	dotenvScope *DotenvScope
 }
 
 // Merge merges the second Taskfile into the first
@@ -74,7 +72,7 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	}
 	t1.Vars.Merge(t2.Vars, include)
 	t1.Env.Merge(t2.Env, include)
-	return t1.Tasks.merge(t2.Tasks, include, t1.Vars, t1.dotenvScope)
+	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
 }
 
 func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {

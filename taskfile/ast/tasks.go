@@ -119,22 +119,15 @@ func (t *Tasks) Values(sorter sort.Sorter) iter.Seq[*Task] {
 }
 
 func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) error {
-	return t1.merge(t2, include, includedTaskfileVars, nil)
-}
-
-func (t1 *Tasks) merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars, dotenvScope *DotenvScope) error {
 	defer t2.mutex.RUnlock()
 	t2.mutex.RLock()
 	for name, v := range t2.All(nil) {
 		// We do a deep copy of the task struct here to ensure that no data can
 		// be changed elsewhere once the taskfile is merged.
 		task := v.DeepCopy()
-		for _, scope := range task.DotenvScopes {
+		if scope := task.DotenvScope; scope != nil {
 			scope.Namespace = include.Namespace + NamespaceSeparator + scope.Namespace
 			scope.IncludeVars.ReverseMerge(include.Vars, nil)
-		}
-		if dotenvScope != nil {
-			task.DotenvScopes = append([]*DotenvScope{dotenvScope.DeepCopy()}, task.DotenvScopes...)
 		}
 		// Set the task to internal if EITHER the included task or the included
 		// taskfile are marked as internal

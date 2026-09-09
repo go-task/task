@@ -265,50 +265,47 @@ func (e *Executor) readIncludedDotEnvFiles(explicitEnv *ast.Vars) error {
 	type scopeKey struct{ namespace, location string }
 	loadedScopes := make(map[scopeKey]*ast.Vars)
 	for t := range e.Taskfile.Tasks.Values(nil) {
-		if len(t.DotenvScopes) == 0 {
+		scope := t.DotenvScope
+		if scope == nil {
 			continue
 		}
-		compiler := &Compiler{
-			Dir:            e.Dir,
-			Entrypoint:     e.Entrypoint,
-			UserWorkingDir: e.UserWorkingDir,
-			TaskfileEnv:    e.Taskfile.Env.DeepCopy(),
-			TaskfileVars:   e.Taskfile.Vars.DeepCopy(),
-			Logger:         e.Logger,
-		}
-		t.IncludedDotenvEnv = ast.NewVars()
-		for _, scope := range t.DotenvScopes {
+		key := scopeKey{scope.Namespace, scope.Location}
+		loaded, ok := loadedScopes[key]
+		if !ok {
+			compiler := &Compiler{
+				Dir:            e.Dir,
+				Entrypoint:     e.Entrypoint,
+				UserWorkingDir: e.UserWorkingDir,
+				TaskfileEnv:    e.Taskfile.Env.DeepCopy(),
+				TaskfileVars:   e.Taskfile.Vars,
+				Logger:         e.Logger,
+			}
 			compiler.TaskfileEnv.Merge(scope.Env, nil)
 			dir := e.Dir
 			if !taskfile.IsRemoteEntrypoint(scope.Location) {
 				dir = filepath.Dir(scope.Location)
 			}
-			key := scopeKey{scope.Namespace, scope.Location}
-			loaded, ok := loadedScopes[key]
-			if !ok {
-				contextTask := &ast.Task{
-					Dir:                  dir,
-					Location:             &ast.Location{Taskfile: scope.Location},
-					IncludeVars:          scope.IncludeVars,
-					IncludedTaskfileVars: scope.Vars,
-				}
-				vars, err := compiler.GetVariables(contextTask, nil)
-				if err != nil {
-					return err
-				}
-				loaded, err = taskfile.Dotenv(vars, &ast.Taskfile{Dotenv: scope.Files}, dir)
-				if err != nil {
-					return err
-				}
-				loadedScopes[key] = loaded
+			contextTask := &ast.Task{
+				Dir:                  dir,
+				Location:             &ast.Location{Taskfile: scope.Location},
+				IncludeVars:          scope.IncludeVars,
+				IncludedTaskfileVars: scope.Vars,
 			}
-			for k, v := range loaded.All() {
-				if _, explicit := explicitEnv.Get(k); !explicit {
-					t.IncludedDotenvEnv.Set(k, v)
-					compiler.TaskfileEnv.Set(k, v)
-				}
+			vars, err := compiler.GetVariables(contextTask, nil)
+			if err != nil {
+				return err
 			}
-			compiler.TaskfileVars.Merge(scope.Vars, nil)
+			loaded, err = taskfile.Dotenv(vars, &ast.Taskfile{Dotenv: scope.Files}, dir)
+			if err != nil {
+				return err
+			}
+			loadedScopes[key] = loaded
+		}
+		t.IncludedDotenvEnv = ast.NewVars()
+		for k, v := range loaded.All() {
+			if _, explicit := explicitEnv.Get(k); !explicit {
+				t.IncludedDotenvEnv.Set(k, v)
+			}
 		}
 	}
 	return nil

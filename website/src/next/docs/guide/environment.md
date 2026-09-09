@@ -140,19 +140,21 @@ contain templates, as in <span v-pre>`'{{.HOME}}/.env'`</span>.
 
 ### Load values for an included Taskfile
 
-Included Taskfiles can also declare `dotenv`. These variables are available to
-their own tasks and tasks in their nested includes. The root Taskfile and sibling
-includes keep their own dotenv values. A common Taskfile included through two
-different parents inherits the dotenv values of the corresponding parent.
+Included Taskfiles can also declare `dotenv`. These variables are available only
+to tasks defined in that Taskfile. Nested includes use their own dotenv values.
+For example, a common Taskfile included by an application does not inherit the
+application's dotenv values. The root Taskfile's dotenv remains available to all
+tasks for compatibility.
 
 Relative paths are resolved from the Taskfile declaring `dotenv`, independently
 of the include's `dir`. Path templates can use that Taskfile's variables and the
 variables supplied by its include. Remote Taskfiles read dotenv files locally
 relative to the root execution directory.
 
-The closest Taskfile's dotenv values take precedence over its ancestors, and the
-first file in each list takes precedence. Explicit Taskfile `env` values override
-dotenv values; task-level `dotenv` and `env` retain their existing precedence.
+An included Taskfile's dotenv values take precedence over the root's values for
+its own tasks, and the first file in each list takes precedence. Explicit
+Taskfile `env` values override dotenv values; task-level `dotenv` and `env`
+retain their existing precedence.
 The existing merge behavior of `vars` and `env` declarations is unchanged.
 
 See [Including Taskfiles](./includes.md).
