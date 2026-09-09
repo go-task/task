@@ -6,6 +6,7 @@ pageClass: installation-page
 ---
 
 <script setup>
+import InstallationMethod from '../../../.vitepress/components/InstallationMethod.vue';
 import InstallationMethods from '../../../.vitepress/components/InstallationMethods.vue';
 </script>
 
@@ -25,23 +26,21 @@ Choose a package manager for your system, or install Task from a binary.
 
 Maintained by the Task team and kept up-to-date.
 
-<div class="install-method" data-platforms="macos">
+<InstallationMethod platforms="macos" platform-label="macOS">
+
+<template #heading>
 
 ### [Homebrew](https://brew.sh) {#homebrew}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">macOS</p>
-
-<div class="install-links">
+<template #links>
 
 [Tap source](https://github.com/go-task/homebrew-tap/blob/main/Casks/go-task.rb)
 [Homebrew package](https://formulae.brew.sh/formula/go-task)
 [Formula source](https://github.com/Homebrew/homebrew-core/blob/master/Formula/g/go-task.rb)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 brew install go-task/tap/go-task
@@ -53,23 +52,21 @@ Or use the Homebrew core formula:
 brew install go-task
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="linux">
+<InstallationMethod platforms="linux" platform-label="Fedora · CentOS · Red Hat">
+
+<template #heading>
 
 ### [dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf) {#dnf}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">Fedora · CentOS · Red Hat</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Arpm)
 
-</div>
-
-</div>
+</template>
 
 Set up the repository:
 
@@ -83,23 +80,21 @@ Install Task:
 dnf install task
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="linux">
+<InstallationMethod platforms="linux" platform-label="Ubuntu · Debian · Linux Mint">
+
+<template #heading>
 
 ### [apt](https://doc.ubuntu-fr.org/apt) {#apt}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">Ubuntu · Debian · Linux Mint</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Adeb)
 
-</div>
-
-</div>
+</template>
 
 Set up the repository:
 
@@ -113,23 +108,21 @@ Install Task:
 apt install task
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="linux">
+<InstallationMethod platforms="linux" platform-label="Alpine Linux">
+
+<template #heading>
 
 ### [apk](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper) {#apk}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">Alpine Linux</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Aalpine)
 
-</div>
-
-</div>
+</template>
 
 Set up the repository:
 
@@ -143,23 +136,21 @@ Install Task:
 apk add task
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="linux">
+<InstallationMethod platforms="linux" platform-label="Linux">
+
+<template #heading>
 
 ### [Snap](https://snapcraft.io/task) {#snap}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">Linux</p>
-
-<div class="install-links">
+<template #links>
 
 [Source](https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 sudo snap install task --classic
@@ -167,24 +158,22 @@ sudo snap install task --classic
 
 Requires a Linux distribution with classic confinement support.
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="macos linux windows">
+<InstallationMethod platforms="macos linux windows" platform-label="macOS · Linux · Windows">
+
+<template #heading>
 
 ### [npm](https://www.npmjs.com) {#npm}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">macOS · Linux · Windows</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://www.npmjs.com/package/@go-task/cli)
 [Source](https://github.com/go-task/task/blob/main/package.json)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 npm install -g @go-task/cli
@@ -192,23 +181,21 @@ npm install -g @go-task/cli
 
 Task is also available as a project dependency.
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="windows">
+<InstallationMethod platforms="windows" platform-label="Windows">
+
+<template #heading>
 
 ### [WinGet](https://github.com/microsoft/winget-cli) {#winget}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">Windows</p>
-
-<div class="install-links">
+<template #links>
 
 [Source](https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/Task/Task)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 winget install Task.Task
@@ -217,7 +204,7 @@ winget install Task.Task
 Available through the
 [WinGet community repository](https://github.com/microsoft/winget-pkgs).
 
-</div>
+</InstallationMethod>
 
 <p class="install-hosting">Package repository hosting for deb/rpm/apk is graciously provided by <a href="https://cloudsmith.com">Cloudsmith</a>.</p>
 
@@ -226,21 +213,19 @@ Available through the
 Maintained by the community, outside the Task team's control. These packages may
 lag behind the latest release.
 
-<div class="install-method" data-platforms="macos linux windows">
+<InstallationMethod platforms="macos linux windows" platform-label="macOS · Linux · Windows">
+
+<template #heading>
 
 ### [Mise](https://mise.jdx.dev/) {#mise}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">macOS · Linux · Windows</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://mise-tools.jdx.dev/tools/task)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 mise use -g task
@@ -249,229 +234,209 @@ mise use -g task
 For a project-local installation, use `mise use task` instead. This adds Task to
 your project's `mise.toml`.
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="macos">
+<InstallationMethod platforms="macos" platform-label="macOS">
+
+<template #heading>
 
 ### [Macports](https://macports.org) {#macports}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">macOS</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://ports.macports.org/port/go-task/details/)
 [Source](https://github.com/macports/macports-ports/blob/master/devel/go-task/Portfile)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 port install go-task
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="macos linux windows">
+<InstallationMethod platforms="macos linux windows" platform-label="macOS · Linux · Windows">
+
+<template #heading>
 
 ### [pip](https://pip.pypa.io) {#pip}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">macOS · Linux · Windows</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://pypi.org/project/go-task-bin)
 [Source](https://github.com/Bing-su/pip-binary-factory/tree/main/task)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 pip install go-task-bin
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="windows">
+<InstallationMethod platforms="windows" platform-label="Windows">
+
+<template #heading>
 
 ### [Chocolatey](https://chocolatey.org) {#chocolatey}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">Windows</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://community.chocolatey.org/packages/go-task)
 [Source](https://github.com/Starz0r/ChocolateyPackagingScripts/blob/master/src/go-task_gh_build.py)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 choco install go-task
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="windows">
+<InstallationMethod platforms="windows" platform-label="Windows">
+
+<template #heading>
 
 ### [Scoop](https://scoop.sh) {#scoop}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">Windows</p>
-
-<div class="install-links">
+<template #links>
 
 [Source](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 scoop install task
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="linux">
+<InstallationMethod platforms="linux" platform-label="Arch Linux">
+
+<template #heading>
 
 ### Arch ([pacman](https://wiki.archlinux.org/title/Pacman)) {#arch}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">Arch Linux</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://archlinux.org/packages/extra/x86_64/go-task/)
 [Source](https://gitlab.archlinux.org/archlinux/packaging/packages/go-task)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 pacman -S go-task
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="linux">
+<InstallationMethod platforms="linux" platform-label="Fedora">
+
+<template #heading>
 
 ### Fedora ([dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) {#fedora-community}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">Fedora</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
 [Source](https://src.fedoraproject.org/rpms/golang-github-task)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 dnf install go-task
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="freebsd">
+<InstallationMethod platforms="freebsd" platform-label="FreeBSD">
+
+<template #heading>
 
 ### FreeBSD ([Ports](https://ports.freebsd.org/cgi/ports.cgi)) {#freebsd}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">FreeBSD</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://cgit.freebsd.org/ports/tree/devel/task)
 [Source](https://cgit.freebsd.org/ports/tree/devel/task/Makefile)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 pkg install task
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="linux macos">
+<InstallationMethod platforms="linux macos" platform-label="Nix · NixOS · Linux · macOS">
+
+<template #heading>
 
 ### [Nix](https://nixos.org) {#nix}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">Nix · NixOS · Linux · macOS</p>
-
-<div class="install-links">
+<template #links>
 
 [Source](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/go/go-task/package.nix)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 nix-env -iA nixpkgs.go-task
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="linux">
+<InstallationMethod platforms="linux" platform-label="Debian · Ubuntu">
+
+<template #heading>
 
 ### [pacstall](https://github.com/pacstall/pacstall) {#pacstall}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">Debian · Ubuntu</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://pacstall.dev/packages/go-task-deb)
 [Source](https://github.com/pacstall/pacstall-programs/blob/master/packages/go-task-deb/go-task-deb.pacscript)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 pacstall -I go-task-deb
 ```
 
-</div>
+</InstallationMethod>
 
-<div class="install-method" data-platforms="macos linux">
+<InstallationMethod platforms="macos linux" platform-label="macOS · Linux">
+
+<template #heading>
 
 ### [pkgx](https://pkgx.sh) {#pkgx}
 
-<div class="install-meta">
+</template>
 
-<p class="install-platforms">macOS · Linux</p>
-
-<div class="install-links">
+<template #links>
 
 [View package](https://pkgx.dev/pkgs/taskfile.dev)
 [Source](https://github.com/pkgxdev/pantry/blob/main/projects/taskfile.dev/package.yml)
 
-</div>
-
-</div>
+</template>
 
 ```shell
 pkgx task
@@ -483,7 +448,7 @@ or, if you have pkgx integration enabled:
 task
 ```
 
-</div>
+</InstallationMethod>
 
 </InstallationMethods>
 

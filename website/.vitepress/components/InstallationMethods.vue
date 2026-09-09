@@ -222,177 +222,10 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.installation-methods :deep(.install-method) {
-  position: relative;
-  margin: 16px 0;
-  padding: 20px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 12px;
-  background: var(--vp-c-bg);
-}
-
-.installation-methods :deep(.install-method h3) {
-  position: relative;
-  margin: 0 0 4px;
-  padding: 0 0 0 30px;
-  font-size: 18px;
-  line-height: 26px;
-}
-
-/* Decorative CSS masks keep logos out of heading names and the page outline. */
-.installation-methods :deep(.install-method h3::before) {
-  position: absolute;
-  top: 3px;
-  left: 0;
-  width: 20px;
-  height: 20px;
-  background-color: var(--install-icon-color, var(--vp-c-text-2));
-  content: '';
-  -webkit-mask: var(--install-icon, url('../theme/icons/install/package.svg'))
-    center / contain no-repeat;
-  mask: var(--install-icon, url('../theme/icons/install/package.svg')) center /
-    contain no-repeat;
-}
-
-.installation-methods :deep(#homebrew) {
-  --install-icon: url('../theme/icons/install/homebrew.svg');
-  --install-icon-color: #fbb040;
-}
-
-.installation-methods :deep(#apk) {
-  --install-icon: url('../theme/icons/install/alpinelinux.svg');
-  --install-icon-color: #0d597f;
-}
-
-.installation-methods :deep(#snap) {
-  --install-icon: url('../theme/icons/install/snapcraft.svg');
-  --install-icon-color: #e95420;
-}
-
-.installation-methods :deep(#npm) {
-  --install-icon: url('../theme/icons/install/npm.svg');
-  --install-icon-color: #cb3837;
-}
-
-.installation-methods :deep(#mise) {
-  --install-icon: url('../theme/icons/install/mise.svg');
-  --install-icon-color: var(--vp-c-text-1);
-}
-
-.installation-methods :deep(#pip) {
-  --install-icon: url('../theme/icons/install/python.svg');
-  --install-icon-color: #3776ab;
-}
-
-.installation-methods :deep(#chocolatey) {
-  --install-icon: url('../theme/icons/install/chocolatey.svg');
-  --install-icon-color: #80b5e3;
-}
-
-.installation-methods :deep(#arch) {
-  --install-icon: url('../theme/icons/install/archlinux.svg');
-  --install-icon-color: #1793d1;
-}
-
-.installation-methods :deep(#fedora-community) {
-  --install-icon: url('../theme/icons/install/fedora.svg');
-  --install-icon-color: #51a2da;
-}
-
-.installation-methods :deep(#freebsd) {
-  --install-icon: url('../theme/icons/install/freebsd.svg');
-  --install-icon-color: #ab2b28;
-}
-
-.installation-methods :deep(#nix) {
-  --install-icon: url('../theme/icons/install/nixos.svg');
-  --install-icon-color: #5277c3;
-}
-
-.installation-methods :deep(.install-method h3 a:not(.header-anchor)) {
-  color: var(--vp-c-text-1);
-  text-decoration: none;
-}
-
-.installation-methods :deep(.install-method h3 a:hover) {
-  color: var(--vp-c-brand-1);
-}
-
-.installation-methods :deep(.install-meta) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-  margin: 4px 0 12px;
-}
-
-.installation-methods :deep(.install-method .install-platforms) {
-  margin: 0;
-  color: var(--vp-c-text-2);
-  font-size: 12px;
-  line-height: 20px;
-  font-weight: 500;
-}
-
-.installation-methods :deep(.install-method .install-links p) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0;
-}
-
-.installation-methods :deep(.install-links a) {
-  padding: 3px 9px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--vp-c-brand-1) 12%, transparent);
-  color: color-mix(in srgb, var(--vp-c-brand-1) 45%, var(--vp-c-text-1));
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 20px;
-  text-decoration: none;
-}
-
-.installation-methods :deep(.install-links a:hover) {
-  border-color: var(--vp-c-brand-1);
-}
-
-.installation-methods :deep(.install-links a:focus-visible) {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 2px;
-}
-
-.installation-methods :deep(.install-method p) {
-  margin: 12px 0;
-  font-size: 14px;
-  line-height: 22px;
-}
-
 .installation-methods :deep(.installation-shortcuts + h2) {
   margin-top: 24px;
   padding-top: 0;
   border-top: 0;
-}
-
-.installation-methods :deep(.install-method > :last-child) {
-  margin-bottom: 0;
-}
-
-.installation-methods :deep(.install-method div[class*='language-']) {
-  margin: 12px 0;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
-}
-
-/* Compact commands leave no room for the overlaid language label. */
-.installation-methods
-  :deep(.install-method div[class*='language-'] > span.lang) {
-  display: none;
-}
-
-.installation-methods :deep(.install-method div[class*='language-'] pre) {
-  padding: 14px 0;
 }
 
 :global(.installation-page div[class*='language-'] pre) {
@@ -438,34 +271,6 @@ onUnmounted(() => {
   background: var(--vp-c-text-3);
 }
 
-.installation-methods :deep(.install-method div[class*='language-'] code) {
-  padding: 0 18px;
-  font-size: 13px;
-  line-height: 22px;
-}
-
-/* Keep the 40px copy control inside the compact, 50px single-line block. */
-.installation-methods
-  :deep(.install-method div[class*='language-'] > button.copy) {
-  top: 5px;
-  right: 6px;
-}
-
-.installation-methods :deep(.install-method .vp-code-group) {
-  margin-top: 16px;
-}
-
-.installation-methods :deep(.install-method .vp-code-group .tabs) {
-  margin: 0;
-  border-radius: 8px 8px 0 0;
-}
-
-.installation-methods
-  :deep(.install-method .vp-code-group div[class*='language-']) {
-  margin: 0;
-  border-radius: 0 0 8px 8px;
-}
-
 .installation-methods :deep(.install-hosting) {
   margin: 24px 0 40px;
   color: var(--vp-c-text-2);
@@ -492,10 +297,6 @@ onUnmounted(() => {
     padding: 8px 10px;
     font-size: 13px;
   }
-
-  .installation-methods :deep(.install-method) {
-    padding: 16px;
-  }
 }
 
 @media (max-width: 379px) {
@@ -519,11 +320,6 @@ onUnmounted(() => {
 @media print {
   .install-picker {
     display: none;
-  }
-
-  .installation-methods :deep(.install-method) {
-    display: block !important;
-    break-inside: avoid;
   }
 }
 </style>
