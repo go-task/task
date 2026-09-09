@@ -134,7 +134,7 @@ project][sponsor]!
   https://github.com/u-root/u-root/blob/main/pkg/core/command.go
 [uroot-base]: https://github.com/u-root/u-root/blob/main/pkg/core/base.go
 [middleware]:
-  https://github.com/mvdan/sh/blob/master/moreinterp/coreutils/coreutils.go
+  https://github.com/mvdan/sh/blob/master/x/coreutils/coreutils.go
 [task-core-utils]: /docs/reference/environment#task-core-utils
 [discord]: https://discord.com/invite/6TY36E39UK
 [gh-issue]: https://github.com/go-task/task/issues
