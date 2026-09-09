@@ -122,6 +122,7 @@ developers who have created their own integrations for Task:
 - [fzf-make](https://github.com/kyu08/fzf-make) fuzzy finder with preview window
   for make, pnpm, yarn, just & task.
 - [taskfile-lsp](https://github.com/s0cks/task-lsp) A language-server-protocol (LSP) implementation for Taskfiles
+- [taskfile.nvim](https://github.com/s0cks/taskfile.nvim) A neovim plugin for working with Taskfiles
 
 If you have made something that integrates with Task, please feel free to open a
 PR to add it to this list.
