@@ -42,7 +42,11 @@ func (e *Executor) Setup() error {
 	if err := e.setupCompiler(); err != nil {
 		return err
 	}
+	explicitEnv := e.Taskfile.Env.DeepCopy()
 	if err := e.readDotEnvFiles(); err != nil {
+		return err
+	}
+	if err := e.readIncludedDotEnvFiles(explicitEnv); err != nil {
 		return err
 	}
 	if err := e.doVersionChecks(); err != nil {
@@ -248,6 +252,64 @@ func (e *Executor) readDotEnvFiles() error {
 		}
 	}
 	return err
+}
+
+func (e *Executor) readIncludedDotEnvFiles(explicitEnv *ast.Vars) error {
+	if e.Taskfile.Version.LessThan(ast.V3) {
+		return nil
+	}
+	// Cache by include ancestry: two includes of the same file may supply
+	// different variables for its dotenv paths.
+	type scopeKey struct{ namespace, location string }
+	loadedScopes := make(map[scopeKey]*ast.Vars)
+	for t := range e.Taskfile.Tasks.Values(nil) {
+		if len(t.DotenvScopes) == 0 {
+			continue
+		}
+		compiler := &Compiler{
+			Dir:            e.Dir,
+			Entrypoint:     e.Entrypoint,
+			UserWorkingDir: e.UserWorkingDir,
+			TaskfileEnv:    e.Taskfile.Env.DeepCopy(),
+			TaskfileVars:   e.Taskfile.Vars.DeepCopy(),
+			Logger:         e.Logger,
+		}
+		t.IncludedDotenvEnv = ast.NewVars()
+		for _, scope := range t.DotenvScopes {
+			compiler.TaskfileEnv.Merge(scope.Env, nil)
+			dir := e.Dir
+			if !taskfile.IsRemoteEntrypoint(scope.Location) {
+				dir = filepath.Dir(scope.Location)
+			}
+			key := scopeKey{scope.Namespace, scope.Location}
+			loaded, ok := loadedScopes[key]
+			if !ok {
+				contextTask := &ast.Task{
+					Dir:                  dir,
+					Location:             &ast.Location{Taskfile: scope.Location},
+					IncludeVars:          scope.IncludeVars,
+					IncludedTaskfileVars: scope.Vars,
+				}
+				vars, err := compiler.GetVariables(contextTask, nil)
+				if err != nil {
+					return err
+				}
+				loaded, err = taskfile.Dotenv(vars, &ast.Taskfile{Dotenv: scope.Files}, dir)
+				if err != nil {
+					return err
+				}
+				loadedScopes[key] = loaded
+			}
+			for k, v := range loaded.All() {
+				if _, explicit := explicitEnv.Get(k); !explicit {
+					t.IncludedDotenvEnv.Set(k, v)
+					compiler.TaskfileEnv.Set(k, v)
+				}
+			}
+			compiler.TaskfileVars.Merge(scope.Vars, nil)
+		}
+	}
+	return nil
 }
 
 func (e *Executor) setupDefaults() {

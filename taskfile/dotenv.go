@@ -17,6 +17,9 @@ func Dotenv(vars *ast.Vars, tf *ast.Taskfile, dir string) (*ast.Vars, error) {
 
 	for _, dotEnvPath := range tf.Dotenv {
 		dotEnvPath = templater.Replace(dotEnvPath, cache)
+		if err := cache.Err(); err != nil {
+			return nil, err
+		}
 		if dotEnvPath == "" {
 			continue
 		}

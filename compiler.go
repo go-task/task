@@ -110,6 +110,13 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			return nil, err
 		}
 	}
+	if t != nil {
+		for k, v := range t.IncludedDotenvEnv.All() {
+			if err := rangeFunc(k, v); err != nil {
+				return nil, err
+			}
+		}
+	}
 	for k, v := range c.TaskfileVars.All() {
 		if err := rangeFunc(k, v); err != nil {
 			return nil, err
