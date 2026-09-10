@@ -339,7 +339,12 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 				return err
 			}
 
-			entrypoint, err := node.ResolveEntrypoint(include.Taskfile)
+			// If no taskfile is specified, look for one in the include's dir
+			taskfile := include.Taskfile
+			if taskfile == "" {
+				taskfile = include.Dir
+			}
+			entrypoint, err := node.ResolveEntrypoint(taskfile)
 			if err != nil {
 				return err
 			}
