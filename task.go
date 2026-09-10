@@ -13,6 +13,7 @@ import (
 	"mvdan.cc/sh/v3/interp"
 
 	"github.com/go-task/task/v3/errors"
+	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/logger"
@@ -528,10 +529,11 @@ func (e *Executor) startExecution(ctx context.Context, t *ast.Task, execute func
 }
 
 // FindMatchingTasks returns a list of tasks that match the given call. A task
-// matches a call if its name is equal to the call's task name, or one of aliases, or if it matches
-// a wildcard pattern. The function returns a list of MatchingTask structs, each
+// matches a call if its name is equal to the call's task name, one of its aliases,
+// matches a wildcard pattern, or (if PREFIX_MATCHING experiment is enabled) matches
+// as a unique prefix. The function returns a list of MatchingTask structs, each
 // containing a task and a list of wildcards that were matched.
-// If multiple tasks match due to aliases, a TaskNameConflictError is returned.
+// If multiple tasks match due to aliases or ambiguous prefixes, a TaskNameConflictError is returned.
 func (e *Executor) FindMatchingTasks(call *Call) ([]*MatchingTask, error) {
 	if call == nil {
 		return nil, nil
@@ -571,6 +573,36 @@ func (e *Executor) FindMatchingTasks(call *Call) ([]*MatchingTask, error) {
 			})
 		}
 	}
+	if len(matchingTasks) > 0 {
+		return matchingTasks, nil
+	}
+
+	if experiments.PrefixMatching.Enabled() {
+		var matchedTasks []string
+		for task := range e.Taskfile.Tasks.Values(nil) {
+			if task.Internal {
+				continue
+			}
+			if task.MatchesPrefix(call.Task) {
+				matchedTasks = append(matchedTasks, task.Task)
+				matchingTasks = append(matchingTasks, &MatchingTask{
+					Task: task,
+				})
+			}
+		}
+
+		if len(matchingTasks) == 1 {
+			return matchingTasks, nil
+		}
+
+		if len(matchingTasks) > 1 {
+			return nil, &errors.TaskNameConflictError{
+				Call:      call.Task,
+				TaskNames: matchedTasks,
+			}
+		}
+	}
+
 	return matchingTasks, nil
 }
 

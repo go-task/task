@@ -64,6 +64,10 @@ export const sidebar: DefaultTheme.SidebarItem[] = [
         link: '/docs/experiments/gentle-force'
       },
       {
+        text: 'Prefix Matching (#2947)',
+        link: '/docs/experiments/prefix-matching'
+      },
+      {
         text: 'Remote Taskfiles (#1317)',
         link: '/docs/experiments/remote-taskfiles'
       }
