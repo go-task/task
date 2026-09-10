@@ -278,7 +278,8 @@ includes:
 
 - **Type**: `bool`
 - **Default**: `false`
-- **Description**: Hide included tasks from command line and `--list`
+- **Description**: Makes a task inaccessible from the command line and hidden
+  from `--list`, restricting its execution to other tasks only.
 
 ```yaml
 includes:
@@ -529,7 +530,9 @@ tasks:
 #### `desc`
 
 - **Type**: `string`
-- **Description**: Short description shown in `--list`
+- **Description**: Short description shown in `--list`. If omitted, the task
+  will not be listed in `--list`, but will remain publicly callable from the
+  command line.
 
 ```yaml
 tasks:
