@@ -13,6 +13,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/sort"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -36,6 +37,7 @@ type (
 		Download            bool
 		Offline             bool
 		TrustedHosts        []string
+		RemoteHeaders       taskfile.HeadersByHost
 		Timeout             time.Duration
 		CacheExpiryDuration time.Duration
 		RemoteCacheDir      string
@@ -275,6 +277,20 @@ type trustedHostsOption struct {
 
 func (o *trustedHostsOption) ApplyToExecutor(e *Executor) {
 	e.TrustedHosts = o.trustedHosts
+}
+
+// WithRemoteHeaders configures the [Executor] with the HTTP headers to send when
+// fetching a remote Taskfile, keyed by host.
+func WithRemoteHeaders(remoteHeaders taskfile.HeadersByHost) ExecutorOption {
+	return &remoteHeadersOption{remoteHeaders}
+}
+
+type remoteHeadersOption struct {
+	remoteHeaders taskfile.HeadersByHost
+}
+
+func (o *remoteHeadersOption) ApplyToExecutor(e *Executor) {
+	e.RemoteHeaders = o.remoteHeaders
 }
 
 // WithTimeout sets the [Executor]'s timeout for fetching remote taskfiles. By
