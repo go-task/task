@@ -9,6 +9,12 @@ tasks:
   hello:
     cmds:
       - echo 'Hello!'
+
+  multi:
+    cmds:
+      - echo 'first'
+      - echo 'second'
+
   bye:
     deps:
       - hello

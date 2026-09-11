@@ -1,0 +1,37 @@
+version: '3'
+
+silent: true
+
+output:
+  group:
+    error_only: true
+    by_task: true
+
+tasks:
+  passing:
+    cmds:
+      - echo 'passing-first'
+      - echo 'passing-second'
+
+  failing:
+    cmds:
+      - echo 'failing-first'
+      - echo 'failing-second' && exit 1
+
+  ignored-command:
+    cmds:
+      - echo 'ignored-command-first'
+      - cmd: echo 'ignored-command-failure' && exit 1
+        ignore_error: true
+      - echo 'ignored-command-last'
+
+  child-failing:
+    cmds:
+      - echo 'child-failing-first'
+      - echo 'child-failing-second' && exit 1
+
+  ignored-task:
+    cmds:
+      - task: child-failing
+        ignore_error: true
+      - echo 'ignored-task-parent'
