@@ -44,8 +44,12 @@ type UI struct {
 	statusLabels  bool
 	taskNavigator tuiTaskNavigator
 
-	mutex   sync.RWMutex
+	mutex   sync.Mutex
 	program *tea.Program
+	// Messages are queued in callback order so execution never waits for a
+	// render. One notification delivers a whole burst to the model.
+	messages       []tea.Msg
+	messagesQueued bool
 	// programDone is closed when the program stops, so a task waiting on an
 	// answer is not left waiting for one that cannot come.
 	programDone chan struct{}
@@ -226,6 +230,8 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 			t.logger.Stdout, t.logger.Stderr = oldStdout, oldStderr
 			t.mutex.Lock()
 			t.program = nil
+			t.messages = nil
+			t.messagesQueued = false
 			t.mutex.Unlock()
 		})
 	}
@@ -279,18 +285,38 @@ func (t *UI) newProgram(model tea.Model, environ []string) *tea.Program {
 	return tea.NewProgram(model, options...)
 }
 
-// send delivers a message to the running program, reporting whether there was
-// one to receive it. Everything the executor reports arrives this way, and it
-// may arrive after the interface has closed.
+// send queues a message for the running program. Lifecycle callbacks hold up
+// execution if they block, so only the wakeup goroutine calls Program.Send.
+// Queueing under one lock preserves event order, including executionDoneMsg.
 func (t *UI) send(msg tea.Msg) bool {
-	t.mutex.RLock()
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
 	program := t.program
-	t.mutex.RUnlock()
 	if program == nil {
 		return false
 	}
-	program.Send(msg)
+	select {
+	case <-t.programDone:
+		return false
+	default:
+	}
+	t.messages = append(t.messages, msg)
+	if !t.messagesQueued {
+		t.messagesQueued = true
+		go program.Send(messagesReadyMsg{ui: t})
+	}
 	return true
+}
+
+type messagesReadyMsg struct{ ui *UI }
+
+func (t *UI) drainMessages() []tea.Msg {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	messages := t.messages
+	t.messages = nil
+	t.messagesQueued = false
+	return messages
 }
 
 func (t *UI) enqueueOutput(id uint64, name, data string) {
@@ -306,9 +332,9 @@ func (t *UI) enqueueOutput(id uint64, name, data string) {
 	t.outputQueued = true
 	t.outputMutex.Unlock()
 
-	// Sending asynchronously lets bursts of command output collapse into one
-	// model update instead of rebuilding the viewport for every pipe write.
-	go t.send(outputReadyMsg{ui: t})
+	// Bursts of command output collapse into one model update instead of
+	// rebuilding the viewport for every pipe write. send queues without waiting.
+	t.send(outputReadyMsg{ui: t})
 }
 
 func (t *UI) drainOutput() map[uint64]pendingOutput {

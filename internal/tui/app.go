@@ -57,6 +57,20 @@ func (m appModel) Init() tea.Cmd {
 }
 
 func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if ready, ok := msg.(messagesReadyMsg); ok {
+		var commands []tea.Cmd
+		for _, event := range ready.ui.drainMessages() {
+			next, cmd := m.updateEvent(event)
+			m = next.(appModel)
+			commands = append(commands, cmd)
+		}
+		return m, tea.Batch(commands...)
+	}
+	return m.updateEvent(msg)
+}
+
+// updateEvent handles batch contents without interpreting another queue wakeup.
+func (m appModel) updateEvent(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if size, ok := msg.(tea.WindowSizeMsg); ok {
 		m.width, m.height = size.Width, size.Height
 	}
