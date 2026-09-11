@@ -341,3 +341,26 @@ remote:
 		assert.Equal(t, []string{"github.com", "gitlab.com"}, base.Remote.TrustedHosts)
 	})
 }
+
+func TestGetConfig_TUI(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+	_, homeDir, localDir := setupDirs(t)
+
+	writeFile(t, homeDir, ".taskrc.yml", `
+tui:
+  status: labels
+  task-navigator: tree
+`)
+	// A project may prefer a different navigator without restating the status.
+	writeFile(t, localDir, ".taskrc.yml", `
+tui:
+  task-navigator: list
+`)
+
+	cfg, err := GetConfig(localDir)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	require.NotNil(t, cfg.TUI.Status)
+	require.NotNil(t, cfg.TUI.TaskNavigator)
+	assert.Equal(t, "labels", *cfg.TUI.Status)
+	assert.Equal(t, "list", *cfg.TUI.TaskNavigator)
+}

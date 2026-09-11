@@ -16,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/tui"
 	"github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -168,7 +169,7 @@ func run() error {
 	calls, globals := args.Parse(cliArgsPreDash...)
 
 	// If there are no calls, run the default task instead
-	if len(calls) == 0 {
+	if len(calls) == 0 && !flags.TUI {
 		calls = append(calls, &task.Call{Task: "default"})
 	}
 
@@ -197,6 +198,16 @@ func run() error {
 
 	if flags.Status {
 		return e.Status(ctx, calls...)
+	}
+	if flags.TUI {
+		ui, err := tui.New(e.Logger, tui.Options{
+			Status:        flags.TUIStatus,
+			TaskNavigator: flags.TUITaskNavigator,
+		})
+		if err != nil {
+			return err
+		}
+		return ui.Run(ctx, e, calls)
 	}
 
 	return e.Run(ctx, calls...)
