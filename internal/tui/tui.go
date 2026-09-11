@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -205,17 +206,7 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 	if len(calls) > 0 {
 		model.execution.cancel = start(calls)
 	}
-	program := tea.NewProgram(
-		model,
-		tea.WithInput(t.input),
-		tea.WithOutput(t.output),
-		tea.WithFilter(func(_ tea.Model, msg tea.Msg) tea.Msg {
-			if _, ok := msg.(tea.InterruptMsg); ok {
-				return interruptRequestedMsg{}
-			}
-			return msg
-		}),
-	)
+	program := t.newProgram(model, os.Environ())
 
 	t.mutex.Lock()
 	t.program = program
@@ -266,6 +257,26 @@ func (t *UI) Run(ctx context.Context, executor *task.Executor, calls []*task.Cal
 	resultMutex.Lock()
 	defer resultMutex.Unlock()
 	return lastRunErr
+}
+
+// newProgram keeps the dashboard's terminal setup in one place, including the
+// tty input that Bubble Tea inspects before enabling cursor optimizations.
+func (t *UI) newProgram(model tea.Model, environ []string) *tea.Program {
+	options := []tea.ProgramOption{
+		tea.WithInput(t.input),
+		tea.WithOutput(t.output),
+		tea.WithEnvironment(environ),
+		tea.WithFilter(func(_ tea.Model, msg tea.Msg) tea.Msg {
+			if _, ok := msg.(tea.InterruptMsg); ok {
+				return interruptRequestedMsg{}
+			}
+			return msg
+		}),
+	}
+	// Append compatibility options last so their terminal environment can
+	// override the base environment above.
+	options = append(options, terminalOptions(t.output, environ)...)
+	return tea.NewProgram(model, options...)
 }
 
 // send delivers a message to the running program, reporting whether there was

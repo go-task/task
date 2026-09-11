@@ -2946,6 +2946,11 @@ processes to exit.
 The TUI requires an interactive terminal. It is intended for local use; use one
 of the stream-based output modes in CI or when redirecting output.
 
+In JetBrains integrated terminals, including PyCharm, Task automatically avoids
+cursor movements that JediTerm can render incorrectly. This compatibility mode
+preserves terminal colours and applies only to the TUI; commands keep their
+normal terminal environment.
+
 When Task needs to ask you something, it asks in the interface. A task
 declaring `prompt` shows its confirmation, and a missing required variable is
 asked for: free text, or a list to choose from when the variable declares an
