@@ -1,0 +1,7 @@
+version: '3'
+dotenv: [child.env]
+tasks:
+  inspect:
+    cmds:
+      - 'echo "{{.DOTENV_CHOICE}}|$DOTENV_CHOICE|$DOTENV_APP"'
+      - 'echo "explicit=$DOTENV_EXPLICIT root=$DOTENV_ROOT base=$DOTENV_BASE env-path=$DOTENV_ENV_PATH"'
