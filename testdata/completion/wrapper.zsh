@@ -28,8 +28,8 @@ _describe() {
 _files()      { CAP+="files:$*"$'\n' }
 _path_files() { CAP+="path_files:$*"$'\n' }
 
-# Sourcing avoids the autoload first-call quirk; `compdef` is stubbed above.
-source ${0:A:h}/../../completion/zsh/_task
+completion_dir=${0:A:h}/../../completion/zsh
+source $completion_dir/_task
 
 run() {
     CAP=""
@@ -60,6 +60,23 @@ echo "zsh: :4 (NoFileComp) forwards candidates, no file fallback"
 run task ''
 has    "candidate forwarded"  "cand:build"
 hasnot "no file fallback"     "files:"
+
+echo "zsh: arguments are passed without shell quoting"
+run task --dir "'with space'" ''
+has "single-quoted dir" "cand:spaced"
+run task --dir '"with space"' ''
+has "double-quoted dir" "cand:spaced"
+run task --dir 'with\ space' ''
+has "escaped dir" "cand:spaced"
+run task --taskfile "'with space/Taskfile.yml'" ''
+has "quoted taskfile" "cand:spaced"
+
+echo "zsh: autoload completes on the first invocation"
+unfunction _task
+fpath=($completion_dir $fpath)
+autoload -Uz _task
+run task ''
+has "first autoload call" "cand:build"
 
 # In the compadd zone, -V would take the next argument as a group name and
 # swallow _describe's own `-d`, offering its internal variables as candidates.
