@@ -8,6 +8,13 @@ export function renderSearchContent(
   let html = md.render(src, env);
   if (env.frontmatter?.search === false) return '';
 
+  // Only this index renderer adds the alternate terms to section content.
+  // The actual page keeps them in an attribute, invisible to readers.
+  html = html.replace(
+    /(<h[1-6]\b[^>]*\bdata-search-keywords="([^"]*)"[^>]*>[\s\S]*?<\/h[1-6]>)/g,
+    '$1<p>$2</p>'
+  );
+
   // Otherwise stripping the tags joins the language label to the first
   // command ("shellbrew"), preventing searches for "brew install".
   html = html.replace(/<span class="lang">[^<]*<\/span>/g, '');
