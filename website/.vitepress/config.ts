@@ -35,10 +35,6 @@ const other = isLatest ? 'next' : 'latest';
 const isPublicDeploy =
   process.env.DOCS_SITE === 'production' && process.env.DOCS_LOCAL !== '1';
 const isProduction = isLatest && isPublicDeploy;
-// Publish crawlable next pages first, then enable Algolia after taskfile-next
-// has been populated by setting this public search-only key for its build.
-const algoliaSearchKey = process.env.DOCS_ALGOLIA_SEARCH_API_KEY;
-const useAlgolia = isPublicDeploy && (isLatest || Boolean(algoliaSearchKey));
 
 const docsSidebar = isLatest ? latestSidebar : nextSidebar;
 
@@ -395,13 +391,12 @@ export default defineConfig({
       code: 'CESI65QJ',
       placement: 'taskfiledev'
     },
-    search: useAlgolia
+    search: isPublicDeploy
       ? {
           provider: 'algolia',
           options: {
             appId: '7IZIJ13AI7',
-            // Public search-only key, serialized into the client bundle.
-            apiKey: algoliaSearchKey || '34b64ae4fc8d9da43d9a13d9710aaddc',
+            apiKey: '34b64ae4fc8d9da43d9a13d9710aaddc',
             indexName: isLatest ? 'taskfile' : 'taskfile-next'
           }
         }
