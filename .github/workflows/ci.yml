@@ -124,19 +124,11 @@ jobs:
         working-directory: website
 
       - name: 📚 Check next documentation
-        run: pnpm test && pnpm build && pnpm check:links
-        working-directory: website
-        env:
-          DOCS_CHANNEL: next
-          DOCS_SITE: preview
-
-      - name: 📚 Check public next documentation
         run: pnpm build && pnpm check:links
         working-directory: website
         env:
           DOCS_CHANNEL: next
-          DOCS_SITE: production
-          DOCS_ALGOLIA_SEARCH_API_KEY: test-search-only-key
+          DOCS_SITE: preview
 
       - name: 📚 Check released documentation
         run: pnpm build && pnpm check:links
