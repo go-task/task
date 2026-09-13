@@ -93,6 +93,11 @@ var (
 )
 
 func init() {
+	cliArgs := os.Args[1:]
+	if complete.IsActive() {
+		_, cliArgs = complete.ParseOptions(complete.Words())
+	}
+
 	// Config files can enable experiments which alter the availability and/or
 	// behavior of some flags, so we need to parse the experiments before the
 	// flags. However, we need the --taskfile and --dir flags before we can
@@ -106,7 +111,7 @@ func init() {
 	fs.StringVarP(&dir, "dir", "d", "", "")
 	fs.StringVarP(&entrypoint, "taskfile", "t", "", "")
 	fs.Usage = func() {}
-	_ = fs.Parse(os.Args[1:])
+	_ = fs.Parse(cliArgs)
 
 	// Parse the experiments
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
@@ -181,10 +186,9 @@ func init() {
 	// flags deciding which Taskfile is loaded must still reach the engine.
 	// ContinueOnError keeps what was parsed and prints nothing.
 	if complete.IsActive() {
-		_, words := complete.ParseOptions(complete.Words())
 		pflag.CommandLine.Init(pflag.CommandLine.Name(), pflag.ContinueOnError)
 		pflag.CommandLine.ParseErrorsAllowlist.UnknownFlags = true
-		_ = pflag.CommandLine.Parse(words)
+		_ = pflag.CommandLine.Parse(cliArgs)
 		return
 	}
 
