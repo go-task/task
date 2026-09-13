@@ -65,10 +65,11 @@ Register-ArgumentCompleter -Native -CommandName $cmdNames -ScriptBlock {
 	# DirectiveNoSpace cannot be honored: CompletionResult has no per-item "no
 	# trailing space" option, so `VAR=` gets one anyway.
 
-	# The text replaces the token as-is, so a value holding a space must be quoted.
+	# The text replaces the token as-is. Quote shell metacharacters as well as
+	# spaces so paths and enum values are inserted as literals.
 	$asCompletionText = {
 		param($text)
-		if ($text -match '[\s'']') { "'" + $text.Replace("'", "''") + "'" } else { $text }
+		if ($text -match '[\s''"`$;|&<>(){}@#]') { "'" + $text.Replace("'", "''") + "'" } else { $text }
 	}
 
 	$asPathResult = {
