@@ -87,7 +87,12 @@ test('code language labels do not become part of command names', () => {
 		{},
 		md
 	);
-	const text = html.replace(/<[^>]*>/g, '');
+	let text = html;
+	let previous;
+	do {
+		previous = text;
+		text = text.replace(/<[^>]*>/g, '');
+	} while (text !== previous);
 	assert.match(text, /\bbrew install go-task\b/);
 	assert.ok(!text.includes('shellbrew'));
 });
