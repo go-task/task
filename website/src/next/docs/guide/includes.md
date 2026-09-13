@@ -6,6 +6,8 @@ description:
 section: Guide
 docType: guide
 outline: deep
+searchKeywords:
+  namespace-aliases: [aliases, namespace aliases]
 ---
 
 # Including Taskfiles {#including-other-taskfiles}

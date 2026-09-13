@@ -1,6 +1,7 @@
 import { defineConfig, HeadConfig } from 'vitepress';
 import githubLinksPlugin from './plugins/github-links';
 import { renderSearchContent } from './plugins/local-search';
+import { searchKeywordsPlugin } from './plugins/search-keywords';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import matter from 'gray-matter';
@@ -34,6 +35,10 @@ const other = isLatest ? 'next' : 'latest';
 const isPublicDeploy =
   process.env.DOCS_SITE === 'production' && process.env.DOCS_LOCAL !== '1';
 const isProduction = isLatest && isPublicDeploy;
+// Publish crawlable next pages first, then enable Algolia after taskfile-next
+// has been populated by setting this public search-only key for its build.
+const algoliaSearchKey = process.env.DOCS_ALGOLIA_SEARCH_API_KEY;
+const useAlgolia = isPublicDeploy && (isLatest || Boolean(algoliaSearchKey));
 
 const docsSidebar = isLatest ? latestSidebar : nextSidebar;
 
@@ -164,6 +169,12 @@ export default defineConfig({
         'meta',
         { name: 'docsearch:doc_type', content: pageData.frontmatter.docType }
       ]);
+    }
+    if (
+      pageData.frontmatter.search === false ||
+      pageData.frontmatter.noindex === true
+    ) {
+      head.push(['meta', { name: 'docsearch:exclude', content: 'true' }]);
     }
 
     // Dynamic Open Graph and Twitter meta tags
@@ -334,6 +345,7 @@ export default defineConfig({
       });
       md.use(tabsMarkdownPlugin);
       md.use(groupIconMdPlugin);
+      md.use(searchKeywordsPlugin);
     }
   },
   vite: {
@@ -383,13 +395,14 @@ export default defineConfig({
       code: 'CESI65QJ',
       placement: 'taskfiledev'
     },
-    search: isProduction
+    search: useAlgolia
       ? {
           provider: 'algolia',
           options: {
             appId: '7IZIJ13AI7',
-            apiKey: '34b64ae4fc8d9da43d9a13d9710aaddc',
-            indexName: 'taskfile'
+            // Public search-only key, serialized into the client bundle.
+            apiKey: algoliaSearchKey || '34b64ae4fc8d9da43d9a13d9710aaddc',
+            indexName: isLatest ? 'taskfile' : 'taskfile-next'
           }
         }
       : {
@@ -483,7 +496,7 @@ export default defineConfig({
     }
   },
   sitemap: {
-    hostname: 'https://taskfile.dev'
+    hostname: isLatest ? 'https://taskfile.dev' : 'https://next.taskfile.dev'
   },
   buildEnd({ outDir }) {
     const robots = isProduction
@@ -494,7 +507,21 @@ export default defineConfig({
           'Sitemap: https://taskfile.dev/sitemap.xml',
           ''
         ]
-      : ['User-agent: *', 'Disallow: /', ''];
+      : isPublicDeploy
+        ? [
+            'User-agent: Algolia Crawler',
+            'Allow: /docs/',
+            'Allow: /sitemap.xml',
+            'Allow: /$',
+            'Disallow: /',
+            '',
+            'User-agent: *',
+            'Disallow: /',
+            '',
+            'Sitemap: https://next.taskfile.dev/sitemap.xml',
+            ''
+          ]
+        : ['User-agent: *', 'Disallow: /', ''];
     writeFileSync(resolve(outDir, 'robots.txt'), robots.join('\n'));
   }
 });

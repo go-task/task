@@ -6,6 +6,8 @@ description:
 section: Guide
 docType: guide
 outline: deep
+searchKeywords:
+  task-aliases: [aliases, task aliases]
 ---
 
 # Defining tasks

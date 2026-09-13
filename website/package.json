@@ -7,6 +7,7 @@
     "dev": "vitepress dev",
     "build": "vitepress build",
     "check:links": "node scripts/check-markdown-links.mjs",
+    "docsearch:export": "node scripts/export-docsearch.mjs",
     "preview": "vitepress preview",
     "test": "node --test tests/*.test.mjs",
     "lint": "prettier --write ."
@@ -17,6 +18,7 @@
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.1.0",
+    "cheerio": "^1.2.0",
     "gray-matter": "^4.0.3",
     "netlify-cli": "^27.0.0",
     "prettier": "^3.6.2",
