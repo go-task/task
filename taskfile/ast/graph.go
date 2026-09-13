@@ -56,29 +56,6 @@ func (tfg *TaskfileGraph) Merge() (*Taskfile, error) {
 		return nil, err
 	}
 
-	// Capture the declaring Taskfile's variables before merging. The root's
-	// dotenv is loaded separately by the executor and remains global.
-	for _, hash := range hashes[1:] {
-		vertex, err := tfg.Vertex(hash)
-		if err != nil {
-			return nil, err
-		}
-		tf := vertex.Taskfile
-		if len(tf.Dotenv) == 0 {
-			continue
-		}
-		scope := &DotenvScope{
-			Location:    tf.Location,
-			Files:       tf.Dotenv,
-			Vars:        tf.Vars.DeepCopy(),
-			Env:         tf.Env.DeepCopy(),
-			IncludeVars: NewVars(),
-		}
-		for task := range tf.Tasks.Values(nil) {
-			task.DotenvScope = scope.DeepCopy()
-		}
-	}
-
 	// Loop over each vertex in reverse topological order except for the root vertex.
 	// This gives us a loop over every included Taskfile in an order which is safe to merge.
 	for i := len(hashes) - 1; i > 0; i-- {
