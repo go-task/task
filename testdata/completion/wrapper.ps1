@@ -60,6 +60,15 @@ Has    "double-quoted dir"   'task --dir "with space" ' 'spaced'
 Write-Output "powershell: a candidate holding a space is quoted for insertion"
 Has    "dir quoted"          'task --dir w' "'with space'"
 
+Write-Output "powershell: shell metacharacters are inserted literally"
+foreach ($name in @('cost$usd', 'semi;colon', 'paren(dir)', "quote'name", 'back`tick')) {
+	[System.IO.Directory]::CreateDirectory((Join-Path $env:TASK_FIXTURE $name)) | Out-Null
+	$prefix = $name.Substring(0, 3)
+	$quoted = "'" + $name.Replace("'", "''") + "'"
+	Has "literal $name" "task --dir $prefix" $quoted
+	Has "inline literal $name" "task --dir=$prefix" ("'--dir=" + $name.Replace("'", "''") + "'")
+}
+
 if ($fails -ne 0) {
 	Write-Output "powershell: $fails failure(s)"
 	exit 1
