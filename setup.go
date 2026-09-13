@@ -270,15 +270,8 @@ func (e *Executor) readIncludedDotEnvFiles(explicitEnv *ast.Vars) error {
 		key := scopeKey{scope.Namespace, t.Location.Taskfile}
 		loaded, ok := loadedScopes[key]
 		if !ok {
-			compiler := &Compiler{
-				Dir:            e.Dir,
-				Entrypoint:     e.Entrypoint,
-				UserWorkingDir: e.UserWorkingDir,
-				TaskfileEnv:    e.Taskfile.Env.DeepCopy(),
-				TaskfileVars:   e.Taskfile.Vars,
-				Logger:         e.Logger,
-			}
-			compiler.TaskfileEnv.Merge(scope.Env, nil)
+			env := e.Taskfile.Env.DeepCopy()
+			env.Merge(scope.Env, nil)
 			dir := e.Dir
 			if !taskfile.IsRemoteEntrypoint(t.Location.Taskfile) {
 				dir = filepath.Dir(t.Location.Taskfile)
@@ -289,7 +282,8 @@ func (e *Executor) readIncludedDotEnvFiles(explicitEnv *ast.Vars) error {
 				IncludeVars:          scope.IncludeVars,
 				IncludedTaskfileVars: scope.Vars,
 			}
-			vars, err := compiler.GetVariables(contextTask, nil)
+			// Reuse the executor's dynamic cache while resolving this scope's environment.
+			vars, err := e.Compiler.getVariables(contextTask, nil, env, true)
 			if err != nil {
 				return err
 			}

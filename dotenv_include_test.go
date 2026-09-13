@@ -2,6 +2,7 @@ package task_test
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -175,6 +176,62 @@ func TestIncludedDotenvErrors(t *testing.T) {
 			require.NoError(t, os.WriteFile(filepath.Join(dir, "broken.env"), []byte(test.contents), 0o600))
 			e := task.NewExecutor(task.WithDir(dir))
 			require.ErrorContains(t, e.Setup(), test.want)
+		})
+	}
+}
+
+func TestIncludedDotenvDynamicCache(t *testing.T) {
+	t.Parallel()
+	for _, rootDotenv := range []bool{false, true} {
+		t.Run(fmt.Sprintf("root_dotenv=%t", rootDotenv), func(t *testing.T) {
+			t.Parallel()
+			dir := t.TempDir()
+			root := `version: '3'
+vars:
+  CONFIG:
+    sh: 'echo run >> global-calls; echo config'
+includes:
+  a:
+    taskfile: included.yml
+    vars:
+      FLAVOR: a
+      LOCAL:
+        sh: 'echo run >> {{.FLAVOR}}-calls; echo {{.FLAVOR}}'
+  b:
+    taskfile: included.yml
+    vars:
+      FLAVOR: b
+      LOCAL:
+        sh: 'echo run >> {{.FLAVOR}}-calls; echo {{.FLAVOR}}'
+`
+			if rootDotenv {
+				root += "dotenv: [root.env]\n"
+			}
+			for name, contents := range map[string]string{
+				"Taskfile.yml": root,
+				"root.env":     "DOTENV_CACHE_ROOT=root\n",
+				"included.yml": `version: '3'
+dotenv: ['{{.CONFIG}}-{{.LOCAL}}.env']
+tasks:
+  inspect: 'echo {{.DOTENV_CACHE_VALUE}}'
+`,
+				"config-a.env": "DOTENV_CACHE_VALUE=a\n",
+				"config-b.env": "DOTENV_CACHE_VALUE=b\n",
+			} {
+				require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(contents), 0o600))
+			}
+			e := task.NewExecutor(task.WithDir(dir))
+			require.NoError(t, e.Setup())
+			for _, flavor := range []string{"a", "b"} {
+				compiled, err := e.CompiledTask(&task.Call{Task: flavor + ":inspect"})
+				require.NoError(t, err)
+				assert.Equal(t, "echo "+flavor, compiled.Cmds[0].Cmd)
+			}
+			for _, name := range []string{"global-calls", "a-calls", "b-calls"} {
+				contents, err := os.ReadFile(filepath.Join(dir, name))
+				require.NoError(t, err)
+				assert.Equal(t, "run\n", string(contents), "%s should be evaluated once during setup and compilation", name)
+			}
 		})
 	}
 }

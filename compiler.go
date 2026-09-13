@@ -34,18 +34,18 @@ type Compiler struct {
 }
 
 func (c *Compiler) GetTaskfileVariables() (*ast.Vars, error) {
-	return c.getVariables(nil, nil, true)
+	return c.getVariables(nil, nil, c.TaskfileEnv, true)
 }
 
 func (c *Compiler) GetVariables(t *ast.Task, call *Call) (*ast.Vars, error) {
-	return c.getVariables(t, call, true)
+	return c.getVariables(t, call, c.TaskfileEnv, true)
 }
 
 func (c *Compiler) FastGetVariables(t *ast.Task, call *Call) (*ast.Vars, error) {
-	return c.getVariables(t, call, false)
+	return c.getVariables(t, call, c.TaskfileEnv, false)
 }
 
-func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*ast.Vars, error) {
+func (c *Compiler) getVariables(t *ast.Task, call *Call, taskfileEnv *ast.Vars, evaluateShVars bool) (*ast.Vars, error) {
 	result := env.GetEnviron()
 	specialVars, err := c.getSpecialVars(t, call)
 	if err != nil {
@@ -105,7 +105,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 		taskRangeFunc = getRangeFunc(dir)
 	}
 
-	for k, v := range c.TaskfileEnv.All() {
+	for k, v := range taskfileEnv.All() {
 		if err := rangeFunc(k, v); err != nil {
 			return nil, err
 		}
