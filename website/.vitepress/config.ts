@@ -1,5 +1,6 @@
 import { defineConfig, HeadConfig } from 'vitepress';
 import githubLinksPlugin from './plugins/github-links';
+import { renderSearchContent } from './plugins/local-search';
 import { readdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import matter from 'gray-matter';
@@ -367,6 +368,7 @@ export default defineConfig({
       : {
           provider: 'local',
           options: {
+            _render: renderSearchContent,
             detailedView: true,
             miniSearch: {
               searchOptions: {

@@ -7,6 +7,7 @@
     "dev": "vitepress dev",
     "build": "vitepress build",
     "preview": "vitepress preview",
+    "test": "node --test tests/*.test.mjs",
     "lint": "prettier --write ."
   },
   "keywords": [],
