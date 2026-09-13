@@ -61,6 +61,21 @@ strict=${TASK_COMPLETION_STRICT:-}
 
 fails=0
 
+# Control options must be removed before both flag passes, including the one
+# that locates configuration and enables experimental flags.
+cat > "$fixture/other/.taskrc.yml" <<'YML'
+experiments:
+  GENTLE_FORCE: 1
+YML
+for option in --no-aliases --no-descriptions; do
+  if output=$("$TASK_BIN" __complete "$option" --dir "$fixture/other" --f) && [[ "$output" == *--force-all* ]]; then
+    echo "engine: $option preserves project configuration"
+  else
+    echo "engine: $option lost project configuration"
+    fails=$((fails + 1))
+  fi
+done
+
 # Setup can fail after parsing the Taskfile but before creating its compiler.
 # The protocol must still finish cleanly instead of panicking on a nil compiler.
 if output=$("$TASK_BIN" __complete --dir "$fixture" --output=g deploy "") && [[ "$output" == ':4' ]]; then
