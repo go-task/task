@@ -57,15 +57,44 @@ func listFlags(fs *pflag.FlagSet) []Suggestion {
 	return out
 }
 
-func matchFlagName(fs *pflag.FlagSet, word string) *pflag.Flag {
+// valueFlag identifies the value-taking option in a long flag or shorthand
+// group. A nonempty prefix means its value is attached to the same word.
+func valueFlag(fs *pflag.FlagSet, word string) (*pflag.Flag, string) {
 	if fs == nil {
-		return nil
+		return nil, ""
 	}
-	switch {
-	case strings.HasPrefix(word, "--"):
-		return fs.Lookup(strings.TrimPrefix(word, "--"))
-	case strings.HasPrefix(word, "-") && len(word) == 2:
-		return fs.ShorthandLookup(word[1:])
+	if strings.HasPrefix(word, "--") {
+		name, _, attached := strings.Cut(word[2:], "=")
+		if f := fs.Lookup(name); f != nil && flagTakesValue(f) {
+			if attached {
+				return f, "--" + name + "="
+			}
+			return f, ""
+		}
+		return nil, ""
 	}
-	return nil
+	if !strings.HasPrefix(word, "-") {
+		return nil, ""
+	}
+	for i := 1; i < len(word); i++ {
+		f := fs.ShorthandLookup(word[i : i+1])
+		if f == nil {
+			break
+		}
+		attached := i+1 < len(word)
+		if flagTakesValue(f) {
+			if !attached {
+				return f, ""
+			}
+			end := i + 1
+			if word[end] == '=' {
+				end++
+			}
+			return f, word[:end]
+		}
+		if attached && word[i+1] == '=' {
+			break // The rest is an explicit boolean value, not more flags.
+		}
+	}
+	return nil, ""
 }

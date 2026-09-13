@@ -128,10 +128,10 @@ func setupExecutor(t *testing.T) *task.Executor {
 	return setupExecutorWith(t, testTaskfile)
 }
 
-func setupExecutorWith(t *testing.T, taskfile string) *task.Executor {
-	t.Helper()
-	dir := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o644))
+func setupExecutorWith(tb testing.TB, taskfile string) *task.Executor {
+	tb.Helper()
+	dir := tb.TempDir()
+	require.NoError(tb, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o644))
 
 	e := task.NewExecutor(
 		task.WithDir(dir),
@@ -139,7 +139,7 @@ func setupExecutorWith(t *testing.T, taskfile string) *task.Executor {
 		task.WithStderr(io.Discard),
 		task.WithVersionCheck(false),
 	)
-	require.NoError(t, e.Setup())
+	require.NoError(tb, e.Setup())
 	return e
 }
 
@@ -520,4 +520,143 @@ func values(suggs []complete.Suggestion) []string {
 
 func descriptions(suggs []complete.Suggestion) []string {
 	return slicesext.Convert(suggs, func(s complete.Suggestion) string { return s.Description })
+}
+
+func TestComplete_StaticRequirementsDoNotCompileTasks(t *testing.T) {
+	t.Parallel()
+
+	e := setupExecutorWith(t, `version: '3'
+tasks:
+  build:
+    cmds:
+      - for:
+          matrix:
+            item: {ref: .MISSING}
+        cmd: 'echo {{.ITEM}}'
+  deploy:
+    aliases: [dep]
+    requires:
+      vars:
+        - name: ENV
+          enum: [dev, prod]
+    cmds:
+      - for:
+          matrix:
+            env: {ref: 'splitList "," .ENV'}
+        cmd: 'echo {{.ITEM.env}}'
+`)
+	// Static suggestions must not even need a compiler, regardless of the
+	// commands, loops, variables or dotenv files attached to the named task.
+	e.Compiler = nil
+	fs := newTestFlagSet()
+	suggs, _ := complete.Complete(e, fs, []string{"build", ""}, complete.Options{})
+	require.Equal(t, []string{"build", "deploy", "dep"}, values(suggs))
+	suggs, _ = complete.Complete(e, fs, []string{"dep", ""}, complete.Options{})
+	require.Equal(t, []string{"ENV=dev", "ENV=prod"}, values(suggs))
+}
+
+func TestComplete_EnumRefUsesCLIGlobals(t *testing.T) {
+	t.Parallel()
+
+	e := setupExecutorWith(t, `version: '3'
+vars:
+  TARGETS: default
+  ENVS: {ref: 'splitList "," .TARGETS'}
+tasks:
+  deploy:
+    requires:
+      vars:
+        - name: ENV
+          enum: {ref: .ENVS}
+  local:
+    vars:
+      TARGETS: local
+      ENVS: {ref: 'splitList "," .TARGETS'}
+    requires:
+      vars:
+        - name: ENV
+          enum: {ref: .ENVS}
+  'release-*':
+    vars:
+      ENVS: {ref: 'splitList "," (index .MATCH 0)'}
+    requires:
+      vars:
+        - name: ENV
+          enum: {ref: .ENVS}
+`)
+	fs := newTestFlagSet()
+	for _, tt := range []struct {
+		words []string
+		want  []string
+	}{
+		{[]string{"TARGETS=ignored", "deploy", "TARGETS=dev,prod", ""}, []string{"ENV=dev", "ENV=prod"}},
+		{[]string{"deploy", ""}, []string{"ENV=default"}}, // No mutation between requests.
+		{[]string{"TARGETS=dev,prod", "local", ""}, []string{"ENV=local"}},
+		{[]string{"release-beta,stable", ""}, []string{"ENV=beta", "ENV=stable"}},
+	} {
+		suggs, _ := complete.Complete(e, fs, tt.words, complete.Options{})
+		require.Equal(t, tt.want, values(suggs))
+	}
+}
+
+func TestComplete_DescriptionsResolveIndependently(t *testing.T) {
+	t.Parallel()
+
+	e := setupExecutorWith(t, `version: '3'
+vars:
+  TITLE: default
+  DYNAMIC:
+    sh: 'exit 1'
+tasks:
+  build:
+    desc: 'Build {{.TITLE}}'
+    aliases: [b]
+    cmds:
+      - for:
+          matrix:
+            item: {ref: .MISSING}
+        cmd: 'echo {{.ITEM}}'
+  broken:
+    desc: '{{index .MISSING 0}}'
+  static:
+    desc: Static
+    dir: '{{index .MISSING 0}}'
+`)
+	suggs, _ := complete.Complete(e, newTestFlagSet(), []string{"TITLE=custom", ""}, complete.Options{})
+	descs := make(map[string]string, len(suggs))
+	for _, s := range suggs {
+		descs[s.Value] = s.Description
+	}
+	require.Equal(t, "Build custom", descs["build"])
+	require.Equal(t, "Build custom", descs["b"])
+	require.Equal(t, "{{index .MISSING 0}}", descs["broken"])
+	require.Equal(t, "Static", descs["static"])
+}
+
+func TestComplete_FlagContext(t *testing.T) {
+	t.Parallel()
+
+	e := setupExecutor(t)
+	fs := newTestFlagSet()
+	for _, tt := range []struct {
+		name  string
+		words []string
+		want  []string
+		load  bool
+	}{
+		{"grouped value flag", []string{"-vo", ""}, []string{"interleaved", "group", "prefixed"}, false},
+		{"grouped inline value", []string{"-vo=g"}, []string{"-vo=interleaved", "-vo=group", "-vo=prefixed"}, false},
+		{"flag-like value", []string{"--dir", "--output", ""}, []string{"build", "deploy", "dep", "ship", "dynenum", "docs:serve"}, true},
+		{"dash value", []string{"--dir", "--", ""}, []string{"build", "deploy", "dep", "ship", "dynenum", "docs:serve"}, true},
+		{"grouped prior value", []string{"-vd", "deploy", "build", ""}, []string{"build", "deploy", "dep", "ship", "dynenum", "docs:serve"}, true},
+		{"attached prior value", []string{"-vddeploy", "build", ""}, []string{"build", "deploy", "dep", "ship", "dynenum", "docs:serve"}, true},
+		{"boolean assignment", []string{"-v=false", "deploy", ""}, []string{"ENV=dev", "ENV=staging", "ENV=prod", "REGION="}, true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			require.Equal(t, tt.load, complete.NeedsTaskfile(tt.words, fs))
+			suggs, _ := complete.Complete(e, fs, tt.words, complete.Options{})
+			require.Equal(t, tt.want, values(suggs))
+		})
+	}
 }

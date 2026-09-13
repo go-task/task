@@ -31,7 +31,9 @@ func runComplete(args []string) error {
 
 	// Best-effort: a missing or broken Taskfile must not break completion.
 	if complete.NeedsTaskfile(args, pflag.CommandLine) {
-		_ = e.Setup()
+		if err := e.Setup(); err != nil {
+			e = nil
+		}
 	}
 
 	suggs, dirv := complete.Complete(e, pflag.CommandLine, args, opts)
