@@ -60,6 +60,16 @@ export TASK_FIXTURE="$fixture"
 strict=${TASK_COMPLETION_STRICT:-}
 
 fails=0
+
+# Setup can fail after parsing the Taskfile but before creating its compiler.
+# The protocol must still finish cleanly instead of panicking on a nil compiler.
+if output=$("$TASK_BIN" __complete --dir "$fixture" --output=g deploy "") && [[ "$output" == ':4' ]]; then
+  echo "engine: failed setup returns an empty completion response"
+else
+  echo "engine: failed setup broke the completion protocol"
+  fails=$((fails + 1))
+fi
+
 run() { # LABEL COMMAND...
   echo "== $1 =="
   "${@:2}" || fails=$((fails + 1))

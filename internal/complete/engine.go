@@ -9,64 +9,63 @@ import (
 	"github.com/go-task/task/v3/internal/refs"
 	"github.com/go-task/task/v3/internal/slicesext"
 	"github.com/go-task/task/v3/internal/sort"
+	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 // e may be nil when the Taskfile failed to load; flag completion still works.
 func Complete(e *task.Executor, fs *pflag.FlagSet, args []string, opts Options) ([]Suggestion, Directive) {
-	ctx := parseContext(args)
+	ctx := parseContext(args, fs)
 
 	if ctx.afterDash {
 		return nil, DirectiveDefault
 	}
 
-	if flag := ctx.flagValue(fs); flag != nil {
+	if flag := ctx.valueFlag; flag != nil {
 		return completeFlagValue(flag.Name, "")
 	}
 
 	if strings.HasPrefix(ctx.toComplete, "-") {
-		if flagWord, _, ok := strings.Cut(ctx.toComplete, "="); ok {
-			if f := matchFlagName(fs, flagWord); f != nil && flagTakesValue(f) {
+		if strings.Contains(ctx.toComplete, "=") {
+			if f, prefix := valueFlag(fs, ctx.toComplete); f != nil {
 				// Shells match against the whole token, so a bare value never would.
-				return completeFlagValue(f.Name, flagWord+"=")
+				return completeFlagValue(f.Name, prefix)
 			}
 		}
 		return listFlags(fs), DirectiveNoFileComp
 	}
 
-	// No prior arg means nothing can require a variable yet.
-	if e != nil && e.Taskfile != nil && len(args) > 1 {
-		if suggs, dir, ok := completeRequiredVars(e, args[:len(args)-1], fs); ok {
-			return suggs, dir
-		}
+	if e == nil || e.Taskfile == nil {
+		return nil, DirectiveNoFileComp
+	}
+	c := compilerWithGlobals(e.Compiler, ctx.vars)
+	if suggs := completeRequiredVars(e, c, ctx); len(suggs) > 0 {
+		return suggs, DirectiveNoSpace | DirectiveNoFileComp | DirectiveKeepOrder
 	}
 
-	return completeTaskNames(e, opts)
+	return completeTaskNames(e, c, opts), DirectiveNoFileComp
 }
 
 func NeedsTaskfile(args []string, fs *pflag.FlagSet) bool {
-	if !parseContext(args).inTaskContext(fs) {
+	if !parseContext(args, fs).inTaskContext() {
 		return false
 	}
 	// Reading the Taskfile from standard input would hang the shell on a keystroke.
+	if fs == nil {
+		return true
+	}
 	f := fs.Lookup("taskfile")
 	return f == nil || f.Value.String() != "-"
 }
 
-func completeTaskNames(e *task.Executor, opts Options) ([]Suggestion, Directive) {
-	if e == nil || e.Taskfile == nil {
-		return nil, DirectiveNoFileComp
-	}
-	tasks := listTasks(e, opts)
-	desc := func(t *ast.Task) string {
-		if opts.NoDescriptions {
-			return ""
-		}
-		return t.Desc
+func completeTaskNames(e *task.Executor, c *task.Compiler, opts Options) []Suggestion {
+	sorter := e.TaskSorter
+	if sorter == nil {
+		sorter = sort.AlphaNumericWithRootTasksFirst
 	}
 
-	out := make([]Suggestion, 0, len(tasks))
-	seen := make(map[string]bool, len(tasks))
+	out := make([]Suggestion, 0, e.Taskfile.Tasks.Len())
+	seen := make(map[string]bool, e.Taskfile.Tasks.Len())
 	add := func(name, desc string) {
 		value, partial := suggestedName(name)
 		// `*-wildcard-*` has no prefix, and `wildcard-*` / `wildcard-*-*` share one.
@@ -81,47 +80,42 @@ func completeTaskNames(e *task.Executor, opts Options) ([]Suggestion, Directive)
 		out = append(out, Suggestion{Value: value, Description: desc})
 	}
 
-	for _, t := range tasks {
-		add(t.Task, desc(t))
-		if opts.NoAliases {
-			continue
-		}
-		for _, alias := range t.Aliases {
-			add(alias, desc(t))
-		}
-	}
-
-	// A single truncated wildcard prefix would otherwise cost every complete
-	// name its trailing space: the directive covers the whole response.
-	return out, DirectiveNoFileComp
-}
-
-// GetTaskList compiles every task, on every keystroke, and a description is the
-// only compiled field read: worth its cost only when one holds a template.
-func listTasks(e *task.Executor, opts Options) []*ast.Task {
-	// Not dead defence: flags.WithFlags() clobbers the sorter NewExecutor set.
-	sorter := e.TaskSorter
-	if sorter == nil {
-		sorter = sort.AlphaNumericWithRootTasksFirst
-	}
-
-	out := make([]*ast.Task, 0, e.Taskfile.Tasks.Len())
-	templated := false
 	for t := range e.Taskfile.Tasks.Values(sorter) {
 		if t.Internal {
 			continue
 		}
-		templated = templated || (!opts.NoDescriptions && strings.Contains(t.Desc, "{{"))
-		out = append(out, t)
-	}
-
-	if templated {
-		// The uncompiled tasks keep one broken task from emptying the list.
-		if compiled, err := e.GetTaskList(task.FilterOutInternal); err == nil {
-			return compiled
+		desc := ""
+		if !opts.NoDescriptions {
+			desc = taskDescription(c, t)
+		}
+		add(t.Task, desc)
+		if opts.NoAliases {
+			continue
+		}
+		for _, alias := range t.Aliases {
+			add(alias, desc)
 		}
 	}
+
 	return out
+}
+
+// Only a templated description needs variables. A failure leaves this task's
+// raw description intact without affecting any other task.
+func taskDescription(c *task.Compiler, t *ast.Task) string {
+	if c == nil || !strings.Contains(t.Desc, "{{") {
+		return t.Desc
+	}
+	vars, err := taskVariables(c, t, t.Task, nil)
+	if err != nil {
+		return t.Desc
+	}
+	cache := &templater.Cache{Vars: vars}
+	desc := templater.Replace(t.Desc, cache)
+	if cache.Err() != nil {
+		return t.Desc
+	}
+	return desc
 }
 
 // A pattern is truncated at its `*`: it is not runnable, `.MATCH` would be empty.
@@ -159,27 +153,40 @@ func suggest(prefix string, values []string) []Suggestion {
 // unions the still-unset requirements of every task named on the line. Reporting
 // none lets the caller offer task names instead, which is how the line resolves
 // itself: fill in what blocks execution, then add another task.
-func completeRequiredVars(e *task.Executor, prior []string, fs *pflag.FlagSet) ([]Suggestion, Directive, bool) {
-	taskWords, setVars := parsePriorWords(prior, fs)
-
-	out := make([]Suggestion, 0, 8)
+func completeRequiredVars(e *task.Executor, c *task.Compiler, ctx completionContext) []Suggestion {
+	if len(ctx.tasks) == 0 {
+		return nil
+	}
+	var out []Suggestion
 	seen := make(map[string]bool, 8)
-	for _, w := range taskWords {
-		// FindMatchingTasks resolves aliases and wildcards, and unlike GetTask it
-		// does not build the fuzzy model to spell-check a word that is not a task.
-		if matches, err := e.FindMatchingTasks(&task.Call{Task: w}); err != nil || len(matches) == 0 {
+	for _, w := range ctx.tasks {
+		matches, err := e.FindMatchingTasks(&task.Call{Task: w})
+		if err != nil || len(matches) == 0 {
 			continue
 		}
-		compiled, err := e.FastCompiledTask(&task.Call{Task: w})
-		if err != nil || compiled == nil || compiled.Requires == nil {
+		t := matches[0].Task
+		if t.Requires == nil {
 			continue
 		}
-		for _, v := range compiled.Requires.Vars {
-			if v == nil || v.Name == "" || setVars[v.Name] || seen[v.Name] {
+		// Static requirements need no compilation. Resolve task variables at
+		// most once, and only if an unset requirement has an enum reference.
+		var vars *ast.Vars
+		resolvedVars := false
+		for _, v := range t.Requires.Vars {
+			if v == nil || v.Name == "" || seen[v.Name] {
+				continue
+			}
+			if _, set := ctx.vars.Get(v.Name); set {
 				continue
 			}
 			seen[v.Name] = true
-			values := enumValues(v, compiled.Vars)
+			if v.Enum != nil && v.Enum.Ref != "" && len(v.Enum.Value) == 0 && !resolvedVars {
+				resolvedVars = true
+				if c != nil {
+					vars, _ = taskVariables(c, t, w, matches[0].Wildcards)
+				}
+			}
+			values := enumValues(v, vars)
 			if len(values) == 0 {
 				out = append(out, Suggestion{Value: v.Name + "="})
 				continue
@@ -190,11 +197,33 @@ func completeRequiredVars(e *task.Executor, prior []string, fs *pflag.FlagSet) (
 		}
 	}
 
-	if len(out) == 0 {
-		return nil, 0, false
+	return out
+}
+
+func taskVariables(c *task.Compiler, t *ast.Task, name string, wildcards []string) (*ast.Vars, error) {
+	vars := ast.NewVars()
+	vars.Set("MATCH", ast.Var{Value: wildcards})
+	return c.FastGetVariables(t, &task.Call{Task: name, Vars: vars})
+}
+
+// Execution merges CLI globals into Taskfile vars before resolving templates.
+// Use a separate compiler so completion never mutates the loaded Taskfile or
+// carries an assignment into a later request.
+func compilerWithGlobals(c *task.Compiler, globals *ast.Vars) *task.Compiler {
+	if c == nil || globals.Len() == 0 {
+		return c
 	}
-	// KeepOrder preserves the declaration order of the `requires` block.
-	return out, DirectiveNoSpace | DirectiveNoFileComp | DirectiveKeepOrder, true
+	vars := ast.NewVars()
+	vars.Merge(c.TaskfileVars, nil)
+	vars.Merge(globals, nil)
+	return &task.Compiler{
+		Dir:            c.Dir,
+		Entrypoint:     c.Entrypoint,
+		UserWorkingDir: c.UserWorkingDir,
+		TaskfileEnv:    c.TaskfileEnv,
+		TaskfileVars:   vars,
+		Logger:         c.Logger,
+	}
 }
 
 func enumValues(v *ast.VarsWithValidation, vars *ast.Vars) []string {
