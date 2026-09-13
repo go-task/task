@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { getScrollOffset } from 'vitepress';
 
 const platforms = [
   { id: 'all', label: 'All' },
@@ -21,9 +22,10 @@ async function selectPlatform(platform: string) {
 
 async function revealLinkedMethod() {
   if (!location.hash || selected.value === 'all') return;
+  const hash = location.hash;
   let id: string;
   try {
-    id = decodeURIComponent(location.hash.slice(1));
+    id = decodeURIComponent(hash.slice(1));
   } catch {
     return;
   }
@@ -33,7 +35,19 @@ async function revealLinkedMethod() {
     return;
   }
   await selectPlatform('all');
-  target?.scrollIntoView();
+  // VitePress schedules its anchor scroll before Vue reveals the card. Wait
+  // for that frame before scrolling to the updated position.
+  requestAnimationFrame(() => {
+    if (!target?.isConnected || location.hash !== hash) {
+      return;
+    }
+    target.focus({ preventScroll: true });
+    window.scrollTo({
+      top:
+        window.scrollY + target.getBoundingClientRect().top - getScrollOffset(),
+      behavior: 'instant'
+    });
+  });
 }
 
 function revealCurrentLink(event: MouseEvent) {
@@ -299,7 +313,7 @@ onUnmounted(() => {
   }
 }
 
-@media (max-width: 379px) {
+@media (max-width: 419px) {
   .install-platform-icon {
     display: none;
   }

@@ -28,13 +28,13 @@ Maintained by the Task team and kept up-to-date.
 
 <InstallationMethod platforms="macos" platform-label="macOS">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [Homebrew](https://brew.sh) {#homebrew}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [Tap source](https://github.com/go-task/homebrew-tap/blob/main/Casks/go-task.rb)
 [Homebrew package](https://formulae.brew.sh/formula/go-task)
@@ -56,13 +56,13 @@ brew install go-task
 
 <InstallationMethod platforms="linux" platform-label="Fedora · CentOS · Red Hat">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf) {#dnf}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Arpm)
 
@@ -84,13 +84,13 @@ dnf install task
 
 <InstallationMethod platforms="linux" platform-label="Ubuntu · Debian · Linux Mint">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [apt](https://doc.ubuntu-fr.org/apt) {#apt}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Adeb)
 
@@ -112,13 +112,13 @@ apt install task
 
 <InstallationMethod platforms="linux" platform-label="Alpine Linux">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [apk](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper) {#apk}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://cloudsmith.io/~task/repos/task/packages/?sort=-format&q=format%3Aalpine)
 
@@ -140,13 +140,13 @@ apk add task
 
 <InstallationMethod platforms="linux" platform-label="Linux">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [Snap](https://snapcraft.io/task) {#snap}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [Source](https://github.com/go-task/snap/blob/main/snap/snapcraft.yaml)
 
@@ -162,13 +162,13 @@ Requires a Linux distribution with classic confinement support.
 
 <InstallationMethod platforms="macos linux windows" platform-label="macOS · Linux · Windows">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [npm](https://www.npmjs.com) {#npm}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://www.npmjs.com/package/@go-task/cli)
 [Source](https://github.com/go-task/task/blob/main/package.json)
@@ -185,13 +185,13 @@ Task is also available as a project dependency.
 
 <InstallationMethod platforms="windows" platform-label="Windows">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [WinGet](https://github.com/microsoft/winget-cli) {#winget}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [Source](https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/Task/Task)
 
@@ -215,13 +215,13 @@ lag behind the latest release.
 
 <InstallationMethod platforms="macos linux windows" platform-label="macOS · Linux · Windows">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [Mise](https://mise.jdx.dev/) {#mise}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://mise-tools.jdx.dev/tools/task)
 
@@ -238,13 +238,13 @@ your project's `mise.toml`.
 
 <InstallationMethod platforms="macos" platform-label="macOS">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [Macports](https://macports.org) {#macports}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://ports.macports.org/port/go-task/details/)
 [Source](https://github.com/macports/macports-ports/blob/master/devel/go-task/Portfile)
@@ -259,13 +259,13 @@ port install go-task
 
 <InstallationMethod platforms="macos linux windows" platform-label="macOS · Linux · Windows">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [pip](https://pip.pypa.io) {#pip}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://pypi.org/project/go-task-bin)
 [Source](https://github.com/Bing-su/pip-binary-factory/tree/main/task)
@@ -280,13 +280,13 @@ pip install go-task-bin
 
 <InstallationMethod platforms="windows" platform-label="Windows">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [Chocolatey](https://chocolatey.org) {#chocolatey}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://community.chocolatey.org/packages/go-task)
 [Source](https://github.com/Starz0r/ChocolateyPackagingScripts/blob/master/src/go-task_gh_build.py)
@@ -301,13 +301,13 @@ choco install go-task
 
 <InstallationMethod platforms="windows" platform-label="Windows">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [Scoop](https://scoop.sh) {#scoop}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [Source](https://github.com/ScoopInstaller/Main/blob/master/bucket/task.json)
 
@@ -321,13 +321,13 @@ scoop install task
 
 <InstallationMethod platforms="linux" platform-label="Arch Linux">
 
-<template #heading>
+<template v-slot:heading>
 
 ### Arch ([pacman](https://wiki.archlinux.org/title/Pacman)) {#arch}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://archlinux.org/packages/extra/x86_64/go-task/)
 [Source](https://gitlab.archlinux.org/archlinux/packaging/packages/go-task)
@@ -342,13 +342,13 @@ pacman -S go-task
 
 <InstallationMethod platforms="linux" platform-label="Fedora">
 
-<template #heading>
+<template v-slot:heading>
 
 ### Fedora ([dnf](https://docs.fedoraproject.org/en-US/quick-docs/dnf)) {#fedora-community}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://packages.fedoraproject.org/pkgs/golang-github-task/go-task/)
 [Source](https://src.fedoraproject.org/rpms/golang-github-task)
@@ -363,13 +363,13 @@ dnf install go-task
 
 <InstallationMethod platforms="freebsd" platform-label="FreeBSD">
 
-<template #heading>
+<template v-slot:heading>
 
 ### FreeBSD ([Ports](https://ports.freebsd.org/cgi/ports.cgi)) {#freebsd}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://cgit.freebsd.org/ports/tree/devel/task)
 [Source](https://cgit.freebsd.org/ports/tree/devel/task/Makefile)
@@ -384,13 +384,13 @@ pkg install task
 
 <InstallationMethod platforms="linux macos" platform-label="Nix · NixOS · Linux · macOS">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [Nix](https://nixos.org) {#nix}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [Source](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/go/go-task/package.nix)
 
@@ -404,13 +404,13 @@ nix-env -iA nixpkgs.go-task
 
 <InstallationMethod platforms="linux" platform-label="Debian · Ubuntu">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [pacstall](https://github.com/pacstall/pacstall) {#pacstall}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://pacstall.dev/packages/go-task-deb)
 [Source](https://github.com/pacstall/pacstall-programs/blob/master/packages/go-task-deb/go-task-deb.pacscript)
@@ -425,13 +425,13 @@ pacstall -I go-task-deb
 
 <InstallationMethod platforms="macos linux" platform-label="macOS · Linux">
 
-<template #heading>
+<template v-slot:heading>
 
 ### [pkgx](https://pkgx.sh) {#pkgx}
 
 </template>
 
-<template #links>
+<template v-slot:links>
 
 [View package](https://pkgx.dev/pkgs/taskfile.dev)
 [Source](https://github.com/pkgxdev/pantry/blob/main/projects/taskfile.dev/package.yml)
