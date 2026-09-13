@@ -1289,3 +1289,74 @@ func TestIf(t *testing.T) {
 		NewExecutorTest(t, opts...)
 	}
 }
+
+func TestIncludedDotenvScopes(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/dotenv/included_scopes"
+	for _, test := range []struct {
+		name, dir, entrypoint, task string
+	}{
+		{name: "root isolation", task: "inspect"},
+		{name: "include directory and file order", task: "app:inspect"},
+		{name: "standalone", dir: "app", task: "inspect"},
+		{name: "standalone root remains global", dir: "app", task: "common:inspect"},
+		{name: "no dotenv inherited without root", entrypoint: "without-root.yml", task: "app:common:inspect"},
+		{name: "without root dotenv", entrypoint: "without-root.yml", task: "app:inspect"},
+		{name: "nested dotenv is independent", task: "app:child:inspect"},
+		{name: "common only inherits root", task: "app:common:inspect"},
+		{name: "sibling isolation", task: "sibling:inspect"},
+		{name: "common via another parent", task: "sibling:common:inspect"},
+		{name: "include vars a", task: "a:inspect"},
+		{name: "include vars b", task: "b:inspect"},
+		{name: "flatten", task: "flattened"},
+		{name: "task env priority", task: "app:task-env"},
+		{name: "task dotenv priority", task: "app:task-dotenv"},
+	} {
+		entrypoint := ""
+		if test.entrypoint != "" {
+			entrypoint = filepath.Join(dir, test.entrypoint)
+		}
+		NewExecutorTest(t,
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir(filepath.Join(dir, test.dir)),
+				task.WithEntrypoint(entrypoint),
+				task.WithSilent(true),
+			),
+			WithTask(test.task),
+		)
+	}
+}
+
+func TestIncludedDotenvErrors(t *testing.T) {
+	t.Parallel()
+
+	for _, name := range []string{"parse", "template"} {
+		NewExecutorTest(t,
+			WithName(name),
+			WithExecutorOptions(
+				task.WithDir("testdata/dotenv/included_errors"),
+				task.WithEntrypoint(filepath.Join("testdata/dotenv/included_errors", name+"-root.yml")),
+			),
+			WithSetupError(),
+			WithFixtureTemplating(),
+		)
+	}
+}
+
+func TestIncludedDotenvDynamicCache(t *testing.T) {
+	t.Parallel()
+
+	for _, entrypoint := range []string{"Taskfile.yml", "with-root.yml"} {
+		NewExecutorTest(t,
+			WithName(entrypoint),
+			WithExecutorOptions(
+				task.WithDir("testdata/dotenv/included_dynamic_cache"),
+				task.WithEntrypoint(filepath.Join("testdata/dotenv/included_dynamic_cache", entrypoint)),
+				task.WithSilent(true),
+			),
+			WithPostProcessFn(PPSortedLines),
+		)
+	}
+}

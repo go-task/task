@@ -1,0 +1,25 @@
+version: '3'
+
+vars:
+  CONFIG:
+    sh: 'echo global-evaluated >&2; echo config'
+
+includes:
+  a:
+    taskfile: included.yml
+    vars:
+      FLAVOR: a
+      LOCAL:
+        sh: 'echo {{.FLAVOR}}-evaluated >&2; echo {{.FLAVOR}}'
+  b:
+    taskfile: included.yml
+    vars:
+      FLAVOR: b
+      LOCAL:
+        sh: 'echo {{.FLAVOR}}-evaluated >&2; echo {{.FLAVOR}}'
+
+tasks:
+  default:
+    cmds:
+      - task: a:inspect
+      - task: b:inspect
