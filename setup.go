@@ -267,7 +267,7 @@ func (e *Executor) readIncludedDotEnvFiles(explicitEnv *ast.Vars) error {
 		if scope == nil {
 			continue
 		}
-		key := scopeKey{scope.Namespace, scope.Location}
+		key := scopeKey{scope.Namespace, t.Location.Taskfile}
 		loaded, ok := loadedScopes[key]
 		if !ok {
 			compiler := &Compiler{
@@ -280,12 +280,12 @@ func (e *Executor) readIncludedDotEnvFiles(explicitEnv *ast.Vars) error {
 			}
 			compiler.TaskfileEnv.Merge(scope.Env, nil)
 			dir := e.Dir
-			if !taskfile.IsRemoteEntrypoint(scope.Location) {
-				dir = filepath.Dir(scope.Location)
+			if !taskfile.IsRemoteEntrypoint(t.Location.Taskfile) {
+				dir = filepath.Dir(t.Location.Taskfile)
 			}
 			contextTask := &ast.Task{
 				Dir:                  dir,
-				Location:             &ast.Location{Taskfile: scope.Location},
+				Location:             t.Location,
 				IncludeVars:          scope.IncludeVars,
 				IncludedTaskfileVars: scope.Vars,
 			}
