@@ -52,8 +52,7 @@ export const guideAnchors: Record<string, string> = {
     '/docs/guide/conditional-execution#using-if-with-for-loops',
   'if-vs-preconditions':
     '/docs/guide/conditional-execution#if-vs-preconditions',
-  'limiting-when-tasks-run':
-    '/docs/guide/conditional-execution#limiting-when-tasks-run',
+  'limiting-when-tasks-run': '/docs/guide/dependencies#repeated-calls',
   'ensuring-required-variables-are-set':
     '/docs/guide/required-variables#ensuring-required-variables-are-set',
   'ensuring-required-variables-have-allowed-values':
@@ -68,7 +67,7 @@ export const guideAnchors: Record<string, string> = {
     '/docs/guide/variables#referencing-other-variables',
   'parsing-json-yaml-into-map-variables':
     '/docs/guide/variables#parsing-json-yaml-into-map-variables',
-  'secret-variables': '/docs/guide/variables#secret-variables',
+  'secret-variables': '/docs/guide/secret-variables',
   'looping-over-values': '/docs/guide/loops',
   'looping-over-a-static-list': '/docs/guide/loops#looping-over-a-static-list',
   'looping-over-a-matrix': '/docs/guide/loops#looping-over-a-matrix',
@@ -82,16 +81,16 @@ export const guideAnchors: Record<string, string> = {
     '/docs/guide/arguments#forwarding-cli-arguments-to-commands',
   'wildcard-arguments': '/docs/guide/arguments#wildcard-arguments',
   'doing-task-cleanup-with-defer':
-    '/docs/guide/dependencies#doing-task-cleanup-with-defer',
+    '/docs/guide/errors-and-cleanup#cleanup-with-defer',
   help: '/docs/guide/defining-tasks#help',
   'display-summary-of-task':
     '/docs/guide/defining-tasks#display-summary-of-task',
   'task-aliases': '/docs/guide/defining-tasks#task-aliases',
   'overriding-task-name': '/docs/guide/defining-tasks#overriding-task-name',
-  'warning-prompts': '/docs/guide/required-variables#warning-prompts',
+  'warning-prompts': '/docs/guide/conditional-execution#confirmation-prompts',
   'silent-mode': '/docs/guide/output#silent-mode',
   'dry-run-mode': '/docs/guide/running-tasks#dry-run-mode',
-  'ignore-errors': '/docs/guide/output#ignore-errors',
+  'ignore-errors': '/docs/guide/errors-and-cleanup#ignoring-command-errors',
   'output-syntax': '/docs/guide/output#output-syntax',
   'ci-integration': '/docs/guide/output#ci-integration',
   'colored-output': '/docs/guide/output#colored-output',

@@ -8,53 +8,73 @@ outline: deep
 
 # Watch mode
 
-With the flags `--watch` or `-w` task will watch for file changes and run the
-task again. This requires the `sources` attribute to be given, so task knows
-which files to watch.
-
-The default watch interval is 100 milliseconds, but it's possible to change it
-by either setting `interval: '500ms'` in the root of the Taskfile or by passing
-it as an argument like `--interval=500ms`. This interval is the time Task will
-wait for duplicated events. It will only run the task again once, even if
-multiple changes happen within the interval.
-
-Also, it's possible to set `watch: true` in a given task and it'll automatically
-run in watch mode:
+Use `--watch` (or `-w`) to keep a task running and rerun it when its source
+files change. For a Go project:
 
 ```yaml
 version: '3'
 
-interval: 500ms
+tasks:
+  build:
+    sources:
+      - '**/*.go'
+      - go.mod
+      - go.sum
+    cmds:
+      - go build ./...
+```
+
+Run `task --watch build`, edit a Go file, and save it to trigger another build.
+Press Ctrl+C to stop watching.
+
+Watch mode detects changes; [up-to-date checks](./up-to-date.md) decide whether
+the task's commands need to run. Both use the same `sources`.
+
+## Enable watching by default
+
+Set `watch: true` on a task if its normal CLI use should start a watcher:
+
+```yaml
+version: '3'
 
 tasks:
   build:
-    desc: Builds the Go application
     watch: true
-    sources:
-      - '**/*.go'
+    sources: ['**/*.go']
     cmds:
-      - go build # ...
+      - go build ./...
 ```
 
-::: info
+Now `task build` starts watch mode. The `watch` setting applies when the task is
+called from the CLI; calls from another task through `cmds` or `deps` do not
+start a watcher.
 
-Note that when setting `watch: true` to a task, it'll only run in watch mode
-when running from the CLI via `task my-watch-task`, but won't run in watch mode
-if called by another task, either directly or as a dependency.
+## Combine rapid changes
 
-:::
+The default watch interval is 100 milliseconds. Increase it if saving several
+files produces duplicate events:
+
+```shell
+task --watch --interval=500ms build
+```
+
+You can also set `interval: '500ms'` at the root of the Taskfile. The interval
+groups events close together so that Task reruns the task once for the batch.
+
+## Watch long-running apps
+
+Builds and checks finish after each run. Servers keep running and need to stop
+before a replacement can take over their port.
 
 ::: warning
 
-The watcher can misbehave in certain scenarios, in particular for long-running
-servers. There is a [known bug](https://github.com/go-task/task/issues/160)
-where child processes of the running might not be killed appropriately. It's
-advised to avoid running commands as `go run` and prefer
-`go build [...] && ./binary` instead.
-
-If you are having issues, you might want to try tools specifically designed for
-live-reloading, like [Air](https://github.com/air-verse/air/). Also, be sure to
-[report any issues](https://github.com/go-task/task/issues/new?template=bug_report.yml)
-to us.
+There is a [known issue](https://github.com/go-task/task/issues/160) where watch
+mode may leave child processes running. Prefer building and running the
+executable directly over `go run`, which starts another process.
 
 :::
+
+For applications that need dedicated live-reload behavior, consider tools such
+as [Air](https://github.com/air-verse/air/). Report Task-specific problems with
+a small reproducer in the
+[issue tracker](https://github.com/go-task/task/issues/new?template=bug_report.yml).

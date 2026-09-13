@@ -1,8 +1,8 @@
 ---
 title: Dependencies and task calls
 description:
-  Run tasks in parallel with `deps`, call another task from `cmds`, and schedule
-  cleanup with `defer`.
+  Run checks before a build, put tasks in order, pass variables, and control
+  repeated calls and cleanup.
 section: Guide
 docType: guide
 outline: deep
@@ -10,218 +10,206 @@ outline: deep
 
 # Dependencies and task calls
 
-A task can pull in other tasks in three ways, and each has different ordering
-guarantees. The rule of thumb: `deps` says "these must have happened", `cmds`
-says "do this, then this". If order matters, it belongs in `cmds`.
+A build often needs several steps: lint the code, run tests, then compile. Use
+`deps` when the checks can run in parallel, or task calls in `cmds` when each
+step must finish before the next starts.
 
-## Task dependencies
+## Run dependencies first {#task-dependencies}
 
-> Dependencies run in parallel, so dependencies of a task should not depend one
-> another. If you want to force tasks to run serially, take a look at the
-> [Calling Another Task](#calling-another-task) section below.
-
-You may have tasks that depend on others. Just pointing them on `deps` will make
-them run automatically before running the parent task:
+In a Go project, this Taskfile runs lint and tests before building:
 
 ```yaml
 version: '3'
 
 tasks:
   build:
-    deps: [assets]
+    deps: [lint, test]
     cmds:
-      - go build -v -i main.go
+      - go build ./...
 
-  assets:
+  lint:
     cmds:
-      - esbuild --bundle --minify css/index.css > public/bundle.css
+      - go vet ./...
+
+  test:
+    cmds:
+      - go test ./...
 ```
 
-In the above example, `assets` will always run right before `build` if you run
-`task build`.
+Run `task build`. Task starts `lint` and `test` concurrently and waits for both
+to succeed before running `go build`. If either fails, the build command does
+not run.
 
-A task can have only dependencies and no commands to group tasks together:
+The order of entries in `deps` does not set their execution order. Use
+[task calls in `cmds`](#calling-another-task) if tests must wait for lint to
+finish.
+
+You can also group tasks without adding commands. Add this task to the same
+Taskfile to run only the checks with `task check`:
 
 ```yaml
-version: '3'
-
 tasks:
-  assets:
-    deps: [js, css]
-
-  js:
-    cmds:
-      - esbuild --bundle --minify js/index.js > public/bundle.js
-
-  css:
-    cmds:
-      - esbuild --bundle --minify css/index.css > public/bundle.css
+  check:
+    deps: [lint, test]
 ```
 
-If there is more than one dependency, they always run in parallel for better
-performance.
+## Run task calls in order {#calling-another-task}
 
-::: tip
+To run lint, then tests, then the build, replace `build` in the example above
+with:
 
-You can also make the tasks given by the command line run in parallel by using
-the `--parallel` flag (alias `-p`). Example: `task --parallel js css`.
+```yaml
+tasks:
+  build:
+    cmds:
+      - task: lint
+      - task: test
+      - go build ./...
+```
+
+Task waits for each command or task call to succeed before starting the next. If
+lint fails, neither tests nor the build run.
+
+Each called task still runs its own dependencies first. You can combine the two
+forms: use `deps` for independent prerequisites and `cmds` for the steps that
+need an order.
+
+::: tip Calling tasks from another Taskfile
+
+To call a task declared in the root Taskfile from an
+[included Taskfile](./includes.md), add a leading `:`, for example
+`task: :build`.
 
 :::
 
-If you want to pass information to dependencies, you can do that the same manner
-as you would to [call another task](#calling-another-task):
+## Pass variables to a task
 
-```yaml
-version: '3'
-
-tasks:
-  default:
-    deps:
-      - task: echo_sth
-        vars: { TEXT: 'before 1' }
-      - task: echo_sth
-        vars: { TEXT: 'before 2' }
-        silent: true
-    cmds:
-      - echo "after"
-
-  echo_sth:
-    cmds:
-      - echo {{.TEXT}}
-```
-
-### Fail-fast dependencies
-
-By default, Task waits for all dependencies to finish running before continuing.
-If you want Task to stop executing further dependencies as soon as one fails,
-you can set `failfast: true` on your [`.taskrc.yml`][config] or for a specific
-task:
-
-```yaml
-# .taskrc.yml
-failfast: true # applies to all tasks
-```
-
-```yaml
-# Taskfile.yml
-version: '3'
-
-tasks:
-  default:
-    deps: [task1, task2, task3]
-    failfast: true # applies only to this task
-```
-
-Alternatively, you can use `--failfast`, which also work for `--parallel`.
-
-### Interleaved output is expected
-
-Because dependencies run concurrently, their output arrives interleaved and in a
-different order between runs. That is not a bug, and it is why the default
-output mode can look scrambled on a parallel build.
-
-Set `output: prefixed` to label each line with the task it came from, or
-`output: group` to hold each command's output and print it in one block when it
-finishes. Blocks from different tasks can still alternate between commands. See
-[Output and logging](./output.md).
-
-### Limiting how much runs at once
-
-`--concurrency` / `-C` caps how many tasks run simultaneously. The default is
-`0`, meaning no limit. It is the setting to reach for when parallel tasks
-compete for the same resource: a database, a port, the network.
-
-### Running a task only once
-
-A task marked `run: once` executes a single time per invocation of `task`, no
-matter how many other tasks depend on it:
-
-```yaml
-version: '3'
-
-tasks:
-  setup:
-    run: once
-    cmds:
-      - echo "setting up"
-
-  test:
-    deps: [setup]
-  lint:
-    deps: [setup]
-
-  check:
-    deps: [test, lint]
-```
-
-`task check` prints `setting up` once, not twice. Without `run: once`, a shared
-dependency runs for each dependent that asks for it.
-
-## Calling another task
-
-When a task has many dependencies, they are executed concurrently. This will
-often result in a faster build pipeline. However, in some situations, you may
-need to call other tasks serially. In this case, use the following syntax:
-
-```yaml
-version: '3'
-
-tasks:
-  main-task:
-    cmds:
-      - task: task-to-be-called
-      - task: another-task
-      - echo "Both done"
-
-  task-to-be-called:
-    cmds:
-      - echo "Task to be called"
-
-  another-task:
-    cmds:
-      - echo "Another task"
-```
-
-Using the `vars` and `silent` attributes you can choose to pass variables and
-toggle [silent mode](./output.md#silent-mode) on a call-by-call basis:
+Use the object form of a task call to provide `vars`. You can also set
+`silent: true` to hide the command being executed for that call:
 
 ```yaml
 version: '3'
 
 tasks:
   greet:
-    vars:
-      RECIPIENT: '{{default "World" .RECIPIENT}}'
     cmds:
       - echo "Hello, {{.RECIPIENT}}!"
 
-  greet-pessimistically:
+  greet:all:
     cmds:
+      - task: greet
+        vars: { RECIPIENT: 'World' }
       - task: greet
         vars: { RECIPIENT: 'Cruel World' }
         silent: true
 ```
 
-The above syntax is also supported in `deps`.
+`task greet:all` prints both greetings in order. The second call still prints
+its greeting: [silent mode](./output.md#silent-mode) hides the command, not its
+output.
 
-::: tip
+The same `task`, `vars`, and `silent` fields work in `deps`. Use
+[references](./variables.md#referencing-other-variables) to pass arrays and maps
+without turning them into strings. To call a task for each value in a list, see
+[Looping over tasks](./loops.md#looping-over-tasks).
 
-NOTE: If you want to call a task declared in the root Taskfile from within an
-[included Taskfile](./includes.md), add a leading `:` like this:
-`task: :task-name`.
+## Control parallel work
 
-:::
+Dependencies run concurrently by default. To run tasks from the command line in
+parallel too, use `task --parallel lint test` (or `task -p lint test`).
 
-## Doing task cleanup with `defer`
+### Limit concurrent tasks {#limiting-how-much-runs-at-once}
 
-With the `defer` keyword, it's possible to schedule cleanup to be run once the
-task finishes. The difference with just putting it as the last command is that
-this command will run even when the task fails.
+Use `--concurrency` (or `-C`) when tasks compete for resources such as database
+connections or memory:
 
-Deferred commands run in reverse order of declaration, so the first thing you
-set up is the last thing torn down.
+```shell
+task --concurrency 2 build
+```
 
-In the example below, `rm -rf tmpdir/` will run even if the third command fails:
+The default is `0`, meaning no limit. A limit of `1` restricts concurrency but
+does not establish an order between dependencies; use task calls in `cmds` when
+order matters.
+
+### Cancel on failure {#fail-fast-dependencies}
+
+By default, Task lets the other dependencies finish if one fails. In either
+case, the parent task's commands do not run after a dependency failure.
+
+Set `failfast: true` on a task to cancel its remaining dependency work when one
+dependency fails. For the build example:
+
+```yaml
+tasks:
+  build:
+    deps: [lint, test]
+    failfast: true
+    cmds:
+      - go build ./...
+```
+
+Already-running commands receive cancellation; this does not undo work they have
+completed. You can also set `failfast: true` in [`.taskrc.yml`][config] or use
+`task --failfast build`. The CLI flag also applies to tasks started with
+`--parallel`.
+
+### Read parallel output {#interleaved-output-is-expected}
+
+Concurrent tasks can interleave their output, and the order may change between
+runs. Set `output: prefixed` to label each line with its task, or
+`output: group` to print each command's buffered output in one block when that
+command finishes. A group is per command, so blocks from different tasks can
+still alternate. See [Output and logging](./output.md) for examples.
+
+## Control repeated calls {#repeated-calls}
+
+A shared dependency can be reached through several tasks. By default, Task
+attempts to run it for each call. Use `run` to control repeated calls within one
+invocation:
+
+| Value              | Behavior                                          |
+| ------------------ | ------------------------------------------------- |
+| `always` (default) | Attempt to run the task on every call.            |
+| `once`             | Run the task once, even if it is called again.    |
+| `when_changed`     | Run once for each distinct set of call variables. |
+
+Set `run` on a task, or at the root of the Taskfile to provide a default for all
+tasks. A task's own setting takes precedence.
+
+### Run shared setup once {#running-a-task-only-once}
+
+If lint and tests both need setup, mark the setup task with `run: once`:
+
+```yaml
+version: '3'
+
+tasks:
+  check:
+    deps: [lint, test]
+
+  lint:
+    deps: [setup]
+    cmds:
+      - echo "Linting"
+
+  test:
+    deps: [setup]
+    cmds:
+      - echo "Testing"
+
+  setup:
+    run: once
+    cmds:
+      - echo "Setting up"
+```
+
+`task check` prints `Setting up` once. Both lint and tests wait for that setup
+to finish. Without `run: once`, setup runs for each task that depends on it.
+
+### Run once per input {#once-per-set-of-variables}
+
+Use `run: when_changed` when a task may be called several times with the same
+inputs:
 
 ```yaml
 version: '3'
@@ -229,49 +217,50 @@ version: '3'
 tasks:
   default:
     cmds:
-      - mkdir -p tmpdir/
-      - defer: rm -rf tmpdir/
-      - echo 'Do work on tmpdir/'
+      - task: generate
+        vars: { CONTENT: '1' }
+      - task: generate
+        vars: { CONTENT: '2' }
+      - task: generate
+        vars: { CONTENT: '2' }
+
+  generate:
+    run: when_changed
+    cmds:
+      - echo {{.CONTENT}}
 ```
 
-If you want to move the cleanup command into another task, that is possible as
-well:
+This prints `1` and `2`. The third call repeats the second call's variables and
+is skipped.
+
+The `run` settings do not remember earlier invocations of Task. To skip work
+when files or external artifacts have not changed, use
+[up-to-date checks](./up-to-date.md).
+
+## Clean up after a task {#doing-task-cleanup-with-defer}
+
+Use `defer` when a task acquires a resource that needs to be released. For
+example, this task starts Docker Compose services, runs integration tests, and
+stops the services even if the tests fail:
 
 ```yaml
 version: '3'
 
 tasks:
-  default:
+  integration:
     cmds:
-      - mkdir -p tmpdir/
-      - defer: { task: cleanup }
-      - echo 'Do work on tmpdir/'
-
-  cleanup: rm -rf tmpdir/
+      - docker compose up -d
+      - defer: docker compose down
+      - go test -tags=integration ./...
 ```
 
-::: info
+Cleanup is registered when Task reaches the `defer` entry. Dependencies run
+before `cmds`, so a failed dependency prevents that registration. Keep the
+resource setup, `defer`, and the work that uses the resource in the command
+sequence, as above.
 
-Due to the nature of how the
-[Go's own `defer` work](https://go.dev/tour/flowcontrol/13), the deferred
-commands are executed in the reverse order if you schedule multiple of them.
-
-:::
-
-A special variable `.EXIT_CODE` is exposed when a command exited with a non-zero
-[exit code](../reference/cli.md#exit-codes). You can check its presence to know
-if the task completed successfully or not:
-
-```yaml
-version: '3'
-
-tasks:
-  default:
-    cmds:
-      - defer:
-          echo '{{if .EXIT_CODE}}Failed with
-          {{.EXIT_CODE}}!{{else}}Success!{{end}}'
-      - exit 1
-```
+For multiple cleanup steps, cleanup tasks, and inspecting failures with
+`.EXIT_CODE`, see
+[Errors and cleanup](./errors-and-cleanup.md#cleanup-with-defer).
 
 [config]: ../reference/config.md

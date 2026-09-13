@@ -1,105 +1,104 @@
 ---
-title: Required variables and prompts
+title: Validation and prompts
 description:
-  Require variables to be set, restrict them to a list of allowed values, and
-  prompt for them interactively.
+  Require variables to be set, restrict them to allowed values, and prompt for
+  missing input.
 section: Guide
 docType: guide
 outline: deep
 ---
 
-# Required variables and prompts
+# Validation and prompts {#required-variables-and-prompts}
 
-A task can refuse to run until it has what it needs, and it can ask the caller
-for it.
+Use `requires` to catch missing inputs before a task runs. Add `enum` when only
+certain values are allowed, and enable interactive prompts when users should be
+able to fill in missing values at the terminal.
 
-## Ensuring required variables are set
+## Require an input {#ensuring-required-variables-are-set}
 
-If you want to check that certain variables are set before running a task then
-you can use `requires`. This is useful when might not be clear to users which
-variables are needed, or if you want clear message about what is required. Also
-some tasks could have dangerous side effects if run with un-set variables.
-
-Using `requires` you specify an array of strings in the `vars` sub-section under
-`requires`, these strings are variable names which are checked prior to running
-the task. If any variables are un-set then the task will error and not run.
-
-Environmental variables are also checked.
-
-Syntax:
-
-```yaml
-requires:
-  vars: [] # Array of strings
-```
-
-::: info
-
-Variables set to empty zero length strings, will pass the `requires` check.
-
-:::
-
-Example of using `requires`:
+Declare inputs in `requires.vars`, then pass them on the command line:
 
 ```yaml
 version: '3'
 
 tasks:
-  docker-build:
-    cmds:
-      - 'docker build . -t {{.IMAGE_NAME}}:{{.IMAGE_TAG}}'
-
-    # Make sure these variables are set before running
+  release:
     requires:
-      vars: [IMAGE_NAME, IMAGE_TAG]
+      vars: [VERSION]
+    cmds:
+      - echo "Preparing release {{.VERSION}}"
 ```
 
-## Ensuring required variables have allowed values
+Run `task release VERSION=1.2.3` to print the message. Without `VERSION`, Task
+fails and identifies the missing input. Task variables and values inherited from
+the process environment can satisfy the requirement.
 
-If you want to ensure that a variable is set to one of a predefined set of valid
-values before executing a task, you can use requires. This is particularly
-useful when there are strict requirements for what values a variable can take,
-and you want to provide clear feedback to the user when an invalid value is
-detected.
+A variable set to an empty string counts as present. To reject an empty value,
+use an enum of nonempty strings or a
+[precondition](./conditional-execution.md#using-programmatic-checks-to-cancel-the-execution-of-a-task-and-its-dependencies).
 
-To use `requires`, you specify an array of allowed values in the vars
-sub-section under requires. Task will check if the variable is set to one of the
-allowed values. If the variable does not match any of these values, the task
-will raise an error and stop execution.
+## Restrict allowed values {#ensuring-required-variables-have-allowed-values}
 
-This check applies both to user-defined variables and environment variables.
-
-Example of using `requires`:
+Use `name` and `enum` to require a string from a fixed list:
 
 ```yaml
 version: '3'
 
 tasks:
   deploy:
-    cmds:
-      - echo "deploying to {{.ENV}}"
-
     requires:
       vars:
         - name: ENV
-          enum: [dev, beta, prod]
+          enum: [dev, staging, prod]
+    cmds:
+      - echo "Deploying to {{.ENV}}"
 ```
 
-If `ENV` is not one of 'dev', 'beta' or 'prod' an error will be raised.
+`task deploy ENV=staging` succeeds. `task deploy ENV=preview` fails before
+running the command. Enum validation applies to string variables, including
+strings inherited from the environment.
 
-::: info
+## Ask for missing input {#prompting-for-missing-variables-interactively}
 
-This is supported only for string variables.
+Run `task --interactive deploy` with the example above to choose the missing
+`ENV` from a menu. Required variables without an enum use a text input instead.
 
-:::
+To enable this behavior by default, set it in your
+[Task configuration](../reference/config.md#interactive):
 
-## Using variable references for enum values
+```yaml [~/.taskrc.yml]
+interactive: true
+```
 
-Instead of hardcoding enum values, you can reference a variable containing the
-allowed values. This is useful when you want to define allowed values once and
-reuse them, or when the values are computed dynamically.
+For a task with both kinds of input:
 
-Use the `ref` key to reference a variable:
+```yaml
+version: '3'
+
+tasks:
+  deploy:
+    requires:
+      vars:
+        - name: ENVIRONMENT
+          enum: [dev, staging, prod]
+        - VERSION
+    cmds:
+      - echo "Deploying {{.VERSION}} to {{.ENVIRONMENT}}"
+```
+
+`task --interactive deploy` asks for an environment and a version. Values
+already supplied through the CLI, environment, or Taskfile do not prompt:
+
+```shell
+task deploy ENVIRONMENT=prod VERSION=1.0.0
+```
+
+Prompts require a terminal. In CI or another non-interactive environment,
+missing variables cause an error; supply all required values explicitly.
+
+## Reuse allowed values {#using-variable-references-for-enum-values}
+
+Define a shared list and reference it from an enum:
 
 ```yaml
 version: '3'
@@ -118,7 +117,8 @@ tasks:
       - echo "Deploying to {{.ENV}}"
 ```
 
-You can also use template expressions to transform the value:
+References can also transform values. Given a `config.json` file containing
+`{"allowed_environments": ["dev", "prod"]}`, this reads the list from it:
 
 ```yaml
 version: '3'
@@ -138,7 +138,8 @@ tasks:
       - echo "Deploying to {{.ENV}}"
 ```
 
-Or generate values dynamically from a shell command:
+For newline-separated command output, convert it to a list before using it as an
+enum. This example uses the entries in an existing `services/` directory:
 
 ```yaml
 version: '3'
@@ -158,141 +159,12 @@ tasks:
       - echo "Deploying {{.SERVICE}}"
 ```
 
-## Prompting for missing variables interactively
+::: tip Related guide
 
-If you want Task to prompt users for missing required variables instead of
-failing, you can enable interactive mode in your `.taskrc.yml`:
+<span id="warning-prompts"></span>
 
-```yaml
-# ~/.taskrc.yml
-interactive: true
-```
-
-When enabled, Task will display an interactive prompt for any missing required
-variable. For variables with an `enum`, a selection menu is shown. For variables
-without an enum, a text input is displayed.
-
-```yaml
-# Taskfile.yml
-version: '3'
-
-tasks:
-  deploy:
-    requires:
-      vars:
-        - name: ENVIRONMENT
-          enum: [dev, staging, prod]
-        - VERSION
-    cmds:
-      - echo "Deploying {{.VERSION}} to {{.ENVIRONMENT}}"
-```
-
-```shell
-$ task deploy
-? Select value for ENVIRONMENT:
-❯ dev
-  staging
-  prod
-? Enter value for VERSION: 1.0.0
-Deploying 1.0.0 to prod
-```
-
-If the variable is already set (via CLI, environment, or Taskfile), no prompt is
-shown:
-
-```shell
-$ task deploy ENVIRONMENT=prod VERSION=1.0.0
-Deploying 1.0.0 to prod
-```
-
-::: info
-
-Interactive prompts require a TTY (terminal). Task automatically detects
-non-interactive environments like GitHub Actions, GitLab CI, and other CI
-pipelines where stdin/stdout are not connected to a terminal. In these cases,
-prompts are skipped and missing variables will cause an error as usual.
-
-You can enable prompts from the command line with `--interactive` or by setting
-`interactive: true` in your `.taskrc.yml`.
-
-:::
-
-## Warning Prompts
-
-Warning Prompts are used to prompt a user for confirmation before a task is
-executed.
-
-Below is an example using `prompt` with a dangerous command, that is called
-between two safe commands:
-
-```yaml
-version: '3'
-
-tasks:
-  example:
-    cmds:
-      - task: not-dangerous
-      - task: dangerous
-      - task: another-not-dangerous
-
-  not-dangerous:
-    cmds:
-      - echo 'not dangerous command'
-
-  another-not-dangerous:
-    cmds:
-      - echo 'another not dangerous command'
-
-  dangerous:
-    prompt: This is a dangerous command... Do you want to continue?
-    cmds:
-      - echo 'dangerous command'
-```
-
-```shell
-❯ task dangerous
-task: "This is a dangerous command... Do you want to continue?" [y/N]
-```
-
-Prompts can be a single value or a list of prompts, like below:
-
-```yaml
-version: '3'
-
-tasks:
-  example:
-    cmds:
-      - task: dangerous
-
-  dangerous:
-    prompt:
-      - This is a dangerous command... Do you want to continue?
-      - Are you sure?
-    cmds:
-      - echo 'dangerous command'
-```
-
-Warning prompts are called before executing a task. If a prompt is denied Task
-will exit with [exit code](../reference/cli.md#exit-codes) 205. If approved,
-Task will continue as normal.
-
-```shell
-❯ task example
-not dangerous command
-task: "This is a dangerous command. Do you want to continue?" [y/N]
-y
-dangerous command
-another not dangerous command
-```
-
-To skip warning prompts automatically, you can use the `--yes` (alias `-y`)
-option when calling the task. By including this option, all warnings, will be
-automatically confirmed, and no prompts will be shown.
-
-::: warning
-
-Tasks with prompts always fail by default on non-terminal environments, like a
-CI, where an `stdin` won't be available for the user to answer. In those cases,
-use `--yes` (`-y`) to force all tasks with a prompt to run.
+A prompt for input fills in a value. A
+[confirmation prompt](./conditional-execution.md#confirmation-prompts) asks
+whether execution should proceed, even if all input values are already present.
 
 :::

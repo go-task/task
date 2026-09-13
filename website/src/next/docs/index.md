@@ -33,7 +33,7 @@ Find a guide for your everyday workflows.
 
 - [Browse the guide](./guide/index.md)
 - [Variables](./guide/variables.md)
-- [Dependencies](./guide/dependencies.md)
+- [Dependencies and task calls](./guide/dependencies.md)
 
 </div>
 <div class="docs-card">

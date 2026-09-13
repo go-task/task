@@ -1,8 +1,8 @@
 ---
 title: Output and logging
 description:
-  Choose how Task prints command output, silence it, ignore errors, and annotate
-  failures in CI.
+  Choose an output mode, hide command echoes, and display colors and failure
+  annotations in CI.
 section: Guide
 docType: guide
 outline: deep
@@ -10,44 +10,152 @@ outline: deep
 
 # Output and logging
 
-By default Task streams each command's output straight through. These settings
-change what reaches the terminal and how it is grouped.
+When several tasks run together, their output can be hard to follow. Choose an
+output mode to identify the source of each line or keep each command's output
+together. Use `silent` separately to hide the command text Task logs.
 
-## Output syntax
+## Choose an output mode {#output-syntax}
 
-By default, Task just redirects the STDOUT and STDERR of the running commands to
-the shell in real-time. This is good for having live feedback for logging
-printed by commands, but the output can become messy if you have multiple
-commands running simultaneously and printing lots of stuff.
+| What do you need?                    | Mode                    |
+| ------------------------------------ | ----------------------- |
+| Live output without extra formatting | `interleaved` (default) |
+| Live output labeled by task          | `prefixed`              |
+| Each command's output in one block   | `group`                 |
 
-To make this more customizable, there are currently three different output
-options you can choose:
+### Identify parallel output
 
-- `interleaved` (default)
-- `group`
-- `prefixed`
-
-To choose another one, just set it to root in the Taskfile:
+Set `output: prefixed` at the root of the Taskfile:
 
 ```yaml
 version: '3'
 
-output: 'group'
+output: prefixed
 
 tasks:
-  # ...
+  check:
+    deps: [lint, test]
+
+  lint:
+    cmds:
+      - echo 'Lint passed'
+
+  test:
+    cmds:
+      - echo 'Tests passed'
 ```
 
-The `group` output will print the entire output of a command once after it
-finishes, so you will not have live feedback for commands that take a long time
-to run.
+Run `task --silent check`. The command output identifies each task:
 
-When using the `group` output, you can optionally provide a templated message to
-print at the start and end of the group. This can be useful for instructing CI
-systems to group all of the output for a given task, such as with
-[GitHub Actions' `::group::` command](https://docs.github.com/en/actions/learn-github-actions/workflow-commands-for-github-actions#grouping-log-lines)
-or
-[Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/scripts/logging-commands?expand=1&view=azure-devops&tabs=bash#formatting-commands).
+```text
+[lint] Lint passed
+[test] Tests passed
+```
+
+The lines may appear in either order because the tasks run concurrently. You can
+override the output mode for one invocation with `task --output group check` (or
+`task -o group check`).
+
+Use a task's `prefix` to distinguish repeated calls with different inputs:
+
+```yaml
+version: '3'
+
+output: prefixed
+
+tasks:
+  default:
+    deps:
+      - task: check
+        vars: { SERVICE: api }
+      - task: check
+        vars: { SERVICE: worker }
+
+  check:
+    prefix: 'check-{{.SERVICE}}'
+    silent: true
+    cmds:
+      - echo 'Passed'
+```
+
+The output uses `[check-api]` and `[check-worker]` prefixes.
+
+### Group command output
+
+Set `output: group` to buffer each command's stdout and stderr until that
+command finishes. Long-running commands do not provide live feedback in this
+mode. Groups are per command, so blocks from different tasks can still alternate
+between commands.
+
+To show buffered output only when a command fails:
+
+```yaml
+version: '3'
+
+silent: true
+output:
+  group:
+    error_only: true
+
+tasks:
+  passes: echo 'Everything passed'
+  fails: echo 'Failure details' && exit 1
+```
+
+`task passes` prints nothing. `task fails` prints `Failure details` and the
+failure message. Hiding successful output does not change exit codes.
+
+## Hide command echoes {#silent-mode}
+
+Use `--silent` (or `-s`) to hide the command text Task logs before execution.
+The command's own output remains visible:
+
+```yaml
+version: '3'
+
+tasks:
+  greet:
+    cmds:
+      - echo 'Hello, World!'
+```
+
+`task greet` shows the command and its output. `task --silent greet` prints only
+`Hello, World!`.
+
+To make this permanent for selected commands:
+
+```yaml
+version: '3'
+
+tasks:
+  greet:
+    cmds:
+      - cmd: echo 'Hello, World!'
+        silent: true
+```
+
+You can also set `silent: true` on a task for all its commands, or at the root
+of the Taskfile for all tasks.
+
+To suppress a command's stdout, use shell redirection instead:
+
+```yaml
+version: '3'
+
+tasks:
+  quiet:
+    cmds:
+      - echo 'This output is discarded' > /dev/null
+```
+
+Stderr remains visible unless you redirect it too. Silent mode is not a
+substitute for [secret masking](./secret-variables.md).
+
+## Make CI logs readable {#ci-integration}
+
+### Fold command logs
+
+Use `output.group.begin` and `end` to add the markers a CI system uses for
+collapsible logs. For GitHub Actions:
 
 ```yaml
 version: '3'
@@ -59,213 +167,48 @@ output:
 
 tasks:
   default:
+    silent: true
     cmds:
       - echo 'Hello, World!'
-    silent: true
 ```
 
-```shell
-$ task default
+Running `task` produces:
+
+```text
 ::group::default
 Hello, World!
 ::endgroup::
 ```
 
-When using the `group` output, you may swallow the output of the executed
-command on standard output and standard error if it does not fail (zero exit
-code).
+These markers follow
+[GitHub Actions' grouping format](https://docs.github.com/en/actions/learn-github-actions/workflow-commands-for-github-actions#grouping-log-lines).
+Other providers, such as
+[Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/scripts/logging-commands?expand=1&view=azure-devops&tabs=bash#formatting-commands),
+use different markers.
 
-```yaml
-version: '3'
+### Control colors {#colored-output}
 
-silent: true
+Task enables its colored output when `CI=true`, which most CI providers set
+automatically. Use `FORCE_COLOR=1` to force colors or `NO_COLOR=1` to disable
+them. Programs launched by Task may have their own color settings.
 
-output:
-  group:
-    error_only: true
+### Surface failures {#error-annotations}
 
-tasks:
-  passes: echo 'output-of-passes'
-  errors: echo 'output-of-errors' && exit 1
-```
+When `GITHUB_ACTIONS=true`, Task automatically emits an annotation when a task
+fails, so the workflow can surface the error:
 
-```shell
-$ task passes
-$ task errors
-output-of-errors
-task: Failed to run task "errors": exit status 1
-```
-
-The `prefix` output will prefix every line printed by a command with
-`[task-name] ` as the prefix, but you can customize the prefix for a command
-with the `prefix:` attribute:
-
-```yaml
-version: '3'
-
-output: prefixed
-
-tasks:
-  default:
-    deps:
-      - task: print
-        vars: { TEXT: foo }
-      - task: print
-        vars: { TEXT: bar }
-      - task: print
-        vars: { TEXT: baz }
-
-  print:
-    cmds:
-      - echo "{{.TEXT}}"
-    prefix: 'print-{{.TEXT}}'
-    silent: true
-```
-
-```shell
-$ task default
-[print-foo] foo
-[print-bar] bar
-[print-baz] baz
-```
-
-::: tip
-
-The `output` option can also be specified by the `--output` or `-o` flags.
-
-:::
-
-## Silent mode
-
-Silent mode disables the echoing of commands before Task runs it. For the
-following Taskfile:
-
-```yaml
-version: '3'
-
-tasks:
-  echo:
-    cmds:
-      - echo "Print something"
-```
-
-Normally this will be printed:
-
-```shell
-echo "Print something"
-Print something
-```
-
-With silent mode on, the below will be printed instead:
-
-```shell
-Print something
-```
-
-There are four ways to enable silent mode:
-
-- At command level:
-
-```yaml
-version: '3'
-
-tasks:
-  echo:
-    cmds:
-      - cmd: echo "Print something"
-        silent: true
-```
-
-- At task level:
-
-```yaml
-version: '3'
-
-tasks:
-  echo:
-    cmds:
-      - echo "Print something"
-    silent: true
-```
-
-- Globally at Taskfile level:
-
-```yaml
-version: '3'
-
-silent: true
-
-tasks:
-  echo:
-    cmds:
-      - echo "Print something"
-```
-
-- Or globally with `--silent` or `-s` flag
-
-If you want to suppress STDOUT instead, just redirect a command to `/dev/null`:
-
-```yaml
-version: '3'
-
-tasks:
-  echo:
-    cmds:
-      - echo "This will print nothing" > /dev/null
-```
-
-## Ignore errors
-
-You have the option to ignore errors during command execution. Given the
-following Taskfile:
-
-```yaml
-version: '3'
-
-tasks:
-  echo:
-    cmds:
-      - exit 1
-      - echo "Hello World"
-```
-
-Task will abort the execution after running `exit 1` because the status code `1`
-stands for `EXIT_FAILURE`. However, it is possible to continue with execution
-using `ignore_error`:
-
-```yaml
-version: '3'
-
-tasks:
-  echo:
-    cmds:
-      - cmd: exit 1
-        ignore_error: true
-      - echo "Hello World"
-```
-
-`ignore_error` can also be set for a task, which means errors will be suppressed
-for all commands. Nevertheless, keep in mind that this option will not propagate
-to other tasks called either by `deps` or `cmds`!
-
-## CI Integration
-
-### Colored output
-
-Task automatically enables colored output when running in CI environments
-(`CI=true`). Most CI providers set this variable automatically.
-
-You can also force colored output with `FORCE_COLOR=1` or disable it with
-`NO_COLOR=1`.
-
-### Error annotations
-
-When running in GitHub Actions (`GITHUB_ACTIONS=true`), Task automatically emits
-error annotations when a task fails. These annotations appear in the workflow
-summary, making it easier to spot failures without scrolling through logs.
-
-```shell
+```text
 ::error title=Task 'build' failed::exit status 1
 ```
 
-This feature requires no configuration and works automatically.
+No Taskfile configuration is required for these annotations.
+
+::: tip Related guide
+
+<span id="ignore-errors"></span>
+
+To continue after a selected failure, use `ignore_error`. See
+[Errors and cleanup](./errors-and-cleanup.md#ignoring-command-errors) for its
+scope and examples.
+
+:::

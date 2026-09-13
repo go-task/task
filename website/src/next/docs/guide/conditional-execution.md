@@ -1,8 +1,8 @@
 ---
 title: Conditional execution
 description:
-  Decide whether a task should run at all, using `preconditions`, `if`, and the
-  flags that limit when a task runs.
+  Skip optional work with if, enforce requirements with preconditions, and ask
+  for confirmation before execution with prompt.
 section: Guide
 docType: guide
 outline: deep
@@ -10,87 +10,42 @@ outline: deep
 
 # Conditional execution
 
-Where up-to-date checks ask whether the work is already done, these controls ask
-whether the work should happen in the first place.
+Decide what a failed check should mean before choosing a setting: skip optional
+work, stop with an error, or ask the user whether to continue.
 
-## Preconditions {#using-programmatic-checks-to-cancel-the-execution-of-a-task-and-its-dependencies}
+| What do you need?                | Use                                                                                                  |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Skip optional work               | [`if`](#conditional-execution-with-if)                                                               |
+| Stop when a requirement is unmet | [`preconditions`](#using-programmatic-checks-to-cancel-the-execution-of-a-task-and-its-dependencies) |
+| Ask before executing commands    | [`prompt`](#confirmation-prompts)                                                                    |
+| Skip work already completed      | [Up-to-date checks](./up-to-date.md)                                                                 |
 
-In addition to `status` checks, `preconditions` checks are the logical inverse
-of `status` checks. That is, if you need a certain set of conditions to be
-_true_ you can use the `preconditions` stanza. `preconditions` are similar to
-`status` lines, except they support `sh` expansion, and they SHOULD all
-return 0.
+## Skip optional work {#conditional-execution-with-if}
 
-```yaml
-version: '3'
+An `if` condition is a shell command. Exit code `0` allows execution; a non-zero
+exit code skips the guarded task or command without failing the run.
 
-tasks:
-  generate-files:
-    cmds:
-      - mkdir directory
-      - touch directory/file1.txt
-      - touch directory/file2.txt
-    # test existence of files
-    preconditions:
-      - test -f .env
-      - sh: '[ 1 = 0 ]'
-        msg: "One doesn't equal Zero, Halting"
-```
+### Skip a whole task {#task-level-if}
 
-Preconditions can set specific failure messages that can tell a user what steps
-to take using the `msg` field.
-
-If a task has a dependency on a sub-task with a precondition, and that
-precondition is not met - the calling task will fail. Note that a task executed
-with a failing precondition will not run unless `--force` is given.
-
-Unlike `status`, which will skip a task if it is up to date and continue
-executing tasks that depend on it, a `precondition` will fail a task, along with
-any other tasks that depend on it.
+Use a task-level condition for optional work. This task only runs when a `docs/`
+directory exists:
 
 ```yaml
 version: '3'
 
 tasks:
-  task-will-fail:
-    preconditions:
-      - sh: 'exit 1'
-
-  task-will-also-fail:
-    deps:
-      - task-will-fail
-
-  task-will-still-fail:
+  docs:
+    if: test -d docs
     cmds:
-      - task: task-will-fail
-      - echo "I will not run"
+      - echo 'Building documentation'
 ```
 
-## Conditional execution with `if`
+Run `task docs` with and without the directory. If it is absent, Task skips the
+task and its dependencies. Other tasks in the invocation can continue.
 
-The `if` attribute allows you to conditionally skip tasks or commands based on a
-shell command's exit code. Unlike `preconditions` which fail and stop execution,
-`if` simply skips the task or command when the condition is not met and
-continues with the rest of the Taskfile.
+### Skip one command {#command-level-if}
 
-### Task-level `if`
-
-When `if` is set on a task, the entire task is skipped if the condition fails:
-
-```yaml
-version: '3'
-
-tasks:
-  deploy:
-    if: '[ "$CI" = "true" ]'
-    cmds:
-      - echo "Deploying..."
-      - ./deploy.sh
-```
-
-### Command-level `if`
-
-When `if` is set on a command, only that specific command is skipped:
+Put `if` on a command when the rest of the task should still run:
 
 ```yaml
 version: '3'
@@ -98,37 +53,39 @@ version: '3'
 tasks:
   build:
     cmds:
-      - cmd: echo "Building for production"
-        if: '[ "$ENV" = "production" ]'
-      - cmd: echo "Building for development"
-        if: '[ "$ENV" = "development" ]'
-      - go build ./...
+      - cmd: echo 'Building documentation'
+        if: test -d docs
+      - echo 'Building the application'
 ```
 
-### Using templates in `if` conditions
+`task build` always prints the application message. It prints the documentation
+message first only if `docs/` exists.
 
-You can use Go template expressions in `if` conditions. Template expressions
-like <span v-pre>`{{eq .VAR "value"}}`</span> evaluate to `true` or `false`,
-which are valid shell commands (`true` exits with 0, `false` exits with 1):
+### Check a Task variable {#using-templates-in-if-conditions}
+
+Template comparisons produce `true` or `false`, which are also shell commands
+with the corresponding exit codes. Put a configurable default at the root:
 
 ```yaml
 version: '3'
 
+vars:
+  ENABLE_FEATURE: 'false'
+
 tasks:
-  conditional:
-    vars:
-      ENABLE_FEATURE: 'true'
+  feature:
+    if: '{{eq .ENABLE_FEATURE "true"}}'
     cmds:
-      - cmd: echo "Feature is enabled"
-        if: '{{eq .ENABLE_FEATURE "true"}}'
-      - cmd: echo "Feature is disabled"
-        if: '{{ne .ENABLE_FEATURE "true"}}'
+      - echo 'Feature is enabled'
 ```
 
-### Using `if` with `for` loops
+`task feature ENABLE_FEATURE=true` runs the command. Without that override, Task
+skips it.
 
-When used inside a `for` loop, the `if` condition is evaluated for each
-iteration:
+### Filter loop iterations {#using-if-with-for-loops}
+
+A command's condition is evaluated for each iteration, with that iteration's
+values:
 
 ```yaml
 version: '3'
@@ -141,61 +98,89 @@ tasks:
         if: '[ "{{.ITEM}}" != "b" ]'
 ```
 
-This will output:
+Run `task process-items` to print `processing a` and `processing c`. See
+[Loops](./loops.md) for the other iteration forms.
 
-```
-processing a
-processing c
-```
+## Enforce a requirement {#using-programmatic-checks-to-cancel-the-execution-of-a-task-and-its-dependencies}
 
-### `if` vs `preconditions`
-
-| Aspect     | `if`                 | `preconditions` |
-| ---------- | -------------------- | --------------- |
-| On failure | Skips (continues)    | Fails (stops)   |
-| Message    | Only in verbose mode | Always shown    |
-| Use case   | "Run if possible"    | "Must be true"  |
-
-Use `if` when you want optional conditional execution that shouldn't stop the
-workflow. Use `preconditions` when the condition must be met for the task to
-make sense.
-
-## Limiting when tasks run
-
-If a task executed by multiple `cmds` or multiple `deps` you can control when it
-is executed using `run`. `run` can also be set at the root of the Taskfile to
-change the behavior of all the tasks unless explicitly overridden.
-
-Supported values for `run`:
-
-- `always` (default) always attempt to invoke the task regardless of the number
-  of previous executions
-- `once` only invoke this task once regardless of the number of references
-- `when_changed` only invokes the task once for each unique set of variables
-  passed into the task
+Use `preconditions` when missing a requirement should fail the task. Every check
+must exit with code `0`. Add `msg` to explain how to resolve a failure:
 
 ```yaml
 version: '3'
 
 tasks:
-  default:
+  generate-files:
+    preconditions:
+      - sh: test -f .env
+        msg: 'Create a .env file before generating files.'
     cmds:
-      - task: generate-file
-        vars: { CONTENT: '1' }
-      - task: generate-file
-        vars: { CONTENT: '2' }
-      - task: generate-file
-        vars: { CONTENT: '2' }
-
-  generate-file:
-    run: when_changed
-    deps:
-      - install-deps
-    cmds:
-      - echo {{.CONTENT}}
-
-  install-deps:
-    run: once
-    cmds:
-      - sleep 5 # long operation like installing packages
+      - mkdir -p directory
+      - touch directory/file.txt
 ```
+
+`task generate-files` fails with the message if `.env` is missing. Create the
+file and run it again to generate `directory/file.txt`.
+
+A plain shell string also works when no custom message is needed. A failed
+precondition fails tasks that call or depend on this task. Dependencies of the
+checked task have already run before its preconditions are evaluated; put a
+check on the task whose commands need protecting.
+
+`--force` bypasses preconditions as well as up-to-date checks.
+
+### Choose skip or failure {#if-vs-preconditions}
+
+Use `if` when skipping is an acceptable result. Use `preconditions` when a
+caller should receive an error instead. To require a variable or restrict its
+allowed values, use [Validation and prompts](./required-variables.md).
+
+## Ask for confirmation {#confirmation-prompts}
+
+Use `prompt` to ask for approval before a task's commands run. For example, this
+task asks before deleting a local build directory:
+
+```yaml
+version: '3'
+
+tasks:
+  clean:
+    prompt: Remove the local build directory?
+    cmds:
+      - rm -rf build/
+```
+
+Run `task clean` in a terminal and answer the confirmation. Declining stops the
+task with [exit code](../reference/cli.md#exit-codes) `205`.
+
+Unlike
+[prompts for missing input](./required-variables.md#prompting-for-missing-variables-interactively),
+confirmation prompts do not require `--interactive`. Supplying every required
+variable does not bypass them.
+
+For several confirmations, use a list:
+
+```yaml
+prompt:
+  - Remove the local build directory?
+  - Have you saved everything you need from it?
+```
+
+Task asks after dependencies have completed and before running `cmds`. If
+approval must precede other tasks, call them from `cmds` in the prompted task
+instead of listing them as dependencies.
+
+Use `task --yes clean` (or `task -y clean`) to accept automatically. In CI or
+another environment without a terminal, confirmation fails unless automatic
+acceptance is enabled.
+
+::: tip Related guide
+
+<span id="limiting-when-tasks-run"></span>
+
+To control how often a task runs when several tasks call it, use
+[`run: once` or `run: when_changed`](./dependencies.md#repeated-calls). These
+settings apply within one invocation. Use [up-to-date checks](./up-to-date.md)
+to skip completed work across invocations.
+
+:::

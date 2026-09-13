@@ -1,8 +1,8 @@
 ---
 title: Guide
 description:
-  An index of every topic in the Task guide, from running your first task to
-  composing Taskfiles across repositories.
+  Learn to define tasks, supply inputs, control execution, configure the
+  environment and output, and include other Taskfiles.
 section: Guide
 docType: guide
 outline: deep
@@ -10,51 +10,59 @@ outline: deep
 
 # Guide
 
-The guide covers everything Task can do once you have written your first
-Taskfile. Each page below is self-contained; start wherever your problem is.
+Use the guide to learn a feature or solve a specific problem. If you are new to
+Task, start with the [Quick Start](../getting-started.md). For accepted keys,
+flags and functions, use the [Taskfile Schema](../reference/schema.md),
+[CLI](../reference/cli.md) and [Templating](../reference/templating.md)
+references.
 
 <GuideRedirect />
 
-## Writing and running tasks
+## Writing and running tasks {#writing-and-running-tasks}
 
-- [Running tasks](./running-tasks.md): how Task finds a Taskfile, and how to run
-  one from a subdirectory, your home directory, standard input or a dry run.
-- [Defining tasks](./defining-tasks.md): syntax shortcuts, internal tasks,
-  aliases, the directory a task runs in, and its help text.
-- [Passing arguments](./arguments.md): forwarding command line arguments with
-  `--`, and matching part of a task's name with a wildcard.
+- [Defining tasks](./defining-tasks.md): command lists, descriptions, aliases
+  and display labels.
+- [Running tasks](./running-tasks.md): choosing a Taskfile, running from other
+  directories, previewing commands and using interactive applications.
 
-## Variables and environment
+## Variables and arguments {#variables-and-environment}
 
-- [Variables](./variables.md): static, dynamic, map and secret variables, their
-  scope, and how they reference each other.
-- [Environment variables](./environment.md): setting them per task or globally,
-  and loading them from `.env` files.
-- [Required variables](./required-variables.md): requiring variables,
-  restricting them to allowed values, and prompting for them.
+- [Variables](./variables.md): declaring values, computing them with shell
+  commands, preserving types and understanding resolution order.
+- [Command-line arguments](./arguments.md): assigning variables, forwarding
+  arguments with `--` and capturing values from task names.
+- [Validation and prompts](./required-variables.md): requiring inputs,
+  restricting allowed values and asking for missing values.
+- [Secret variables](./secret-variables.md): loading sensitive values and
+  masking them in Task's command logs.
 
-## Controlling what runs
+## Task execution {#controlling-what-runs}
 
-- [Dependencies](./dependencies.md): `deps`, calling a task from `cmds`, and
-  cleanup with `defer`.
-- [Up-to-date checks](./up-to-date.md): source and generated file fingerprints,
-  and your own `status` checks.
-- [Conditional execution](./conditional-execution.md): `preconditions`, `if`,
-  and the flags that limit when a task runs.
-- [Loops](./loops.md): repeating a command over a list, a matrix, a variable,
-  your sources, or other tasks.
+- [Dependencies and task calls](./dependencies.md): running tasks concurrently
+  or in sequence, limiting concurrency and controlling repeated calls.
+- [Loops](./loops.md): repeating commands or task calls over values, files and
+  matrices.
+- [Conditional execution](./conditional-execution.md): skipping optional work
+  with `if`, enforcing requirements with `preconditions` and asking for
+  [confirmation](./conditional-execution.md#confirmation-prompts).
+- [Errors and cleanup](./errors-and-cleanup.md): continuing after selected
+  failures and running cleanup with `defer`.
+- [Up-to-date checks](./up-to-date.md): skipping unchanged builds, checking for
+  missing outputs and combining file checks with custom conditions.
+- [Watch mode](./watch.md): rerunning tasks when source files change.
 
-## Composing Taskfiles
+## Environment and output {#execution-environment}
 
-- [Including Taskfiles](./includes.md): namespaces, optional and internal
-  includes, flattening, and per-include variables.
-- [Remote Taskfiles](../remote-taskfiles.md): running and including Taskfiles
-  served over HTTP or Git, and the checksum rules that guard them.
+- [Environment variables](./environment.md): setting the environment for
+  commands and loading `.env` files.
+- [Platforms and shells](./platforms.md): selecting platform-specific commands,
+  understanding shell context and setting shell options.
+- [Output and logging](./output.md): streaming, grouping and prefixing output,
+  hiding command echoes and displaying CI annotations.
 
-## Execution environment
+## Including Taskfiles {#composing-taskfiles}
 
-- [Output and logging](./output.md): output modes, silent mode, ignoring errors,
-  and CI annotations.
-- [Platforms and shells](./platforms.md): restricting tasks to an OS or
-  architecture, and shell options.
-- [Watch mode](./watch.md): re-running a task when its sources change.
+- [Including Taskfiles](./includes.md): sharing tasks with namespaces,
+  configuring includes and passing variables to them.
+- [Remote Taskfiles](../remote-taskfiles.md): loading Taskfiles over HTTP or Git
+  and managing trust, checksums and cached copies.

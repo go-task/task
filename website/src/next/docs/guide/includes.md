@@ -1,5 +1,5 @@
 ---
-title: Including other Taskfiles
+title: Including Taskfiles
 description:
   Reuse tasks across projects with `includes`, covering namespaces, optional and
   internal includes, flattening, and per-include variables.
@@ -8,65 +8,17 @@ docType: guide
 outline: deep
 ---
 
-# Including other Taskfiles
+# Including Taskfiles {#including-other-taskfiles}
 
-If you want to share tasks between different projects (Taskfiles), you can use
-the importing mechanism to include other Taskfiles using the `includes` keyword:
+Use `includes` to split a project into smaller Taskfiles or reuse tasks across
+projects. Give each included file a namespace, then call its tasks through that
+name.
 
-```yaml
-version: '3'
+Start with a Markdown file at `docs/README.md`, then create these two Taskfiles:
 
-includes:
-  docs: ./documentation # will look for ./documentation/Taskfile.yml
-  docker: ./DockerTasks.yml
-```
+::: code-group
 
-The tasks described in the given Taskfiles will be available with the informed
-namespace. So, you'd call `task docs:serve` to run the `serve` task from
-`documentation/Taskfile.yml` or `task docker:build` to run the `build` task from
-the `DockerTasks.yml` file.
-
-Relative paths are resolved relative to the directory containing the including
-Taskfile.
-
-## Remote Taskfiles
-
-::: danger
-
-Never run remote Taskfiles from sources that you do not trust.
-
-:::
-
-It is possible to include a Taskfile from a remote source via HTTP(S) or Git.
-This is useful if you want to reuse a set of tasks in multiple projects. For
-more information, take a look at our
-[remote Taskfiles documentation](../remote-taskfiles.md).
-
-```yaml
-version: '3'
-
-includes:
-  my-remote-namespace: https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
-```
-
-## OS-specific Taskfiles
-
-You can include OS-specific Taskfiles by using a templating function:
-
-```yaml
-version: '3'
-
-includes:
-  build: ./Taskfile_{{OS}}.yml
-```
-
-## Directory of included Taskfile
-
-By default, included Taskfile's tasks are run in the current directory, even if
-the Taskfile is in another directory, but you can force its tasks to run in
-another directory by using this alternative syntax:
-
-```yaml
+```yaml [Taskfile.yml]
 version: '3'
 
 includes:
@@ -75,184 +27,47 @@ includes:
     dir: ./docs
 ```
 
-::: info
+```yaml [docs/Taskfile.yml]
+version: '3'
 
-The included Taskfiles must be using the same schema version as the main
-Taskfile uses.
+tasks:
+  build:
+    cmds:
+      - mkdir -p build
+      - cp README.md build/index.md
+```
 
 :::
 
-## Optional includes
+Run `task docs:build` to copy `docs/README.md` to `docs/build/index.md`. The
+`docs` namespace comes from the include key, not the directory name. You can
+also call `docs:build` from another task's `cmds` or `deps`.
 
-Includes marked as optional will allow Task to continue execution as normal if
-the included file is missing.
+An include path can point to a file or a directory. With `docs: ./docs`, Task
+looks for a supported Taskfile name in that directory. Paths are relative to the
+including file, and included Taskfiles must use the same schema version.
 
-```yaml
-version: '3'
+## Set the working directory {#directory-of-included-taskfile}
 
-includes:
-  tests:
-    taskfile: ./tests/Taskfile.yml
-    optional: true
+The `dir: ./docs` setting makes the included task read `docs/README.md` and
+write into `docs/build/`, even when you run `task docs:build` from the project
+root.
 
-tasks:
-  greet:
-    cmds:
-      - echo "This command can still be successfully executed if
-        ./tests/Taskfile.yml does not exist"
-```
+Without `dir`, included tasks use the including Taskfile's execution directory.
+The same commands would look for `README.md` and create `build/` at the project
+root. A Taskfile's location alone does not set its execution directory.
 
-## Internal includes
+Individual tasks can also specify their own
+[working directory](./defining-tasks.md#task-directory).
 
-Includes marked as internal will set all the tasks of the included file to be
-internal as well (see [Internal tasks](./defining-tasks.md#internal-tasks)).
-This is useful when including utility tasks that are not intended to be used
-directly by the user.
+## Configure reusable tasks {#vars-of-included-taskfiles}
 
-```yaml
-version: '3'
-
-includes:
-  tests:
-    taskfile: ./taskfiles/Utils.yml
-    internal: true
-```
-
-## Flatten includes
-
-You can flatten the included Taskfile tasks into the main Taskfile by using the
-`flatten` option. It means that the included Taskfile tasks will be available
-without the namespace.
+Use `vars` on an include to configure reusable tasks. This example includes the
+same file twice with different image names:
 
 ::: code-group
 
 ```yaml [Taskfile.yml]
-version: '3'
-
-includes:
-  lib:
-    taskfile: ./Included.yml
-    flatten: true
-
-tasks:
-  greet:
-    cmds:
-      - echo "Greet"
-      - task: foo
-```
-
-```yaml [Included.yml]
-version: '3'
-
-tasks:
-  foo:
-    cmds:
-      - echo "Foo"
-```
-
-:::
-
-If you run `task -a` it will print :
-
-```sh
-task: Available tasks for this project:
-* greet:
-* foo
-```
-
-You can run `task foo` directly without the namespace.
-
-You can also reference the task in other tasks without the namespace. So if you
-run `task greet` it will run `greet` and `foo` tasks and the output will be :
-
-```text
-Greet
-Foo
-```
-
-If multiple tasks have the same name, an error will be thrown:
-
-::: code-group
-
-```yaml [Taskfile.yml]
-version: '3'
-includes:
-  lib:
-    taskfile: ./Included.yml
-    flatten: true
-
-tasks:
-  greet:
-    cmds:
-      - echo "Greet"
-      - task: foo
-```
-
-```yaml [Included.yml]
-version: '3'
-
-tasks:
-  greet:
-    cmds:
-      - echo "Foo"
-```
-
-:::
-
-If you run `task -a` it will print:
-
-```text
-task: Found multiple tasks (greet) included by "lib"
-```
-
-If the included Taskfile has a task with the same name as a task in the main
-Taskfile, you may want to exclude it from the flattened tasks.
-
-You can do this by using the
-[`excludes` option](#exclude-tasks-from-being-included).
-
-## Exclude tasks from being included
-
-You can exclude tasks or entire namespaces from being included by using the
-`excludes` option. This option takes the list of tasks or namespaces to be
-excluded from this include. Task names are matched exactly. To exclude a
-namespace, append `:*` to its name.
-
-::: code-group
-
-```yaml [Taskfile.yml]
-version: '3'
-
-includes:
-  included:
-    taskfile: ./Included.yml
-    excludes: [foo, 'internal:*', 'debug:*']
-```
-
-```yaml [Included.yml]
-version: '3'
-
-tasks:
-  foo: echo "Foo"
-  bar: echo "Bar"
-  internal:setup: echo "Internal setup"
-  debug:status: echo "Debug status"
-```
-
-:::
-
-`task included:foo`, `task included:internal:setup`, and
-`task included:debug:status` will throw errors because they are excluded, but
-`task included:bar` will work and display `Bar`.
-
-It's compatible with the `flatten` option.
-
-## Vars of included Taskfiles
-
-You can also specify variables when including a Taskfile. This may be useful for
-having a reusable Taskfile that can be tweaked or even included more than once:
-
-```yaml
 version: '3'
 
 includes:
@@ -260,34 +75,171 @@ includes:
     taskfile: ./taskfiles/Docker.yml
     vars:
       DOCKER_IMAGE: backend_image
-
   frontend:
     taskfile: ./taskfiles/Docker.yml
     vars:
       DOCKER_IMAGE: frontend_image
 ```
 
-## Namespace aliases
+```yaml [taskfiles/Docker.yml]
+version: '3'
 
-When including a Taskfile, you can give the namespace a list of `aliases`. This
-works in the same way as [task aliases](./defining-tasks.md#task-aliases) and
-can be used together to create shorter and easier-to-type commands.
+vars:
+  DOCKER_IMAGE: '{{.DOCKER_IMAGE | default "app"}}'
+
+tasks:
+  build:
+    cmds:
+      - echo 'Building {{.DOCKER_IMAGE}}'
+```
+
+:::
+
+`task backend:build` prints `Building backend_image`; `task frontend:build`
+prints `Building frontend_image`.
+
+The template default in the included file is deliberate. A constant value in
+that file's `vars` would override the value supplied by the include. See
+[variable precedence](./variables.md#resolution-order) for the full rules.
+
+## Shorten namespace names {#namespace-aliases}
+
+Add namespace `aliases` to shorten frequently used task names:
 
 ```yaml
 version: '3'
 
 includes:
-  generate:
-    taskfile: ./taskfiles/Generate.yml
-    aliases: [gen]
+  documentation:
+    taskfile: ./docs/Taskfile.yml
+    dir: ./docs
+    aliases: [docs]
 ```
 
-::: info
+Both `task documentation:build` and `task docs:build` call the same task.
+Namespace aliases can be combined with
+[task aliases](./defining-tasks.md#task-aliases).
 
-Vars declared in the included Taskfile have preference over the variables in the
-including Taskfile! If you want a variable in an included Taskfile to be
-overridable, use the
-[default function](https://sprig.taskfile.dev/defaults.html):
-<span v-pre>`MY_VAR: '{{.MY_VAR | default "my-default-value"}}'`</span>.
+## Allow a missing file {#optional-includes}
+
+Use `optional: true` when a missing local Taskfile should not prevent the rest
+of the project from running:
+
+```yaml
+version: '3'
+
+includes:
+  local:
+    taskfile: ./Taskfile.local.yml
+    optional: true
+
+tasks:
+  greet:
+    cmds:
+      - echo 'Hello, World!'
+```
+
+`task greet` works even without `Taskfile.local.yml`. Optional includes do not
+make tasks from a missing file available.
+
+## Keep included tasks internal {#internal-includes}
+
+Use `internal: true` when all tasks in an included file are helpers for your
+public tasks:
+
+```yaml
+version: '3'
+
+includes:
+  docs:
+    taskfile: ./docs/Taskfile.yml
+    dir: ./docs
+    internal: true
+
+tasks:
+  build:
+    cmds:
+      - task: docs:build
+```
+
+With the `docs/Taskfile.yml` from the first example, `task build` works, but
+`task docs:build` cannot be called directly. Internal tasks are also hidden from
+task listings.
+
+## Remove the namespace {#flatten-includes}
+
+Use `flatten: true` to expose included tasks without a namespace:
+
+```yaml
+version: '3'
+
+includes:
+  docs:
+    taskfile: ./docs/Taskfile.yml
+    dir: ./docs
+    flatten: true
+```
+
+With the first example's included file, call `task build` instead of
+`task docs:build`. Calls within the Taskfile can also use the flattened name.
+
+If the root Taskfile already defines `build`, this inclusion fails with a name
+collision. Keep the namespace or exclude the conflicting included task.
+
+## Exclude selected tasks {#exclude-tasks-from-being-included}
+
+Use `excludes` to remove selected tasks from an include. Names match exactly;
+append `:*` to exclude a namespace:
+
+::: code-group
+
+```yaml [Taskfile.yml]
+version: '3'
+
+includes:
+  tools:
+    taskfile: ./Tools.yml
+    excludes: [debug, 'internal:*']
+```
+
+```yaml [Tools.yml]
+version: '3'
+
+tasks:
+  check: echo 'Checking project'
+  debug: echo 'Debug details'
+  internal:setup: echo 'Internal setup'
+```
+
+:::
+
+`task tools:check` works. `task tools:debug` and `task tools:internal:setup`
+fail because those tasks were excluded. `excludes` also works with `flatten`.
+
+## Choose a file by OS {#os-specific-taskfiles}
+
+Use the `OS` template function to select a file for the current platform:
+
+```yaml
+version: '3'
+
+includes:
+  build: ./Taskfile_{{OS}}.yml
+```
+
+Provide files such as `Taskfile_linux.yml`, `Taskfile_darwin.yml`, and
+`Taskfile_windows.yml` for the platforms you support. If only a few commands
+differ,
+[platform restrictions](./platforms.md#platform-specific-tasks-and-commands) may
+be easier to maintain.
+
+::: tip Related guide
+
+<span id="remote-taskfiles"></span>
+
+Replace the local path with an HTTP or Git location to reuse tasks maintained
+outside the project. Only run remote Taskfiles from sources you trust; they
+execute commands on your machine. See [Remote Taskfiles](../remote-taskfiles.md)
+for a complete example, checksum pinning, and offline use.
 
 :::

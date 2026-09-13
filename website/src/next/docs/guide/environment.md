@@ -10,126 +10,133 @@ outline: deep
 
 # Environment variables
 
-Environment variables are set with `env`, which works at the root of the
-Taskfile and on individual tasks.
-
-## Task
-
-You can use `env` to set custom environment variables for a specific task:
+Use `env` for values a program reads from its environment. In this example, the
+shell reads `GREETING` with `$GREETING`:
 
 ```yaml
 version: '3'
 
 tasks:
   greet:
-    cmds:
-      - echo $GREETING
     env:
-      GREETING: Hey, there!
+      GREETING: Hello, World!
+    cmds:
+      - echo "$GREETING"
 ```
 
-Additionally, you can set global environment variables that will be available to
-all tasks:
+Run `task greet` to print the greeting. Task uses the same shell syntax on
+supported platforms, including Windows. For values used in Task templates, use
+[Variables](./variables.md#env-and-vars-are-not-the-same-thing).
+
+## Set values for commands {#task}
+
+Put `env` on a task to configure its commands, or at the root to provide values
+for every task:
 
 ```yaml
 version: '3'
 
 env:
-  GREETING: Hey, there!
+  GREETING: Hello, World!
 
 tasks:
   greet:
     cmds:
-      - echo $GREETING
+      - echo "$GREETING"
+
+  greet:local:
+    env:
+      GREETING: Hello from this task!
+    cmds:
+      - echo "$GREETING"
 ```
 
-::: info
+With no `GREETING` in the process environment, `task greet` uses the root value
+and `task greet:local` uses the task's value.
 
-`env` supports expansion and retrieving output from a shell command just like
-variables, as you can see in the [Variables](./variables.md) section.
+By default, a variable already present in the process environment takes
+precedence over Taskfile `env` values. If the result differs from the example,
+check the environment used to launch Task. The
+[Env Precedence experiment](../experiments/env-precedence.md) changes this rule.
 
-:::
+`env` values support templates and dynamic `sh` commands. For example, an entry
+<span v-pre>`BUILD_MODE: '{{.MODE}}'`</span> exports a Task variable to a
+command's environment. A `vars` entry alone is not exported to commands in
+`cmds`.
 
-## .env files
+## Load values from files {#env-files}
 
-You can also ask Task to include `.env` like files by using the `dotenv:`
-setting:
+Use `dotenv` to load values from files instead of repeating them in the
+Taskfile. Create these two files in your project:
 
 ::: code-group
 
-```shell [.env]
-KEYNAME=VALUE
+```dotenv [.env]
+GREETING=Hello from .env!
 ```
 
-```shell [testing/.env]
-ENDPOINT=testing.com
+```yaml [Taskfile.yml]
+version: '3'
+
+dotenv: ['.env']
+
+tasks:
+  greet:
+    cmds:
+      - echo "$GREETING"
 ```
 
 :::
 
+Run `task greet` to use the value from `.env`, assuming the process environment
+does not already set `GREETING`.
+
+### Choose file precedence
+
+When several dotenv files define a name, the **first file wins**. Put local
+overrides before shared defaults:
+
 ```yaml
 version: '3'
 
-env:
-  ENV: testing
-
-dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
+vars:
+  ENV: development
 
 tasks:
   greet:
+    dotenv:
+      - .env.local
+      - .env.{{.ENV}}
+      - .env
     cmds:
-      - echo "Using $KEYNAME and endpoint $ENDPOINT"
+      - echo "$GREETING"
 ```
 
-When the same variable is defined in multiple dotenv files, the **first file in
-the list takes precedence**. This allows you to set up override patterns by
-placing higher-priority files first:
+`task greet ENV=testing` selects `.env.testing` for the middle entry. This
+example puts `dotenv` on the task so it can use call variables; root-level
+dotenv files are loaded before those variables are available. Missing dotenv
+files are skipped. Keep files containing local credentials out of version
+control.
+
+### Load values for one task
+
+Put `dotenv` on a task when only that task needs the file. Explicit task-level
+`env` values take precedence over values loaded from dotenv files:
 
 ```yaml
 version: '3'
-
-dotenv:
-  - .env.local # Highest priority - local developer overrides
-  - .env.{{.ENV}} # Environment-specific settings
-  - .env # Base defaults (lowest priority)
-```
-
-Dotenv files can also be specified at the task level:
-
-```yaml
-version: '3'
-
-env:
-  ENV: testing
 
 tasks:
   greet:
-    dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
-    cmds:
-      - echo "Using $KEYNAME and endpoint $ENDPOINT"
-```
-
-Environment variables specified explicitly at the task-level will override
-variables defined in dotfiles:
-
-```yaml
-version: '3'
-
-env:
-  ENV: testing
-
-tasks:
-  greet:
-    dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
+    dotenv: ['.env']
     env:
-      KEYNAME: DIFFERENT_VALUE
+      GREETING: Hello from the task!
     cmds:
-      - echo "Using $KEYNAME and endpoint $ENDPOINT"
+      - echo "$GREETING"
 ```
 
-::: info
+The process environment still takes precedence by default. Dotenv paths can
+contain templates, as in <span v-pre>`'{{.HOME}}/.env'`</span>.
 
-Please note that you are not currently able to use the `dotenv` key inside
-included Taskfiles.
-
-:::
+The `dotenv` key is not supported inside included Taskfiles. Load shared values
+in the entrypoint Taskfile instead. See [Including Taskfiles](./includes.md).

@@ -422,7 +422,7 @@ value.
 
 For complete documentation on secret variables, including security
 considerations and best practices, see the
-[Secret variables](../guide/variables.md#secret-variables) section in the Guide.
+[Secret variables](../guide/secret-variables.md) section in the Guide.
 
 :::
 

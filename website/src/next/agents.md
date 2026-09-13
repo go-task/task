@@ -17,13 +17,17 @@ URL. The curated index is at [/llms.txt](/llms.txt) and the full corpus at
 
 ## Where to look
 
-- [Getting Started](./docs/getting-started.md): the shape of a Taskfile.
+- [Quick Start](./docs/getting-started.md): the shape of a Taskfile.
 - [Taskfile Schema](./docs/reference/schema.md): the source of truth for keys,
   types and accepted values. Check here before assuming a field exists.
 - [CLI](./docs/reference/cli.md): commands, flags and exit codes.
 - [Templating](./docs/reference/templating.md): every template function and
   special variable. Check here before inventing one.
-- [Guide](./docs/guide/): one page per topic, for how to do a thing.
+- [Guide](./docs/guide/): task definitions, inputs, execution and shared
+  Taskfiles.
+- [Errors and cleanup](./docs/guide/errors-and-cleanup.md): failure handling and
+  `defer`.
+- [Secret variables](./docs/guide/secret-variables.md): masking and its limits.
 - [Resolution order](./docs/guide/variables.md#resolution-order) and
   [Task dependencies](./docs/guide/dependencies.md#task-dependencies): for when
   the behaviour matters more than the procedure.

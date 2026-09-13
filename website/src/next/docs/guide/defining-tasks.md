@@ -10,13 +10,36 @@ outline: deep
 
 # Defining tasks
 
-Beyond a name and a list of commands, a task carries a handful of properties
-that control how it is written, named and presented.
+Define tasks under `tasks`. Each task has a name and a list of commands in
+`cmds`. Add `desc` to explain what a task does:
 
-## Short task syntax
+```yaml
+version: '3'
 
-Starting on Task v3, you can now write tasks with a shorter syntax if they have
-the default settings (e.g. no custom `env:`, `vars:`, `desc:`, `silent:` , etc):
+tasks:
+  greet:
+    desc: Print a greeting
+    cmds:
+      - echo "Hello, World!"
+```
+
+Run `task greet` to execute it, or `task --list` to see its description. See
+[Running tasks](./running-tasks.md) for selecting a Taskfile and previewing
+commands.
+
+## Choose a task name
+
+The name under `tasks` is the name you pass to the CLI. Call your main task
+`default` if it should run when someone types `task` without a name.
+
+Use `desc` for the short explanation shown by `task --list`, `aliases` for
+alternative names, and `label` to customize log messages. The sections below
+show each independently.
+
+## Use command shortcuts {#short-task-syntax}
+
+Use shorthand syntax for tasks that only need commands. Use the full form when
+you need properties such as `env`, `vars`, `desc` or `silent`:
 
 ```yaml
 version: '3'
@@ -29,12 +52,11 @@ tasks:
     - ./app{{exeExt}} -h localhost -p 8080
 ```
 
-## Internal tasks
+## Keep helpers internal {#internal-tasks}
 
-Internal tasks are tasks that cannot be called directly by the user. They will
-not appear in the output when running `task --list|--list-all`. Other tasks may
-call internal tasks in the usual way. This is useful for creating reusable,
-function-like tasks that have no useful purpose on the command line.
+Set `internal: true` on a helper that should only be called by other tasks. It
+stays out of `task --list` and `task --list-all`, and a direct CLI call fails.
+Expose a public task that supplies the helper's inputs:
 
 ```yaml
 version: '3'
@@ -52,11 +74,10 @@ tasks:
       - docker build -t {{.DOCKER_IMAGE}} .
 ```
 
-## Task directory
+## Set the working directory {#task-directory}
 
-By default, tasks will be executed in the directory where the Taskfile is
-located. But you can easily make the task run in another folder, informing
-`dir`:
+Set `dir` when commands need to run in a subdirectory. Relative paths are
+resolved from the Taskfile's execution directory:
 
 ```yaml
 version: '3'
@@ -69,9 +90,11 @@ tasks:
       - caddy
 ```
 
-If the directory does not exist, `task` creates it.
+Run `task serve` to start the server in `public/www`. Task creates the directory
+if it does not exist. For included Taskfiles, configure the
+[include directory](./includes.md#directory-of-included-taskfile).
 
-## Task aliases
+## Add shorter names {#task-aliases}
 
 Aliases are alternative names for tasks. They can be used to make it easier and
 quicker to run tasks with long or hard-to-type names. You can use them on the
@@ -95,11 +118,10 @@ tasks:
       - echo "generating..."
 ```
 
-## Overriding task name
+## Customize log labels {#overriding-task-name}
 
-Sometimes you may want to override the task name printed on the summary,
-up-to-date messages to STDOUT, etc. In this case, you can just set `label:`,
-which can also be interpolated with variables:
+Use `label` to customize the name shown in summaries and status messages. Labels
+can contain templates. They do not rename the task you call:
 
 ```yaml
 version: '3'
@@ -120,7 +142,7 @@ tasks:
       - echo "{{.MESSAGE}}"
 ```
 
-## Help
+## Describe public tasks {#help}
 
 Running `task --list` (or `task -l`) lists all tasks with a description. The
 following Taskfile:
@@ -130,12 +152,12 @@ version: '3'
 
 tasks:
   build:
-    desc: Build the go binary.
+    desc: Build the Go binary.
     cmds:
-      - go build -v -i main.go
+      - go build -v main.go
 
   test:
-    desc: Run all the go tests.
+    desc: Run all Go tests.
     cmds:
       - go test -race ./...
 
@@ -151,13 +173,14 @@ tasks:
 would print the following output:
 
 ```shell
-* build:   Build the go binary.
-* test:    Run all the go tests.
+* build:   Build the Go binary.
+* test:    Run all Go tests.
 ```
 
-If you want to see all tasks, there's a `--list-all` (alias `-a`) flag as well.
+Use `--list-all` (or `-a`) to also list tasks without a description. Internal
+tasks remain hidden.
 
-## Display summary of task
+## Explain a task in detail {#display-summary-of-task}
 
 Running `task --summary task-name` will show a summary of a task. The following
 Taskfile:
@@ -169,7 +192,7 @@ tasks:
   release:
     deps: [build]
     summary: |
-      Release your project to github
+      Release your project to GitHub
 
       It will build your project before starting the release.
       Please make sure that you have set GITHUB_TOKEN before starting.
@@ -181,12 +204,12 @@ tasks:
       - your-build-tool
 ```
 
-with running `task --summary release` would print the following output:
+`task --summary release` prints:
 
 ```
 task: release
 
-Release your project to github
+Release your project to GitHub
 
 It will build your project before starting the release.
 Please make sure that you have set GITHUB_TOKEN before starting.
@@ -201,4 +224,4 @@ commands:
 If a summary is missing, the description will be printed. If the task does not
 have a summary or a description, a warning is printed.
 
-Please note: _showing the summary will not execute the command_.
+Showing a summary does not execute the task.

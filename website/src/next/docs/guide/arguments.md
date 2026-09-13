@@ -1,24 +1,62 @@
 ---
-title: Passing arguments
+title: Command-line arguments
 description:
-  Forward command line arguments to a task with `--`, and match part of a task's
-  name with a wildcard.
+  Supply variables with NAME=value, forward arguments after --, and capture
+  values with wildcard task names.
 section: Guide
 docType: guide
 outline: deep
 ---
 
-# Passing arguments
+# Command-line arguments {#passing-arguments}
 
-Tasks can take input from the command line in two ways: everything after `--`,
-or a pattern in the task name itself.
+Choose how to pass input based on what needs to receive it:
 
-## Forwarding CLI arguments to commands
+| Input                   | Example                | Read it with                            |
+| ----------------------- | ---------------------- | --------------------------------------- |
+| A Task variable         | `task greet NAME=Bob`  | <span v-pre>`{{.NAME}}`</span>          |
+| Arguments for a command | `task yarn -- install` | <span v-pre>`{{.CLI_ARGS}}`</span>      |
+| Part of a task name     | `task start:api`       | <span v-pre>`{{index .MATCH 0}}`</span> |
 
-If `--` is given in the CLI, all following parameters are added to a special
-`.CLI_ARGS` variable. This is useful to forward arguments to another command.
+## Pass named values {#variable-assignments}
 
-The below example will run `yarn install`.
+Pass `NAME=value` to supply a Task variable. A default in the root `vars` block
+can be overridden from the command line:
+
+```yaml
+version: '3'
+
+vars:
+  NAME: World
+
+tasks:
+  greet:
+    cmds:
+      - echo "Hello, {{.NAME}}!"
+```
+
+```shell
+task greet NAME=Bob
+task greet "NAME=Jane Doe"
+```
+
+Quote assignments that contain spaces. These assignments work across shells,
+including Windows, and are shared by all tasks in the invocation:
+
+```shell
+task build test ENV=production
+```
+
+A value declared in a task's own `vars` can override the command-line value. See
+[variable resolution](./variables.md#resolution-order) for precedence and
+configurable defaults. To set values in a command's shell environment, see
+[Environment variables](./environment.md).
+
+## Forward command arguments {#forwarding-cli-arguments-to-commands}
+
+Everything after `--` is available in `.CLI_ARGS`, including values containing
+`=`. Insert it into a command to forward those arguments. This example runs
+`yarn install`:
 
 ```shell
 $ task yarn -- install
@@ -33,17 +71,11 @@ tasks:
       - yarn {{.CLI_ARGS}}
 ```
 
-## Wildcard arguments
+## Capture task-name inputs {#wildcard-arguments}
 
-Another way to parse arguments into a task is to use a wildcard in your task's
-name. Wildcards are denoted by an asterisk (`*`) and can be used multiple times
-in a task's name to pass in multiple arguments.
-
-Matching arguments will be captured and stored in the `.MATCH` variable and can
-then be used in your task's commands like any other variable. This variable is
-an array of strings and so will need to be indexed to access the individual
-arguments. We suggest creating a named variable for each argument to make it
-clear what they contain:
+Use `*` in a task name to turn a call such as `task start:api` into an input.
+Task captures each wildcard in the `.MATCH` array. Give the captured values
+names with `vars` so their meaning stays clear:
 
 ```yaml
 version: '3'
@@ -63,10 +95,7 @@ tasks:
       - echo "Starting {{.SERVICE}}"
 ```
 
-This call matches the `start:*` task and the string "foo" is captured by the
-wildcard and stored in the `.MATCH` variable. We then index the `.MATCH` array
-and store the result in the `.SERVICE` variable which is then echoed out in the
-cmds:
+The first captured value becomes `SERVICE`:
 
 ```shell
 $ task start:foo
@@ -89,9 +118,7 @@ $ task start:foo:3
 Starting foo with 3 replicas
 ```
 
-Using wildcards with aliases Wildcards also work with aliases. If a task has an
-alias, you can use the alias name with wildcards to capture arguments. For
-example:
+Wildcard task names also work with aliases:
 
 ```yaml
 version: '3'
@@ -105,7 +132,7 @@ tasks:
       - echo "Running {{.SERVICE}}"
 ```
 
-In this example, you can call the task using the alias run:\*:
+Call the task through the `run:*` alias:
 
 ```shell
 $ task run:foo

@@ -10,247 +10,130 @@ outline: deep
 
 # Loops
 
-Task allows you to loop over certain values and execute a command for each.
-There are a number of ways to do this depending on the type of value you want to
-loop over.
+Use `for` to repeat a command or task call with different values. Start with a
+list, then choose a different input source when the values come from a variable,
+files, or several combinations.
 
-## Looping over a static list
+## Repeat a command {#looping-over-a-static-list}
 
-The simplest kind of loop is an explicit one. This is useful when you want to
-loop over a set of values that are known ahead of time.
-
-```yaml
-version: '3'
-
-tasks:
-  default:
-    cmds:
-      - for: ['foo.txt', 'bar.txt']
-        cmd: cat {{ .ITEM }}
-```
-
-## Looping over a matrix
-
-If you need to loop over all permutations of multiple lists, you can use the
-`matrix` property. This should be familiar to anyone who has used a matrix in a
-CI/CD pipeline.
+In a project containing `README.md` and `LICENSE`, this task saves a copy of
+each file in `backup/`. Put `for` beside `cmd` and read the current filename
+through `.ITEM`:
 
 ```yaml
 version: '3'
 
 tasks:
-  default:
-    silent: true
+  backup:
     cmds:
-      - for:
-          matrix:
-            OS: ['windows', 'linux', 'darwin']
-            ARCH: ['amd64', 'arm64']
-        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
+      - mkdir -p backup
+      - for: [README.md, LICENSE]
+        cmd: cp '{{.ITEM}}' backup/
 ```
 
-This will output:
+Run `task backup` to create `backup/README.md` and `backup/LICENSE`. Command
+loops run in list order. Use [dependency loops](#looping-over-dependencies) for
+iterations that may run concurrently.
 
-```txt
-windows/amd64
-windows/arm64
-linux/amd64
-linux/arm64
-darwin/amd64
-darwin/arm64
-```
+For a changing set of files, use
+[a source glob](#looping-over-your-task-s-sources-or-generated-files) instead of
+maintaining a fixed list.
 
-You can also use references to other variables as long as they are also lists:
+## Read values from variables {#looping-over-variables}
+
+Use `var` to read an existing variable. Strings are split on whitespace:
 
 ```yaml
 version: '3'
 
-vars:
-  OS_VAR: ['windows', 'linux', 'darwin']
-  ARCH_VAR: ['amd64', 'arm64']
-
 tasks:
-  default:
-    cmds:
-      - for:
-          matrix:
-            OS:
-              ref: .OS_VAR
-            ARCH:
-              ref: .ARCH_VAR
-        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
-```
-
-## Looping over your task's sources or generated files
-
-You are also able to loop over the sources of your task or the files it
-generates:
-
-::: code-group
-
-```yaml [Sources]
-version: '3'
-
-tasks:
-  default:
-    sources:
-      - foo.txt
-      - bar.txt
-    cmds:
-      - for: sources
-        cmd: cat {{ .ITEM }}
-```
-
-```yaml [Generates]
-version: '3'
-
-tasks:
-  default:
-    generates:
-      - foo.txt
-      - bar.txt
-    cmds:
-      - for: generates
-        cmd: cat {{ .ITEM }}
-```
-
-:::
-
-This will also work if you use globbing syntax in `sources` or `generates`. For
-example, if you specify a source for `*.txt`, the loop will iterate over all
-files that match that glob.
-
-Paths will always be returned as paths relative to the task directory. If you
-need to convert this to an absolute path, you can use the built-in `joinPath`
-function. There are some
-[special variables](../reference/templating.md#special-variables) that you may
-find useful for this.
-
-::: code-group
-
-```yaml [Sources]
-version: '3'
-
-tasks:
-  default:
+  greet:
     vars:
-      MY_DIR: /path/to/dir
-    dir: '{{.MY_DIR}}'
-    sources:
-      - foo.txt
-      - bar.txt
+      NAMES: Alice Bob
     cmds:
-      - for: sources
-        cmd: cat {{joinPath .MY_DIR .ITEM}}
+      - for: { var: NAMES }
+        cmd: echo "Hello, {{.ITEM}}!"
 ```
 
-```yaml [Generates]
-version: '3'
-
-tasks:
-  default:
-    vars:
-      MY_DIR: /path/to/dir
-    dir: '{{.MY_DIR}}'
-    generates:
-      - foo.txt
-      - bar.txt
-    cmds:
-      - for: generates
-        cmd: cat {{joinPath .MY_DIR .ITEM}}
-```
-
-:::
-
-## Looping over variables
-
-To loop over the contents of a variable, use the `var` key followed by the name
-of the variable you want to loop over. By default, string variables will be
-split on any whitespace characters.
+For another separator, set `split`:
 
 ```yaml
 version: '3'
 
 tasks:
-  default:
+  greet:
     vars:
-      MY_VAR: foo.txt bar.txt
+      NAMES: Alice,Bob
     cmds:
-      - for: { var: MY_VAR }
-        cmd: cat {{.ITEM}}
+      - for: { var: NAMES, split: ',' }
+        cmd: echo "Hello, {{.ITEM}}!"
 ```
 
-If you need to split a string on a different character, you can do this by
-specifying the `split` property:
+Arrays preserve values containing spaces:
 
 ```yaml
 version: '3'
 
 tasks:
-  default:
+  greet:
     vars:
-      MY_VAR: foo.txt,bar.txt
+      NAMES: ['Alice Smith', 'Bob Jones']
     cmds:
-      - for: { var: MY_VAR, split: ',' }
-        cmd: cat {{.ITEM}}
+      - for: { var: NAMES }
+        cmd: echo "Hello, {{.ITEM}}!"
 ```
 
-You can also loop over arrays and maps directly:
-
-```yaml
-version: 3
-
-tasks:
-  foo:
-    vars:
-      LIST: [foo, bar, baz]
-    cmds:
-      - for:
-          var: LIST
-        cmd: echo {{.ITEM}}
-```
-
-When looping over a map we also make an additional <span v-pre>`{{.KEY}}`</span>
-variable available that holds the string value of the map key. Remember that
-maps are unordered, so the order in which the items are looped over is random.
-
-All of this also works with dynamic variables!
+Maps expose the key as `.KEY` and the value as `.ITEM`. Their iteration order is
+not guaranteed:
 
 ```yaml
 version: '3'
 
 tasks:
-  default:
+  services:
     vars:
-      MY_VAR:
-        sh: find -type f -name '*.txt'
+      PORTS:
+        map: { api: 8080, worker: 9090 }
     cmds:
-      - for: { var: MY_VAR }
-        cmd: cat {{.ITEM}}
+      - for: { var: PORTS }
+        cmd: echo "{{.KEY}} uses port {{.ITEM}}"
 ```
 
-## Renaming variables
-
-If you want to rename the iterator variable to make it clearer what the value
-contains, you can do so by specifying the `as` property:
+Dynamic variables work too. This example reads newline-separated names from an
+existing `names.txt` file:
 
 ```yaml
 version: '3'
 
 tasks:
-  default:
+  greet:
     vars:
-      MY_VAR: foo.txt bar.txt
+      NAMES:
+        sh: cat names.txt
     cmds:
-      - for: { var: MY_VAR, as: FILE }
-        cmd: cat {{.FILE}}
+      - for: { var: NAMES, split: "\n" }
+        cmd: echo "Hello, {{.ITEM}}!"
 ```
 
-## Looping over tasks
+## Name the current item {#renaming-variables}
 
-Because the `for` property is defined at the `cmds` level, you can also use it
-alongside the `task` keyword to run tasks multiple times with different
-variables.
+Use `as` to name the current item when that makes a command easier to read:
+
+```yaml
+version: '3'
+
+tasks:
+  greet:
+    cmds:
+      - for: { var: NAMES, as: NAME }
+        cmd: echo "Hello, {{.NAME}}!"
+    vars:
+      NAMES: [Alice, Bob]
+```
+
+## Repeat a task call {#looping-over-tasks}
+
+Put `task` beside `for` to reuse another task for each item:
 
 ```yaml
 version: '3'
@@ -258,17 +141,18 @@ version: '3'
 tasks:
   default:
     cmds:
-      - for: [foo, bar]
-        task: my-task
+      - for: [api, worker]
+        task: check
         vars:
-          FILE: '{{.ITEM}}'
+          SERVICE: '{{.ITEM}}'
 
-  my-task:
+  check:
     cmds:
-      - echo '{{.FILE}}'
+      - echo "Checking {{.SERVICE}}"
 ```
 
-Or if you want to run different tasks depending on the value of the loop:
+`task` checks `api` before `worker`. Each call finishes before the next starts.
+You can also template the task name itself:
 
 ```yaml
 version: '3'
@@ -276,22 +160,16 @@ version: '3'
 tasks:
   default:
     cmds:
-      - for: [foo, bar]
-        task: task-{{.ITEM}}
+      - for: [api, worker]
+        task: check:{{.ITEM}}
 
-  task-foo:
-    cmds:
-      - echo 'foo'
-
-  task-bar:
-    cmds:
-      - echo 'bar'
+  check:api: echo 'Checking API'
+  check:worker: echo 'Checking worker'
 ```
 
-## Looping over dependencies
+## Run iterations in parallel {#looping-over-dependencies}
 
-All of the above looping techniques can also be applied to the `deps` property.
-This allows you to combine loops with concurrency:
+Use a loop in `deps` when the calls can run concurrently:
 
 ```yaml
 version: '3'
@@ -299,28 +177,99 @@ version: '3'
 tasks:
   default:
     deps:
-      - for: [foo, bar]
-        task: my-task
+      - for: [api, worker]
+        task: check
         vars:
-          FILE: '{{.ITEM}}'
+          SERVICE: '{{.ITEM}}'
 
-  my-task:
+  check:
     cmds:
-      - echo '{{.FILE}}'
+      - echo "Checking {{.SERVICE}}"
 ```
 
-It is important to note that as `deps` are run in parallel, the order in which
-the iterations are run is not guaranteed and the output may vary. For example,
-the output of the above example may be either:
+The messages may appear in either order. All the input forms shown on this page
+also work with dependency loops. See
+[Dependencies and task calls](./dependencies.md) for concurrency limits and
+repeated-call policies.
 
-```shell
-foo
-bar
+## Try every combination {#looping-over-a-matrix}
+
+Use `matrix` to visit every combination of several lists:
+
+```yaml
+version: '3'
+
+tasks:
+  targets:
+    cmds:
+      - for:
+          matrix:
+            OS: [linux, darwin]
+            ARCH: [amd64, arm64]
+        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
 ```
 
-or
+`task targets` prints `linux/amd64`, `linux/arm64`, `darwin/amd64`, and
+`darwin/arm64`. These are ordinary iteration values; they do not change the
+platform on which Task runs.
 
-```shell
-bar
-foo
+Use `ref` to reuse lists defined elsewhere:
+
+```yaml
+version: '3'
+
+vars:
+  SYSTEMS: [linux, darwin]
+  ARCHITECTURES: [amd64, arm64]
+
+tasks:
+  targets:
+    cmds:
+      - for:
+          matrix:
+            OS: { ref: .SYSTEMS }
+            ARCH: { ref: .ARCHITECTURES }
+        cmd: echo "{{.ITEM.OS}}/{{.ITEM.ARCH}}"
 ```
+
+## Loop over files {#looping-over-your-task-s-sources-or-generated-files}
+
+Use `for: sources` or `for: generates` to reuse the task's file declarations.
+Globs are expanded before iteration:
+
+::: code-group
+
+```yaml [Sources]
+version: '3'
+
+tasks:
+  show:
+    sources: ['src/*.txt']
+    cmds:
+      - for: sources
+        cmd: cat '{{.ITEM}}'
+```
+
+```yaml [Generates]
+version: '3'
+
+tasks:
+  show:
+    generates: ['output/*.txt']
+    cmds:
+      - for: generates
+        cmd: cat '{{.ITEM}}'
+```
+
+:::
+
+Run `task show` with matching files present. Paths are relative to the task's
+working directory. Source declarations also enable
+[up-to-date checks](./up-to-date.md); use `method: none` if this task should
+print the files every time.
+
+To build an absolute path, combine a directory with the item using the
+`joinPath` template function, for example
+<span v-pre>`{{joinPath .TASK_DIR .ITEM}}`</span>. See the
+[file-path variables](../reference/templating.md#file-paths) for the available
+directory values.

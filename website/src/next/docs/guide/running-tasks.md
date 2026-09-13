@@ -10,44 +10,45 @@ outline: deep
 
 # Running tasks
 
-Task looks for a Taskfile in the current directory, but it can run one from
-almost anywhere else too.
+Run `task <name>` from your project to execute a task. With no name, Task runs
+the `default` task. Start by listing tasks, then run one:
 
-Specific Taskfiles can be called by specifying the `--taskfile` flag. If you
-don't specify a Taskfile, Task will automatically look for a file with one of
-the [supported file names](#supported-file-names) in the current directory. If
-you want to search in a different directory, you can use the `--dir` flag.
+```shell
+task --list
+task build
+```
 
-## Supported file names
+`--list` shows tasks with descriptions. Use `--list-all` to include tasks
+without descriptions; [internal tasks](./defining-tasks.md#internal-tasks)
+remain hidden. See [Defining tasks](./defining-tasks.md) to create these
+entries.
 
-Task looks for files with the following names, in order of priority:
+Pass several names, such as `task lint test`, to run them in order. Use
+[`--parallel`](./dependencies.md#limiting-how-much-runs-at-once) for independent
+tasks that can run concurrently. To pass values or command arguments, see
+[Command-line arguments](./arguments.md).
 
-- `Taskfile.yml`
-- `taskfile.yml`
-- `Taskfile.yaml`
-- `taskfile.yaml`
-- `Taskfile.dist.yml`
-- `taskfile.dist.yml`
-- `Taskfile.dist.yaml`
-- `taskfile.dist.yaml`
+## Preview commands {#dry-run-mode}
 
-The `.dist` variants allow projects to have one committed file (`.dist`) while
-still allowing individual users to override the Taskfile by adding an additional
-`Taskfile.yml` (which would be in your `.gitignore`).
+Use `--dry` (or `-n`) to print the commands Task would run:
 
-## Running a Taskfile from a subdirectory
+```shell
+task --dry build
+```
 
-If a Taskfile cannot be found in the current working directory, it will walk up
-the file tree until it finds one (similar to how `git` works). When running Task
-from a subdirectory like this, it will behave as if you ran it from the
-directory containing the Taskfile.
+Task still resolves templates and dynamic variables while preparing the
+commands. A variable declared with `sh` can therefore execute its shell command
+during a dry run. See [Variables](./variables.md#when-values-are-computed).
 
-You can use this functionality along with the special
-<span v-pre>`{{.USER_WORKING_DIR}}`</span> variable to create some very useful
-reusable tasks. For example, if you have a monorepo with directories for each
-microservice, you can `cd` into a microservice directory and run a task command
-to bring it up without having to create multiple tasks or Taskfiles with
-identical content. For example:
+## Run from a subdirectory {#running-a-taskfile-from-a-subdirectory}
+
+If Task cannot find a Taskfile in the current directory, it searches parent
+directories. Tasks run from the directory containing that Taskfile unless
+[their `dir` setting](./defining-tasks.md#task-directory) changes it.
+
+Use <span v-pre>`{{.USER_WORKING_DIR}}`</span> when the task should act on the
+directory where you invoked it. In a monorepo, this lets each service use the
+same task to start its Docker Compose services:
 
 ```yaml
 version: '3'
@@ -58,29 +59,24 @@ tasks:
     preconditions:
       - test -f docker-compose.yml
     cmds:
-      - docker-compose up -d
+      - docker compose up -d
 ```
 
-In this example, we can run `cd <service>` and `task up` and as long as the
-`<service>` directory contains a `docker-compose.yml`, the Docker composition
-will be brought up.
+From a service directory containing `docker-compose.yml`, run `task up`. The
+root Taskfile supplies the task; the service directory supplies its files.
 
-## Running a global Taskfile
+## Use a personal Taskfile {#running-a-global-taskfile}
 
-If you call Task with the `--global` (alias `-g`) flag, it will look for your
-home directory instead of your working directory. In short, Task will look for a
-Taskfile that matches `$HOME/{T,t}askfile.{yml,yaml}` .
+Store a Taskfile in your home directory and use `--global` (or `-g`) to call it
+from anywhere:
 
-This is useful to have automation that you can run from anywhere in your system!
+```shell
+task --global from-working-directory
+```
 
-::: info
-
-When running your global Taskfile with `-g`, tasks will run on `$HOME` by
-default, and not on your working directory!
-
-As mentioned in the previous section, the
-<span v-pre>`{{.USER_WORKING_DIR}}`</span> special variable can be very handy
-here to run stuff on the directory you're calling `task -g` from.
+Global tasks run in your home directory by default. Set `dir` to
+<span v-pre>`{{.USER_WORKING_DIR}}`</span> when a personal utility should work
+on the current project:
 
 ```yaml
 version: '3'
@@ -96,46 +92,59 @@ tasks:
       - pwd
 ```
 
-:::
+## Read a Taskfile from stdin {#running-a-taskfile-from-stdin}
 
-## Running a Taskfile from stdin
-
-Taskfile also supports reading from stdin. This is useful if you are generating
-Taskfiles dynamically and don't want write them to disk. To tell task to read
-from stdin, you must specify the `-t/--taskfile` flag with the special `-`
-value. You may then pipe into Task as you would any other program:
+Use `--taskfile -` (or `-t -`) to read a generated Taskfile from standard input.
+For example, to read an existing file through stdin:
 
 ```shell
-task -t - < ./Taskfile.yml
-# OR
-cat ./Taskfile.yml | task -t -
+task --taskfile - < ./Taskfile.yml
 ```
 
-## Dry run mode
+You can also pipe the output of a Taskfile generator into `task --taskfile -`.
+With no task name, these commands run the generated file's `default` task.
 
-Dry run mode (`--dry`) compiles and steps through each task, printing the
-commands that would be run without executing them. This is useful for debugging
-your Taskfiles.
+## Run a terminal app {#interactive-cli-application}
 
-## Interactive CLI application
-
-When running interactive CLI applications inside Task they can sometimes behave
-weirdly, especially when the [output mode](./output.md#output-syntax) is set to
-something other than `interleaved` (the default), or when interactive apps are
-run in parallel with other tasks.
-
-The `interactive: true` tells Task this is an interactive application and Task
-will try to optimize for it:
+Set `interactive: true` on a task that launches a terminal application:
 
 ```yaml
 version: '3'
 
 tasks:
-  default:
+  edit:
+    interactive: true
     cmds:
       - vim my-file.txt
-    interactive: true
 ```
 
-If you still have problems running an interactive app through Task, please open
-an issue about it.
+Run `task edit` to open the editor. Interactive applications need direct access
+to the terminal; buffered or prefixed [output modes](./output.md#output-syntax)
+and other tasks running concurrently can interfere with their input and display.
+
+This task setting is distinct from the CLI `--interactive` option, which
+[prompts for missing variables](./required-variables.md#prompting-for-missing-variables-interactively).
+
+## Choose a file name {#supported-file-names}
+
+Use `--taskfile` to choose a specific file or `--dir` to run in another project:
+
+```shell
+task --taskfile Taskfile.ci.yml build
+task --dir ./backend build
+```
+
+Task looks for these names in order of priority:
+
+- `Taskfile.yml`
+- `taskfile.yml`
+- `Taskfile.yaml`
+- `taskfile.yaml`
+- `Taskfile.dist.yml`
+- `taskfile.dist.yml`
+- `Taskfile.dist.yaml`
+- `taskfile.dist.yaml`
+
+Commit a `.dist` variant if users need to supply their own `Taskfile.yml`
+override. The local file takes priority; add it to `.gitignore` if it should
+remain personal.
