@@ -33,6 +33,15 @@ echo "fish: :4 (NoFileComp) forwards candidates, offers no files"
 has    "candidate forwarded"  'task ' build
 hasnot "no file fallback"     'task ' notes.txt
 
+echo "fish: KeepOrder preserves non-alphabetical enum declarations"
+set -l enum_values (cands 'task deploy ENV=')
+if test (string join ',' -- $enum_values) = 'ENV=prod,ENV=dev'
+    echo "  ok   enum declaration order"
+else
+    echo "  FAIL enum declaration order: $enum_values"
+    set fails (math $fails + 1)
+end
+
 echo "fish: :16 (FilterDirs) offers directories only"
 has    "dir offered"          'task --dir ' sub/
 hasnot "no plain file"        'task --dir ' notes.txt

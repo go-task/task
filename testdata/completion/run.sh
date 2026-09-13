@@ -34,7 +34,7 @@ tasks:
     requires:
       vars:
         - name: ENV
-          enum: [dev, prod]
+          enum: [prod, dev]
         - REGION
   docs:serve:
     desc: Serve docs
