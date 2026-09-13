@@ -4,7 +4,7 @@ set -l GO_TASK_PROGNAME (if set -q GO_TASK_PROGNAME; echo $GO_TASK_PROGNAME; els
 
 # Completion directives, mirroring internal/complete/complete.go. `math` has no
 # bitwise operators, hence __task_test_bit. NoSpace (2) and KeepOrder (32) need
-# none: fish appends no space and keeps the order.
+# none: fish handles spacing and the registration below preserves order.
 set -g __task_directive_no_file_comp 4
 set -g __task_directive_filter_file_ext 8
 set -g __task_directive_filter_dirs 16
@@ -95,4 +95,4 @@ end
 complete -c $GO_TASK_PROGNAME -e
 
 # `--no-files` keeps fish from mixing in files against the engine's directive.
-complete -c $GO_TASK_PROGNAME --no-files -a "(__task_complete)"
+complete -c $GO_TASK_PROGNAME --no-files --keep-order -a "(__task_complete)"
