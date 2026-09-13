@@ -15,8 +15,8 @@ _task() {
 	zstyle -T ":completion:${curcontext}:" show-aliases || ctl+=(--no-aliases)
 	zstyle -T ":completion:${curcontext}:" verbose      || ctl+=(--no-descriptions)
 
-	# (@) preserves the trailing empty word the engine reads as a fresh cursor.
-	args=("${(@)words[2,CURRENT]}")
+	# Q removes shell quoting; @ preserves the trailing empty cursor word.
+	args=("${(@Q)words[2,CURRENT]}")
 	(( ${#args} == 0 )) && args=("")
 
 	output=$("$TASK_CMD" __complete "${ctl[@]}" "${args[@]}" 2>/dev/null)
@@ -74,3 +74,9 @@ _task() {
 }
 
 compdef _task "$TASK_CMD"
+
+# An autoload call must also complete on its first invocation. Sourcing the
+# script only registers the function.
+if [[ "$funcstack[1]" == "_task" ]]; then
+	_task "$@"
+fi
