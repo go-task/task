@@ -4,13 +4,22 @@
 
 ### 🚀 Features
 
-- Added versioned Homebrew casks (`go-task@<major>.<minor>`) to install a
-  specific minor version of Task (#3023 by @vmaerten).
+- Added versioned Homebrew casks (`go-task@<major>.<minor>`) to install a specific
+  minor version of Task (#3023 by @vmaerten).
+- Added a `remote.headers` config option to send HTTP headers when downloading a
+  remote Taskfile, configured per host. Header values support templating
+  functions, e.g. `{{env "GITLAB_TOKEN"}}`. This keeps the credential out of the
+  include URL, where it would leak into error messages and the confirmation
+  prompt (#2329 by @vmaerten).
 
 ### 🐛 Fixes
 
 - Fixed a bug on Windows where watching source paths did not work as expected
   (#2863, #3028 by @pd93).
+- Fixed a remote Taskfile whose server refuses the credentials being reported as
+  a missing Taskfile. A `401` now stops the search and reports the status code,
+  instead of retrying every default Taskfile name and concluding that no
+  Taskfile exists (#2329 by @vmaerten).
 
 ### 📦 Package API
 
