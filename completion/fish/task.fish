@@ -91,6 +91,7 @@ complete -c $GO_TASK_PROGNAME -s o -l output                    -d 'set output s
 complete -c $GO_TASK_PROGNAME      -l output-group-begin        -d 'message template before grouped output'
 complete -c $GO_TASK_PROGNAME      -l output-group-end          -d 'message template after grouped output'
 complete -c $GO_TASK_PROGNAME      -l output-group-error-only   -d 'hide output from successful tasks'
+complete -c $GO_TASK_PROGNAME      -l output-group-by-task      -d 'group all task output together'
 complete -c $GO_TASK_PROGNAME -s p -l parallel                  -d 'execute tasks in parallel'
 complete -c $GO_TASK_PROGNAME -s s -l silent                    -d 'disable echoing'
 complete -c $GO_TASK_PROGNAME      -l sort                      -d 'set task sorting order' -xa "default alphanumeric none"

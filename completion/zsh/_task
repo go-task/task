@@ -112,6 +112,7 @@ _task() {
         '(--output-group-begin)--output-group-begin[message template before grouped output]:template text: '
         '(--output-group-end)--output-group-end[message template after grouped output]:template text: '
         '(--output-group-error-only)--output-group-error-only[hide output from successful tasks]'
+        '(--output-group-by-task)--output-group-by-task[group all task output together]'
         '(-s --silent)'{-s,--silent}'[disable echoing]'
         '(--sort)--sort[set task sorting order]:order:(default alphanumeric none)'
         '(--status)--status[exit non-zero if supplied tasks not up-to-date]'

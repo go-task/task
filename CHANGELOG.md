@@ -6,6 +6,9 @@
 
 - Added versioned Homebrew casks (`go-task@<major>.<minor>`) to install a specific
   minor version of Task (#3023 by @vmaerten).
+- Added opt-in task-level grouping for `output: group`. Set `by_task: true` or
+  use `--output-group-by-task` to combine all shell command output from a task
+  into one group while preserving the existing per-command default.
 
 ### 📦 Package API
 

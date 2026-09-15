@@ -149,6 +149,7 @@ func init() {
 	pflag.StringVar(&Output.Group.Begin, "output-group-begin", getConfig(config, "OUTPUT_GROUP_BEGIN", func() *string { return nil }, ""), "Message template to print before a task's grouped output.")
 	pflag.StringVar(&Output.Group.End, "output-group-end", getConfig(config, "OUTPUT_GROUP_END", func() *string { return nil }, ""), "Message template to print after a task's grouped output.")
 	pflag.BoolVar(&Output.Group.ErrorOnly, "output-group-error-only", getConfig(config, "OUTPUT_GROUP_ERROR_ONLY", func() *bool { return nil }, false), "Swallow output from successful tasks.")
+	pflag.BoolVar(&Output.Group.ByTask, "output-group-by-task", getOutputGroupByTask(), "Group output by task instead of command.")
 	pflag.BoolVarP(&Color, "color", "c", getConfig(config, "COLOR", func() *bool { return config.Color }, true), "Colored output. Enabled by default. Set flag to false or use NO_COLOR=1 to disable.")
 	pflag.IntVarP(&Concurrency, "concurrency", "C", getConfig(config, "CONCURRENCY", func() *int { return config.Concurrency }, 0), "Limit number of tasks to run concurrently.")
 	pflag.DurationVarP(&Interval, "interval", "I", 0, "Interval to watch for changes.")
@@ -222,6 +223,9 @@ func Validate() error {
 		}
 		if Output.Group.ErrorOnly {
 			return errors.New("task: You can't set --output-group-error-only without --output=group")
+		}
+		if Output.Group.ByTask {
+			return errors.New("task: You can't set --output-group-by-task without --output=group")
 		}
 	}
 
@@ -309,6 +313,13 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithFailfast(Failfast),
 		task.WithTempDirPath(TempDir),
 	)
+}
+
+func getOutputGroupByTask() bool {
+	if value, ok := getEnvAs[bool]("OUTPUT_GROUP_BY_TASK"); ok {
+		return value
+	}
+	return false
 }
 
 // getConfig extracts a config value with priority: env var > taskrc config > fallback
