@@ -86,7 +86,7 @@ func (r *Reader) Options(opts ...ReaderOption) {
 
 // WithInsecure allows the [Reader] to make insecure connections when reading
 // remote taskfiles. By default, insecure connections are rejected.
-func WithInsecure(insecure bool) ReaderOption {
+func WithInsecure(insecure bool) *insecureOption {
 	return &insecureOption{insecure: insecure}
 }
 
@@ -100,7 +100,7 @@ func (o *insecureOption) ApplyToReader(r *Reader) {
 
 // WithDownload forces the [Reader] to download a fresh copy of the taskfile
 // from the remote source.
-func WithDownload(download bool) ReaderOption {
+func WithDownload(download bool) *downloadOption {
 	return &downloadOption{download: download}
 }
 
@@ -114,7 +114,7 @@ func (o *downloadOption) ApplyToReader(r *Reader) {
 
 // WithOffline stops the [Reader] from being able to make network connections.
 // It will still be able to read local files and cached copies of remote files.
-func WithOffline(offline bool) ReaderOption {
+func WithOffline(offline bool) *offlineOption {
 	return &offlineOption{offline: offline}
 }
 
@@ -128,7 +128,7 @@ func (o *offlineOption) ApplyToReader(r *Reader) {
 
 // WithTrustedHosts configures the [Reader] with a list of trusted hosts for remote
 // Taskfiles. Hosts in this list will not prompt for user confirmation.
-func WithTrustedHosts(trustedHosts []string) ReaderOption {
+func WithTrustedHosts(trustedHosts []string) *trustedHostsOption {
 	return &trustedHostsOption{trustedHosts: trustedHosts}
 }
 
@@ -142,7 +142,7 @@ func (o *trustedHostsOption) ApplyToReader(r *Reader) {
 
 // WithTempDir sets the temporary directory that will be used by the [Reader].
 // By default, the reader uses [os.TempDir].
-func WithTempDir(tempDir string) ReaderOption {
+func WithTempDir(tempDir string) *tempDirOption {
 	return &tempDirOption{tempDir: tempDir}
 }
 
@@ -156,7 +156,7 @@ func (o *tempDirOption) ApplyToReader(r *Reader) {
 
 // WithCacheExpiryDuration sets the duration after which the cache is considered
 // expired. By default, the cache is considered expired after 24 hours.
-func WithCacheExpiryDuration(duration time.Duration) ReaderOption {
+func WithCacheExpiryDuration(duration time.Duration) *cacheExpiryDurationOption {
 	return &cacheExpiryDurationOption{duration: duration}
 }
 
@@ -172,7 +172,7 @@ func (o *cacheExpiryDurationOption) ApplyToReader(r *Reader) {
 // this function will be called with debug messages. This can be useful if the
 // caller wants to log debug messages from the [Reader]. By default, no debug
 // function is set and the logs are not written.
-func WithDebugFunc(debugFunc DebugFunc) ReaderOption {
+func WithDebugFunc(debugFunc DebugFunc) *debugFuncOption {
 	return &debugFuncOption{debugFunc: debugFunc}
 }
 
@@ -191,7 +191,7 @@ func (o *debugFuncOption) ApplyToReader(r *Reader) {
 // error which describes why the prompt was rejected. This can then be caught
 // and used later when calling the [Reader.Read] method. By default, no prompt
 // function is set and all prompts are automatically accepted.
-func WithPromptFunc(promptFunc PromptFunc) ReaderOption {
+func WithPromptFunc(promptFunc PromptFunc) *promptFuncOption {
 	return &promptFuncOption{promptFunc: promptFunc}
 }
 
@@ -203,43 +203,55 @@ func (o *promptFuncOption) ApplyToReader(r *Reader) {
 	r.promptFunc = o.promptFunc
 }
 
-// WithReaderCACert sets the path to a custom CA certificate for TLS connections.
-func WithReaderCACert(caCert string) ReaderOption {
-	return &readerCACertOption{caCert: caCert}
+// WithCACert sets the path to a custom CA certificate for TLS connections.
+func WithCACert(caCert string) *caCertOption {
+	return &caCertOption{caCert: caCert}
 }
 
-type readerCACertOption struct {
+type caCertOption struct {
 	caCert string
 }
 
-func (o *readerCACertOption) ApplyToReader(r *Reader) {
+func (o *caCertOption) ApplyToReader(r *Reader) {
 	r.caCert = o.caCert
 }
 
-// WithReaderCert sets the path to a client certificate for TLS connections.
-func WithReaderCert(cert string) ReaderOption {
-	return &readerCertOption{cert: cert}
+func (o *caCertOption) ApplyToBaseNode(n *baseNode) {
+	n.caCert = o.caCert
 }
 
-type readerCertOption struct {
+// WithCert sets the path to a client certificate for TLS connections.
+func WithCert(cert string) *certOption {
+	return &certOption{cert: cert}
+}
+
+type certOption struct {
 	cert string
 }
 
-func (o *readerCertOption) ApplyToReader(r *Reader) {
+func (o *certOption) ApplyToReader(r *Reader) {
 	r.cert = o.cert
 }
 
-// WithReaderCertKey sets the path to a client certificate key for TLS connections.
-func WithReaderCertKey(certKey string) ReaderOption {
-	return &readerCertKeyOption{certKey: certKey}
+func (o *certOption) ApplyToBaseNode(n *baseNode) {
+	n.cert = o.cert
 }
 
-type readerCertKeyOption struct {
+// WithCertKey sets the path to a client certificate key for TLS connections.
+func WithCertKey(certKey string) *certKeyOption {
+	return &certKeyOption{certKey: certKey}
+}
+
+type certKeyOption struct {
 	certKey string
 }
 
-func (o *readerCertKeyOption) ApplyToReader(r *Reader) {
+func (o *certKeyOption) ApplyToReader(r *Reader) {
 	r.certKey = o.certKey
+}
+
+func (o *certKeyOption) ApplyToBaseNode(n *baseNode) {
+	n.certKey = o.certKey
 }
 
 // Read will read the Taskfile defined by the [Reader]'s [Node] and recurse
