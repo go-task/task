@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vitepress dev",
     "build": "vitepress build",
+    "check:links": "node scripts/check-markdown-links.mjs",
     "preview": "vitepress preview",
     "test": "node --test tests/*.test.mjs",
     "lint": "prettier --write ."

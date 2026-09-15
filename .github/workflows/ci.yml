@@ -97,6 +97,58 @@ jobs:
       - name: 📋 Validate JSON Schema
         run: check-jsonschema --check-metaschema website/src/public/next-schema.json website/src/public/schema.json
 
+  website:
+    name: 📚 Build documentation channels
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: ⬇️ Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.27.x
+
+      - name: ⬇️ Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+
+      - name: ⬇️ Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+        with:
+          package_json_file: website/package.json
+
+      - name: ⬇️ Install website dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: website
+
+      - name: 📚 Check next documentation
+        run: pnpm build && pnpm check:links
+        working-directory: website
+        env:
+          DOCS_CHANNEL: next
+          DOCS_SITE: preview
+
+      - name: 📚 Check released documentation
+        run: pnpm build && pnpm check:links
+        working-directory: website
+        env:
+          DOCS_CHANNEL: latest
+          DOCS_SITE: production
+
+      # Exercise the actual promotion in this disposable checkout. The current
+      # latest content alone cannot reveal links to files missing from promotion.
+      - name: 📚 Simulate a release
+        run: go run ./cmd/release patch
+
+      - name: 📚 Check promoted documentation
+        run: pnpm build && pnpm check:links
+        working-directory: website
+        env:
+          DOCS_CHANNEL: latest
+          DOCS_SITE: production
+
   check-latest-content:
     name: 📚 Check latest content
     # Pull requests only: the release commit is pushed straight to main and is

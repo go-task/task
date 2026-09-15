@@ -1,7 +1,7 @@
 import { defineConfig, HeadConfig } from 'vitepress';
 import githubLinksPlugin from './plugins/github-links';
 import { renderSearchContent } from './plugins/local-search';
-import { readdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import matter from 'gray-matter';
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs';
@@ -85,6 +85,10 @@ const urlVersion =
         next: 'https://next.taskfile.dev/'
       };
 
+const hasDocsOverview = existsSync(
+  resolve(__dirname, `../src/${channel}/docs/index.md`)
+);
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: taskName,
@@ -144,6 +148,23 @@ export default defineConfig({
       'https://taskfile.dev/'
     ).href;
     head.push(['link', { rel: 'canonical', href: canonicalUrl }]);
+
+    // The DocSearch crawler otherwise has to infer a record's section from the
+    // active sidebar link in the DOM. Stating it on the page is steadier: it
+    // survives a theme upgrade, and it is what hierarchy.lvl0 - the breadcrumb
+    // on every search result - should be set from.
+    if (pageData.frontmatter.section) {
+      head.push([
+        'meta',
+        { name: 'docsearch:section', content: pageData.frontmatter.section }
+      ]);
+    }
+    if (pageData.frontmatter.docType) {
+      head.push([
+        'meta',
+        { name: 'docsearch:doc_type', content: pageData.frontmatter.docType }
+      ]);
+    }
 
     // Dynamic Open Graph and Twitter meta tags
     const isHome = new URL(canonicalUrl).pathname === '/';
@@ -298,6 +319,11 @@ export default defineConfig({
   srcDir: 'src',
   cleanUrls: true,
   srcExclude: [`${other}/**`, `${channel}/docs/**/template.md`],
+  // A function rather than the equivalent `{ '<channel>/:path*': ':path*' }`.
+  // vitepress-plugin-llms reuses this config to name its Markdown output, and
+  // on the object form it compiles the `:path*` array parameter back without
+  // separators, producing dist/docsreferencecli.md instead of
+  // dist/docs/reference/cli.md and breaking every relative link in them.
   rewrites: (id) =>
     id.startsWith(`${channel}/`) ? id.slice(channel.length + 1) : id,
   markdown: {
@@ -352,6 +378,7 @@ export default defineConfig({
 
   themeConfig: {
     logo: '/img/logo.svg',
+    sidebarMenuLabel: 'Documentation',
     carbonAds: {
       code: 'CESI65QJ',
       placement: 'taskfiledev'
@@ -368,8 +395,15 @@ export default defineConfig({
       : {
           provider: 'local',
           options: {
-            _render: renderSearchContent,
             detailedView: true,
+            // Match the public DocSearch scope: current docs, without release
+            // notes or blog posts competing with feature documentation.
+            _render(src, env, md) {
+              const path = env.relativePath.replace(/^(next|latest)\//, '');
+              if (!path.startsWith('docs/') || path === 'docs/changelog.md')
+                return '';
+              return renderSearchContent(src, env, md);
+            },
             miniSearch: {
               searchOptions: {
                 fuzzy: 0.2,
@@ -383,7 +417,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       {
         text: 'Docs',
-        link: '/docs/guide',
+        link: hasDocsOverview ? '/docs/' : '/docs/guide',
         activeMatch: '^/docs'
       },
       { text: 'Blog', link: '/blog', activeMatch: '^/blog' },

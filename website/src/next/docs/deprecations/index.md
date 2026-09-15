@@ -3,6 +3,8 @@ title: Deprecations
 description:
   Guide to deprecated features in Task and how to migrate to the new
   alternatives
+section: Project
+docType: project
 outline: deep
 ---
 
