@@ -49,6 +49,8 @@ type Task struct {
 	Namespace            string `hash:"ignore"`
 	IncludeVars          *Vars
 	IncludedTaskfileVars *Vars
+	DotenvScope          *DotenvScope
+	IncludedDotenvEnv    *Vars
 
 	FullName string `hash:"ignore"`
 }
@@ -246,6 +248,8 @@ func (t *Task) DeepCopy() *Task {
 		Run:                  t.Run,
 		IncludeVars:          t.IncludeVars.DeepCopy(),
 		IncludedTaskfileVars: t.IncludedTaskfileVars.DeepCopy(),
+		DotenvScope:          t.DotenvScope.DeepCopy(),
+		IncludedDotenvEnv:    t.IncludedDotenvEnv.DeepCopy(),
 		Platforms:            deepcopy.Slice(t.Platforms),
 		If:                   t.If,
 		Location:             t.Location.DeepCopy(),

@@ -259,8 +259,22 @@ tasks:
 
 ::: info
 
-Please note that you are not currently able to use the `dotenv` key inside
-included Taskfiles.
+Included Taskfiles can also declare `dotenv`. These variables are available only
+to tasks defined in that Taskfile. Nested includes use their own dotenv values.
+For example, a common Taskfile included by an application does not inherit the
+application's dotenv values. The root Taskfile's dotenv remains available to all
+tasks for compatibility.
+
+Relative paths are resolved from the Taskfile declaring `dotenv`, independently
+of the include's `dir`. Path templates can use that Taskfile's variables and the
+variables supplied by its include. Remote Taskfiles read dotenv files locally
+relative to the root execution directory.
+
+An included Taskfile's dotenv values take precedence over the root's values for
+its own tasks, and the first file in each list takes precedence. Explicit
+Taskfile `env` values override dotenv values; task-level `dotenv` and `env`
+retain their existing precedence.
+The existing merge behavior of `vars` and `env` declarations is unchanged.
 
 :::
 

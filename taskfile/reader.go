@@ -431,6 +431,17 @@ func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error)
 
 	// Set the taskfile/task's locations
 	tf.Location = node.Location()
+	// Preserve the included Taskfile's context before merging. Root dotenv
+	// keeps its existing global scope.
+	var dotenvScope *ast.DotenvScope
+	if node.Parent() != nil && len(tf.Dotenv) > 0 {
+		dotenvScope = &ast.DotenvScope{
+			Files:       tf.Dotenv,
+			Vars:        tf.Vars.DeepCopy(),
+			Env:         tf.Env.DeepCopy(),
+			IncludeVars: ast.NewVars(),
+		}
+	}
 	for task := range tf.Tasks.Values(nil) {
 		// If the task is not defined, create a new one
 		if task == nil {
@@ -440,6 +451,7 @@ func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error)
 		if task.Location.Taskfile == "" {
 			task.Location.Taskfile = tf.Location
 		}
+		task.DotenvScope = dotenvScope.DeepCopy()
 	}
 
 	return &tf, nil

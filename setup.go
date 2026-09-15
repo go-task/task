@@ -42,7 +42,11 @@ func (e *Executor) Setup() error {
 	if err := e.setupCompiler(); err != nil {
 		return err
 	}
+	explicitEnv := e.Taskfile.Env.DeepCopy()
 	if err := e.readDotEnvFiles(); err != nil {
+		return err
+	}
+	if err := e.readIncludedDotEnvFiles(explicitEnv); err != nil {
 		return err
 	}
 	if err := e.doVersionChecks(); err != nil {
@@ -248,6 +252,55 @@ func (e *Executor) readDotEnvFiles() error {
 		}
 	}
 	return err
+}
+
+func (e *Executor) readIncludedDotEnvFiles(explicitEnv *ast.Vars) error {
+	if e.Taskfile.Version.LessThan(ast.V3) {
+		return nil
+	}
+	// Cache by include ancestry: two includes of the same file may supply
+	// different variables for its dotenv paths.
+	type scopeKey struct{ namespace, location string }
+	loadedScopes := make(map[scopeKey]*ast.Vars)
+	for t := range e.Taskfile.Tasks.Values(nil) {
+		scope := t.DotenvScope
+		if scope == nil {
+			continue
+		}
+		key := scopeKey{scope.Namespace, t.Location.Taskfile}
+		loaded, ok := loadedScopes[key]
+		if !ok {
+			env := e.Taskfile.Env.DeepCopy()
+			env.Merge(scope.Env, nil)
+			dir := e.Dir
+			if !taskfile.IsRemoteEntrypoint(t.Location.Taskfile) {
+				dir = filepath.Dir(t.Location.Taskfile)
+			}
+			contextTask := &ast.Task{
+				Dir:                  dir,
+				Location:             t.Location,
+				IncludeVars:          scope.IncludeVars,
+				IncludedTaskfileVars: scope.Vars,
+			}
+			// Reuse the executor's dynamic cache while resolving this scope's environment.
+			vars, err := e.Compiler.getVariables(contextTask, nil, env, true)
+			if err != nil {
+				return err
+			}
+			loaded, err = taskfile.Dotenv(vars, &ast.Taskfile{Dotenv: scope.Files}, dir)
+			if err != nil {
+				return err
+			}
+			loadedScopes[key] = loaded
+		}
+		t.IncludedDotenvEnv = ast.NewVars()
+		for k, v := range loaded.All() {
+			if _, explicit := explicitEnv.Get(k); !explicit {
+				t.IncludedDotenvEnv.Set(k, v)
+			}
+		}
+	}
+	return nil
 }
 
 func (e *Executor) setupDefaults() {
