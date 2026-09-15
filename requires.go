@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/input"
-	"github.com/go-task/task/v3/internal/templater"
+	"github.com/go-task/task/v3/internal/refs"
 	"github.com/go-task/task/v3/internal/term"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -46,7 +46,7 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 
 		for _, v := range getMissingRequiredVars(compiledTask) {
 			if !varsMap.Has(v.Name) {
-				varsMap.Set(v.Name, resolveEnumRefForPrompt(v, compiledTask.Vars))
+				varsMap.Set(v.Name, refs.ResolveEnum(v, compiledTask.Vars))
 			}
 		}
 
@@ -216,17 +216,4 @@ func getEnumValues(e *ast.Enum) []string {
 		return nil
 	}
 	return e.Value
-}
-
-// resolveEnumRefForPrompt returns a copy of v with its enum ref resolved into
-// concrete values, so the interactive prompter can show a Select. Refs that
-// depend on dynamic vars may not resolve here and fall back to free-form input.
-func resolveEnumRefForPrompt(v *ast.VarsWithValidation, vars *ast.Vars) *ast.VarsWithValidation {
-	if v.Enum == nil || v.Enum.Ref == "" || len(v.Enum.Value) > 0 {
-		return v
-	}
-	vCopy := v.DeepCopy()
-	cache := &templater.Cache{Vars: vars}
-	_ = resolveEnumRefs(&ast.Requires{Vars: []*ast.VarsWithValidation{vCopy}}, cache)
-	return vCopy
 }
