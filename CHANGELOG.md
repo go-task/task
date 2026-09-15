@@ -4,8 +4,13 @@
 
 ### 🚀 Features
 
-- Added versioned Homebrew casks (`go-task@<major>.<minor>`) to install a specific
-  minor version of Task (#3023 by @vmaerten).
+- Added versioned Homebrew casks (`go-task@<major>.<minor>`) to install a
+  specific minor version of Task (#3023 by @vmaerten).
+
+### 🐛 Fixes
+
+- Fixed a bug on Windows where watching source paths did not work as expected
+  (#2863, #3028 by @pd93).
 
 ### 📦 Package API
 
