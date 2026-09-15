@@ -72,6 +72,20 @@ task --init
 task -i
 ```
 
+### `task --tui [tasks...]`
+
+Open the interactive task launcher. Type to filter, use the arrow keys to select
+a task, then press Enter to run it in the execution dashboard or Ctrl+R to run
+it normally. Escape clears the filter. From the dashboard, Escape or `b` returns
+to or opens the launcher. When task names are supplied, skip the launcher and
+open the execution dashboard directly.
+
+```bash
+task --tui
+task --tui build test
+task -T --parallel build test
+```
+
 ::: tip
 
 Combine `--list` or `--list-all` with `--silent` (`-ls` or `-as` for shortants)
@@ -291,6 +305,44 @@ task build --color=false
 # or use environment variable
 NO_COLOR=1 task build
 ```
+
+### TUI
+
+#### `-T, --tui`
+
+Open the interactive task launcher, or the execution dashboard when task names
+are provided.
+
+The dashboard gives each task invocation its own output pane, so `--output` has
+no effect on tasks run inside it. It still applies to tasks launched with
+Ctrl+R, which run with Task's normal terminal output.
+
+The interface asks for missing required variables in its own dialog, so
+[`--interactive`](#--interactive) is not needed and `--interactive=false` is
+rejected rather than ignored.
+
+#### `--tui-status <style>`
+
+Set how task status is displayed in the TUI. Available styles: `icons`,
+`labels`. The default is `icons`.
+
+```bash
+task --tui --tui-status labels test
+```
+
+Both TUI options can be set as defaults in
+[`.taskrc.yml`](./config.md#tui), so that they do not have to be repeated.
+
+#### `--tui-task-navigator <mode>`
+
+Set how tasks are organized in the TUI task navigator. Available modes: `list`,
+`tree`. The default is `tree`.
+
+```bash
+task --tui --tui-task-navigator list test
+```
+
+Press `n` in the interface to switch between the two during a run.
 
 ### Task Information
 

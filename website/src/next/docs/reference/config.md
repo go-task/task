@@ -182,6 +182,43 @@ interactive: true
 temp-dir: .task
 ```
 
+### `tui`
+
+- **Type**: `object`
+- **Description**: Display preferences for the
+  [interactive TUI](../guide.md#interactive-tui). Whether to use the
+  interface stays a flag: it needs a terminal, so a setting that turned it on by
+  default would break piped and scripted runs.
+
+#### `tui.status`
+
+- **Type**: `string`
+- **Default**: `icons`
+- **Description**: How a task's state is shown in the task navigator, either
+  `icons` or `labels`.
+- **CLI equivalent**: [`--tui-status`](./cli.md#tui-status)
+- **Environment variable**: [`TASK_TUI_STATUS`](./environment.md#task-tui-status)
+
+```yaml
+tui:
+  status: labels
+```
+
+#### `tui.task-navigator`
+
+- **Type**: `string`
+- **Default**: `tree`
+- **Description**: How tasks are arranged in the navigator, either `tree` or
+  `list`. Press `n` in the interface to switch between them during a run.
+- **CLI equivalent**: [`--tui-task-navigator`](./cli.md#tui-task-navigator)
+- **Environment variable**:
+  [`TASK_TUI_TASK_NAVIGATOR`](./environment.md#task-tui-task-navigator)
+
+```yaml
+tui:
+  task-navigator: list
+```
+
 ### `remote`
 
 - **Type**: `object`

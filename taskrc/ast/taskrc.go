@@ -18,9 +18,18 @@ type TaskRC struct {
 	Concurrency  *int            `yaml:"concurrency"`
 	Interactive  *bool           `yaml:"interactive"`
 	Remote       Remote          `yaml:"remote"`
+	TUI          TUI             `yaml:"tui"`
 	Failfast     bool            `yaml:"failfast"`
 	TempDir      *string         `yaml:"temp-dir"`
 	Experiments  map[string]int  `yaml:"experiments"`
+}
+
+// TUI holds the display preferences of the terminal interface. Whether to use
+// the interface at all stays a flag: it needs a terminal, so a file that turned
+// it on by default would break every piped or scripted run.
+type TUI struct {
+	Status        *string `yaml:"status"`
+	TaskNavigator *string `yaml:"task-navigator"`
 }
 
 type Remote struct {
@@ -72,4 +81,6 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.Interactive = cmp.Or(other.Interactive, t.Interactive)
 	t.Failfast = cmp.Or(other.Failfast, t.Failfast)
 	t.TempDir = cmp.Or(other.TempDir, t.TempDir)
+	t.TUI.Status = cmp.Or(other.TUI.Status, t.TUI.Status)
+	t.TUI.TaskNavigator = cmp.Or(other.TUI.TaskNavigator, t.TUI.TaskNavigator)
 }
