@@ -2223,6 +2223,27 @@ func TestDotenvHasEnvVarInPath(t *testing.T) { // nolint:paralleltest // cannot 
 	tt.Run(t)
 }
 
+// TestDotenvNestedTemplateVarsResolveDeterministically is a regression test
+// for https://github.com/go-task/task/issues/1847. Dotenv values used to be
+// copied into Task's ordered vars by ranging over godotenv's plain
+// map[string]string, which iterates in a randomized order. Chained
+// {{.VAR}} references declared in a dotenv file would then only resolve in
+// full on some runs, depending on that random order. Repeating the run many
+// times gives the previous, order-dependent behavior many chances to fail.
+func TestDotenvNestedTemplateVarsResolveDeterministically(t *testing.T) { // nolint:paralleltest // same output file is reused across iterations, which must run sequentially
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv/nested_template_vars",
+		Target:    "default",
+		TrimSpace: true,
+		Files: map[string]string{
+			"full_path.txt": "/home/user/nested/deeper/file.txt",
+		},
+	}
+	for range 30 {
+		tt.Run(t)
+	}
+}
+
 func TestTaskDotenvParseErrorMessage(t *testing.T) {
 	t.Parallel()
 
