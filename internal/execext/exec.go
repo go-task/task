@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"mvdan.cc/sh/moreinterp/coreutils"
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/syntax"
+	"mvdan.cc/sh/x/coreutils"
 
 	"github.com/go-task/task/v3/errors"
 )
