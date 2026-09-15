@@ -48,36 +48,3 @@ func (node *baseNode) Checksum() string {
 func (node *baseNode) Verify(checksum string) bool {
 	return node.checksum == "" || node.checksum == checksum
 }
-
-// WithParent sets the parent node for the node base.
-func WithParent(parent Node) *parentOption {
-	return &parentOption{parent: parent}
-}
-
-type parentOption struct {
-	parent Node
-}
-
-func (o *parentOption) ApplyToBaseNode(n *baseNode) {
-	n.parent = o.parent
-}
-
-// WithChecksum sets the checksum for the node base.
-func WithChecksum(checksum string) *checksumOption {
-	return &checksumOption{checksum: checksum}
-}
-
-type checksumOption struct {
-	checksum string
-}
-
-func (o *checksumOption) ApplyToBaseNode(n *baseNode) {
-	n.checksum = o.checksum
-}
-
-// WithHeaders sets the HTTP headers to send, keyed by host.
-func WithHeaders(headersByHost HeadersByHost) NodeOption {
-	return func(node *baseNode) {
-		node.headersByHost = headersByHost
-	}
-}
