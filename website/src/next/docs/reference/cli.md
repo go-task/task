@@ -388,9 +388,15 @@ The following flags are used to control the behavior of
 
 Allow insecure connections when fetching remote Taskfiles.
 
+- **Config equivalent**: [`remote.insecure`](./config.md#remote-insecure)
+- **Environment variable**: [`TASK_REMOTE_INSECURE`](./environment.md#task-remote-insecure)
+
 #### `--offline`
 
 Work in offline mode, preventing remote Taskfile fetching.
+
+- **Config equivalent**: [`remote.offline`](./config.md#remote-offline)
+- **Environment variable**: [`TASK_REMOTE_OFFLINE`](./environment.md#task-remote-offline)
 
 #### `--download`
 
@@ -400,6 +406,9 @@ Forces task to download remote Taskfiles and ignore any cached versions.
 
 Timeout duration for remote operations (e.g., '30s', '5m').
 
+- **Config equivalent**: [`remote.timeout`](./config.md#remote-timeout)
+- **Environment variable**: [`TASK_REMOTE_TIMEOUT`](./environment.md#task-remote-timeout)
+
 #### `--clear-cache`
 
 Wipe the cache of remote Taskfiles and checksums.
@@ -408,10 +417,16 @@ Wipe the cache of remote Taskfiles and checksums.
 
 Cache expiry duration for remote Taskfiles (e.g., '1h', '24h').
 
+- **Config equivalent**: [`remote.cache-expiry`](./config.md#remote-cache-expiry)
+- **Environment variable**: [`TASK_REMOTE_CACHE_EXPIRY`](./environment.md#task-remote-cache-expiry)
+
 #### `--remote-cache-dir`
 
 Directory where remote Taskfiles are cached. Can be an absolute path (e.g.,
 `/var/cache/task`) or relative to the Taskfile directory.
+
+- **Config equivalent**: [`remote.cache-dir`](./config.md#remote-cache-dir)
+- **Environment variable**: [`TASK_REMOTE_CACHE_DIR`](./environment.md#task-remote-cache-dir)
 
 #### `--trusted-hosts`
 
@@ -423,17 +438,29 @@ for confirmation when they are first downloaded or when their checksums change.
 The host matching includes the port if specified in the URL. Use with caution
 and only add hosts you fully trust.
 
+- **Config equivalent**: [`remote.trusted-hosts`](./config.md#remote-trusted-hosts)
+- **Environment variable**: [`TASK_REMOTE_TRUSTED_HOSTS`](./environment.md#task-remote-trusted-hosts)
+
 #### `--cacert`
 
 Path to a custom CA certificate file for TLS verification.
+
+- **Config equivalent**: [`remote.cacert`](./config.md#remote-cacert)
+- **Environment variable**: [`TASK_REMOTE_CACERT`](./environment.md#task-remote-cacert)
 
 #### `--cert`
 
 Path to a client certificate file for mTLS authentication.
 
+- **Config equivalent**: [`remote.cert`](./config.md#remote-cert)
+- **Environment variable**: [`TASK_REMOTE_CERT`](./environment.md#task-remote-cert)
+
 #### `--cert-key`
 
 Path to the client certificate private key file.
+
+- **Config equivalent**: [`remote.cert-key`](./config.md#remote-cert-key)
+- **Environment variable**: [`TASK_REMOTE_CERT_KEY`](./environment.md#task-remote-cert-key)
 
 ## Exit Codes
 
