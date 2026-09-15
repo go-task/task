@@ -86,7 +86,7 @@ func (s *Snippet) Options(opts ...SnippetOption) {
 
 // WithLine specifies the line number that the [Snippet] should center around
 // and point to.
-func WithLine(line int) SnippetOption {
+func WithLine(line int) *lineOption {
 	return &lineOption{line: line}
 }
 
@@ -99,7 +99,7 @@ func (o *lineOption) ApplyToSnippet(s *Snippet) {
 }
 
 // WithColumn specifies the column number that the [Snippet] should point to.
-func WithColumn(column int) SnippetOption {
+func WithColumn(column int) *columnOption {
 	return &columnOption{column: column}
 }
 
@@ -113,7 +113,7 @@ func (o *columnOption) ApplyToSnippet(s *Snippet) {
 
 // WithPadding specifies the number of lines to include before and after the
 // selected line in the [Snippet].
-func WithPadding(padding int) SnippetOption {
+func WithPadding(padding int) *paddingOption {
 	return &paddingOption{padding: padding}
 }
 
@@ -127,7 +127,7 @@ func (o *paddingOption) ApplyToSnippet(s *Snippet) {
 
 // WithNoIndicators specifies that the [Snippet] should not include line or
 // column indicators.
-func WithNoIndicators() SnippetOption {
+func WithNoIndicators() *noIndicatorsOption {
 	return &noIndicatorsOption{}
 }
 
