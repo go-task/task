@@ -14,6 +14,10 @@
         "GENTLE_FORCE": {
           "type": "number",
           "enum": [0, 1]
+        },
+        "PREFIX_MATCHING": {
+          "type": "number",
+          "enum": [0, 1]
         }
       }
     },

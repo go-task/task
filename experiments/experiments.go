@@ -16,8 +16,9 @@ const envPrefix = "TASK_X_"
 
 // Active experiments.
 var (
-	GentleForce   Experiment
-	EnvPrecedence Experiment
+	GentleForce    Experiment
+	EnvPrecedence  Experiment
+	PrefixMatching Experiment
 )
 
 // Inactive experiments. These are experiments that cannot be enabled, but are
@@ -42,6 +43,7 @@ func ParseWithConfig(dir string, config *ast.TaskRC) {
 	// Initialize the experiments
 	GentleForce = New("GENTLE_FORCE", config, 1)
 	EnvPrecedence = New("ENV_PRECEDENCE", config, 1)
+	PrefixMatching = New("PREFIX_MATCHING", config, 1)
 	// Inactive experiments
 	AnyVariables = NewReleased("ANY_VARIABLES", config)
 	MapVariables = NewReleased("MAP_VARIABLES", config)
