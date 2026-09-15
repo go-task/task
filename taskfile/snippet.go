@@ -84,59 +84,6 @@ func (s *Snippet) Options(opts ...SnippetOption) {
 	}
 }
 
-// WithLine specifies the line number that the [Snippet] should center around
-// and point to.
-func WithLine(line int) *lineOption {
-	return &lineOption{line: line}
-}
-
-type lineOption struct {
-	line int
-}
-
-func (o *lineOption) ApplyToSnippet(s *Snippet) {
-	s.line = o.line
-}
-
-// WithColumn specifies the column number that the [Snippet] should point to.
-func WithColumn(column int) *columnOption {
-	return &columnOption{column: column}
-}
-
-type columnOption struct {
-	column int
-}
-
-func (o *columnOption) ApplyToSnippet(s *Snippet) {
-	s.column = o.column
-}
-
-// WithPadding specifies the number of lines to include before and after the
-// selected line in the [Snippet].
-func WithPadding(padding int) *paddingOption {
-	return &paddingOption{padding: padding}
-}
-
-type paddingOption struct {
-	padding int
-}
-
-func (o *paddingOption) ApplyToSnippet(s *Snippet) {
-	s.padding = o.padding
-}
-
-// WithNoIndicators specifies that the [Snippet] should not include line or
-// column indicators.
-func WithNoIndicators() *noIndicatorsOption {
-	return &noIndicatorsOption{}
-}
-
-type noIndicatorsOption struct{}
-
-func (o *noIndicatorsOption) ApplyToSnippet(s *Snippet) {
-	s.noIndicators = true
-}
-
 func (s *Snippet) String() string {
 	buf := &bytes.Buffer{}
 
