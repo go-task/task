@@ -392,54 +392,6 @@ func (sb *SyncBuffer) Write(p []byte) (n int, err error) {
 	return sb.buf.Write(p)
 }
 
-// fileContentTest provides a basic reusable test-case for running a Taskfile
-// and inspect generated files.
-type fileContentTest struct {
-	Dir        string
-	Entrypoint string
-	Target     string
-	TrimSpace  bool
-	Files      map[string]string
-}
-
-func (fct fileContentTest) name(file string) string {
-	return fmt.Sprintf("target=%q,file=%q", fct.Target, file)
-}
-
-func (fct fileContentTest) Run(t *testing.T) {
-	t.Helper()
-
-	for f := range fct.Files {
-		_ = os.Remove(filepathext.SmartJoin(fct.Dir, f))
-	}
-
-	e := task.NewExecutor(
-		task.WithDir(fct.Dir),
-		task.WithTempDir(task.TempDir{
-			Remote:      filepathext.SmartJoin(fct.Dir, ".task"),
-			Fingerprint: filepathext.SmartJoin(fct.Dir, ".task"),
-		}),
-		task.WithEntrypoint(fct.Entrypoint),
-		task.WithStdout(io.Discard),
-		task.WithStderr(io.Discard),
-	)
-
-	require.NoError(t, e.Setup(), "e.Setup()")
-	require.NoError(t, e.Run(t.Context(), &task.Call{Task: fct.Target}), "e.Run(target)")
-	for name, expectContent := range fct.Files {
-		t.Run(fct.name(name), func(t *testing.T) {
-			path := filepathext.SmartJoin(e.Dir, name)
-			b, err := os.ReadFile(path)
-			require.NoError(t, err, "Error reading file")
-			s := string(b)
-			if fct.TrimSpace {
-				s = strings.TrimSpace(s)
-			}
-			assert.Equal(t, expectContent, s, "unexpected file content in %s", path)
-		})
-	}
-}
-
 func TestGenerates(t *testing.T) {
 	t.Parallel()
 
@@ -1151,48 +1103,6 @@ func TestDryChecksum(t *testing.T) {
 	require.NoError(t, err, "checksum file should exist")
 }
 
-func TestIncludes(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/includes",
-		Target:    "default",
-		TrimSpace: true,
-		Files: map[string]string{
-			"main.txt":                                  "main",
-			"included_directory.txt":                    "included_directory",
-			"included_directory_without_dir.txt":        "included_directory_without_dir",
-			"included_taskfile_without_dir.txt":         "included_taskfile_without_dir",
-			"./module2/included_directory_with_dir.txt": "included_directory_with_dir",
-			"./module2/included_taskfile_with_dir.txt":  "included_taskfile_with_dir",
-			"os_include.txt":                            "os",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestIncludesMultiLevel(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/includes_multi_level",
-		Target:    "default",
-		TrimSpace: true,
-		Files: map[string]string{
-			"called_one.txt":   "one",
-			"called_two.txt":   "two",
-			"called_three.txt": "three",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
 func TestIncludesRemote(t *testing.T) {
 	dir := "testdata/includes_remote"
 	os.RemoveAll(filepath.Join(dir, ".task", "remote"))
@@ -1378,23 +1288,6 @@ func TestIncludesMissingTaskfile(t *testing.T) {
 	assert.NotContains(t, err.Error(), "include cycle detected")
 }
 
-func TestIncludesEmptyMain(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/includes_empty",
-		Target:    "included:default",
-		TrimSpace: true,
-		Files: map[string]string{
-			"file.txt": "default",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
 func TestIncludesHttp(t *testing.T) {
 	dir, err := filepath.Abs("testdata/includes_http")
 	require.NoError(t, err)
@@ -1478,59 +1371,6 @@ func TestIncludesHttp(t *testing.T) {
 	}
 }
 
-func TestIncludesDependencies(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/includes_deps",
-		Target:    "default",
-		TrimSpace: true,
-		Files: map[string]string{
-			"default.txt":     "default",
-			"called_dep.txt":  "called_dep",
-			"called_task.txt": "called_task",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestIncludesCallingRoot(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/includes_call_root_task",
-		Target:    "included:call-root",
-		TrimSpace: true,
-		Files: map[string]string{
-			"root_task.txt": "root task",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestIncludesOptional(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/includes_optional",
-		Target:    "default",
-		TrimSpace: true,
-		Files: map[string]string{
-			"called_dep.txt": "called_dep",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
 func TestIncludesOptionalImplicitFalse(t *testing.T) {
 	t.Parallel()
 
@@ -1569,26 +1409,6 @@ func TestIncludesOptionalExplicitFalse(t *testing.T) {
 	err := e.Setup()
 	require.Error(t, err)
 	assert.Equal(t, expected, err.Error())
-}
-
-func TestIncludesFromCustomTaskfile(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Entrypoint: "testdata/includes_yaml/Custom.ext",
-		Dir:        "testdata/includes_yaml",
-		Target:     "default",
-		TrimSpace:  true,
-		Files: map[string]string{
-			"main.txt":                         "main",
-			"included_with_yaml_extension.txt": "included_with_yaml_extension",
-			"included_with_custom_file.txt":    "included_with_custom_file",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
 }
 
 func TestIncludesRelativePath(t *testing.T) {
@@ -1865,66 +1685,6 @@ func TestInternalTask(t *testing.T) {
 	}
 }
 
-func TestIncludesShadowedDefault(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/includes_shadowed_default",
-		Target:    "included",
-		TrimSpace: true,
-		Files: map[string]string{
-			"file.txt": "shadowed",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestIncludesUnshadowedDefault(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/includes_unshadowed_default",
-		Target:    "included",
-		TrimSpace: true,
-		Files: map[string]string{
-			"file.txt": "included",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestSupportedFileNames(t *testing.T) {
-	t.Parallel()
-
-	fileNames := []string{
-		"Taskfile.yml",
-		"Taskfile.yaml",
-		"Taskfile.dist.yml",
-		"Taskfile.dist.yaml",
-	}
-	for _, fileName := range fileNames {
-		t.Run(fileName, func(t *testing.T) {
-			t.Parallel()
-
-			tt := fileContentTest{
-				Dir:       fmt.Sprintf("testdata/file_names/%s", fileName),
-				Target:    "default",
-				TrimSpace: true,
-				Files: map[string]string{
-					"output.txt": "hello",
-				},
-			}
-			tt.Run(t)
-		})
-	}
-}
-
 func TestSummary(t *testing.T) {
 	t.Parallel()
 
@@ -2059,26 +1819,6 @@ func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
 	_ = os.RemoveAll(toBeCreated)
 }
 
-func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/dir/dynamic_var",
-		Target:    "default",
-		TrimSpace: false,
-		Files: map[string]string{
-			"subdirectory/from_root_taskfile.txt":          "subdirectory\n",
-			"subdirectory/from_included_taskfile.txt":      "subdirectory\n",
-			"subdirectory/from_included_taskfile_task.txt": "subdirectory\n",
-			"subdirectory/from_interpolated_dir.txt":       "subdirectory\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
 func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
 	t.Parallel()
 
@@ -2125,23 +1865,6 @@ func TestShortTaskNotation(t *testing.T) {
 	assert.Equal(t, "string-slice-1\nstring-slice-2\nstring\n", buff.String())
 }
 
-func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/dotenv/default",
-		Target:    "default",
-		TrimSpace: false,
-		Files: map[string]string{
-			"include.txt": "INCLUDE1='from_include1' INCLUDE2='from_include2'\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
 func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
 	t.Parallel()
 
@@ -2158,71 +1881,6 @@ func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
 	assert.Contains(t, err.Error(), "move the dotenv")
 }
 
-func TestDotenvShouldAllowMissingEnv(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/dotenv/missing_env",
-		Target:    "default",
-		TrimSpace: false,
-		Files: map[string]string{
-			"include.txt": "INCLUDE1='' INCLUDE2=''\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestDotenvHasLocalEnvInPath(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/dotenv/local_env_in_path",
-		Target:    "default",
-		TrimSpace: false,
-		Files: map[string]string{
-			"var.txt": "VAR='var_in_dot_env_1'\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestDotenvHasLocalVarInPath(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/dotenv/local_var_in_path",
-		Target:    "default",
-		TrimSpace: false,
-		Files: map[string]string{
-			"var.txt": "VAR='var_in_dot_env_3'\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestDotenvHasEnvVarInPath(t *testing.T) { // nolint:paralleltest // cannot run in parallel
-	t.Setenv("ENV_VAR", "testing")
-
-	tt := fileContentTest{
-		Dir:       "testdata/dotenv/env_var_in_path",
-		Target:    "default",
-		TrimSpace: false,
-		Files: map[string]string{
-			"var.txt": "VAR='var_in_dot_env_2'\n",
-		},
-	}
-	tt.Run(t)
-}
-
 func TestTaskDotenvParseErrorMessage(t *testing.T) {
 	t.Parallel()
 
@@ -2235,74 +1893,6 @@ func TestTaskDotenvParseErrorMessage(t *testing.T) {
 
 	err := e.Setup()
 	require.ErrorContains(t, err, expected)
-}
-
-func TestTaskDotenv(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/dotenv_task/default",
-		Target:    "dotenv",
-		TrimSpace: true,
-		Files: map[string]string{
-			"dotenv.txt": "foo",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestTaskDotenvFail(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/dotenv_task/default",
-		Target:    "no-dotenv",
-		TrimSpace: true,
-		Files: map[string]string{
-			"no-dotenv.txt": "global",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestTaskDotenvOverriddenByEnv(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/dotenv_task/default",
-		Target:    "dotenv-overridden-by-env",
-		TrimSpace: true,
-		Files: map[string]string{
-			"dotenv-overridden-by-env.txt": "overridden",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestTaskDotenvWithVarName(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:       "testdata/dotenv_task/default",
-		Target:    "dotenv-with-var-name",
-		TrimSpace: true,
-		Files: map[string]string{
-			"dotenv-with-var-name.txt": "foo",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
 }
 
 func TestExitImmediately(t *testing.T) {
@@ -2321,38 +1911,6 @@ func TestExitImmediately(t *testing.T) {
 
 	require.Error(t, e.Run(t.Context(), &task.Call{Task: "default"}))
 	assert.Contains(t, buff.String(), `"this_should_fail": executable file not found in $PATH`)
-}
-
-func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:    "testdata/run",
-		Target: "generate-hash",
-		Files: map[string]string{
-			"hash.txt": "starting 1\n1\n2\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
-}
-
-func TestRunOnlyRunsJobsHashOnceWithWildcard(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:    "testdata/run",
-		Target: "deploy",
-		Files: map[string]string{
-			"wildcard.txt": "Deploy infra\nDeploy js\nDeploy go\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
 }
 
 func TestRunOnceSharedDeps(t *testing.T) {
@@ -3206,23 +2764,6 @@ func TestAbsPath(t *testing.T) {
 	require.NoError(t, err)
 	expected := filepath.Join(cwd, "bar") + "\n"
 	assert.Equal(t, expected, buff.String())
-}
-
-func TestSingleCmdDep(t *testing.T) {
-	t.Parallel()
-
-	tt := fileContentTest{
-		Dir:    "testdata/single_cmd_dep",
-		Target: "foo",
-		Files: map[string]string{
-			"foo.txt": "foo\n",
-			"bar.txt": "bar\n",
-		},
-	}
-	t.Run("", func(t *testing.T) {
-		t.Parallel()
-		tt.Run(t)
-	})
 }
 
 func TestSilence(t *testing.T) {

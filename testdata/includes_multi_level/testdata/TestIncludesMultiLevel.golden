@@ -1,0 +1,6 @@
+task: [one:default] echo one
+one
+task: [one:two:default] echo two
+two
+task: [one:two:three:default] echo three
+three

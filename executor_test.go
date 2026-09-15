@@ -1289,3 +1289,191 @@ func TestIf(t *testing.T) {
 		NewExecutorTest(t, opts...)
 	}
 }
+
+func TestIncludes(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/includes")),
+	)
+}
+
+func TestIncludesMultiLevel(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/includes_multi_level")),
+	)
+}
+
+func TestIncludesEmptyMain(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/includes_empty")),
+		WithTask("included:default"),
+	)
+}
+
+func TestIncludesDependencies(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/includes_deps")),
+	)
+}
+
+func TestIncludesCallingRoot(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/includes_call_root_task")),
+		WithTask("included:call-root"),
+	)
+}
+
+func TestIncludesOptional(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/includes_optional")),
+	)
+}
+
+func TestIncludesFromCustomTaskfile(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_yaml"),
+			task.WithEntrypoint("testdata/includes_yaml/Custom.ext"),
+		),
+	)
+}
+
+func TestIncludesShadowedDefault(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/includes_shadowed_default")),
+		WithTask("included"),
+	)
+}
+
+func TestIncludesUnshadowedDefault(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/includes_unshadowed_default")),
+		WithTask("included"),
+	)
+}
+
+func TestSupportedFileNames(t *testing.T) {
+	t.Parallel()
+
+	fileNames := []string{
+		"Taskfile.yml",
+		"Taskfile.yaml",
+		"Taskfile.dist.yml",
+		"Taskfile.dist.yaml",
+	}
+	for _, fileName := range fileNames {
+		t.Run(fileName, func(t *testing.T) {
+			t.Parallel()
+			NewExecutorTest(t,
+				WithExecutorOptions(task.WithDir(fmt.Sprintf("testdata/file_names/%s", fileName))),
+			)
+		})
+	}
+}
+
+func TestDynamicVariablesShouldRunOnTheTaskDir(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dir/dynamic_var")),
+	)
+}
+
+func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dotenv/default")),
+	)
+}
+
+func TestDotenvShouldAllowMissingEnv(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dotenv/missing_env")),
+	)
+}
+
+func TestDotenvHasLocalEnvInPath(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dotenv/local_env_in_path")),
+	)
+}
+
+func TestDotenvHasLocalVarInPath(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dotenv/local_var_in_path")),
+	)
+}
+
+func TestDotenvHasEnvVarInPath(t *testing.T) { // nolint:paralleltest // cannot run in parallel
+	t.Setenv("ENV_VAR", "testing")
+
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dotenv/env_var_in_path")),
+	)
+}
+
+func TestTaskDotenv(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dotenv_task/default")),
+		WithTask("dotenv"),
+	)
+}
+
+func TestTaskDotenvFail(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dotenv_task/default")),
+		WithTask("no-dotenv"),
+	)
+}
+
+func TestTaskDotenvOverriddenByEnv(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dotenv_task/default")),
+		WithTask("dotenv-overridden-by-env"),
+	)
+}
+
+func TestTaskDotenvWithVarName(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dotenv_task/default")),
+		WithTask("dotenv-with-var-name"),
+	)
+}
+
+func TestRunOnlyRunsJobsHashOnce(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/run")),
+		WithTask("generate-hash"),
+	)
+}
+
+func TestRunOnlyRunsJobsHashOnceWithWildcard(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/run")),
+		WithTask("deploy"),
+	)
+}
+
+func TestSingleCmdDep(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/single_cmd_dep")),
+		WithTask("foo"),
+	)
+}
