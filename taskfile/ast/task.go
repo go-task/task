@@ -87,7 +87,10 @@ func (t *Task) WildcardMatch(name string) (bool, []string) {
 	names := append([]string{t.Task}, t.Aliases...)
 
 	for _, taskName := range names {
-		regexStr := fmt.Sprintf("^%s$", strings.ReplaceAll(taskName, "*", "(.*)"))
+		// Escape the task name so a name like "c++" or "a.b" is matched literally
+		// and does not panic in MustCompile, then turn the escaped "*" back into
+		// the wildcard group
+		regexStr := fmt.Sprintf("^%s$", strings.ReplaceAll(regexp.QuoteMeta(taskName), `\*`, "(.*)"))
 		regex := regexp.MustCompile(regexStr)
 		wildcards := regex.FindStringSubmatch(name)
 
