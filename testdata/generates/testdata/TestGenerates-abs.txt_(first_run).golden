@@ -1,2 +1,2 @@
 task: Task "sub/src.txt" is up to date
-task: [abs.txt] cat src.txt > '/home/pete/dev/github.com/go-task/task/testdata/generates/abs.txt'
+task: [abs.txt] cat src.txt > '{{.TEST_DIR}}/testdata/generates/abs.txt'

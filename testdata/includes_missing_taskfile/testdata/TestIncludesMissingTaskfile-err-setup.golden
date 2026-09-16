@@ -1,5 +1,5 @@
 err:  include must specify taskfile or dir
-file: /home/pete/dev/github.com/go-task/task/testdata/includes_missing_taskfile/Taskfile.yml:5:5
+file: {{.TEST_DIR}}/testdata/includes_missing_taskfile/Taskfile.yml:5:5
   3 | [33mincludes[0m[1m[30m:[0m[1m[30m[0m
   4 | [1m[30m  [0m[33mGOBIN[0m[1m[30m:[0m[1m[30m[0m
 > 5 | [1m[30m    [0m[33msh[0m[1m[30m:[0m[1m[30m [0m[36mecho $(go env GOPATH)/bin[0m[1m[30m[0m

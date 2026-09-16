@@ -2276,6 +2276,7 @@ func TestIncludesMissingTaskfile(t *testing.T) {
 			task.WithSilent(true),
 		),
 		WithSetupError(),
+		WithFixtureTemplating(),
 	)
 }
 
@@ -2724,6 +2725,11 @@ func TestDryChecksum(t *testing.T) {
 	)
 }
 
+// fixedSourceModTime pins a source file's modification time so that
+// timestamp-fingerprinting output (which reads that mtime) is deterministic
+// across machines and test runs, and can be golden-fixture compared.
+var fixedSourceModTime = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+
 func TestStatusVariables(t *testing.T) {
 	t.Parallel()
 
@@ -2743,6 +2749,9 @@ func TestStatusVariables(t *testing.T) {
 			assert.Contains(t, r.Output, "3e464c4b03f4b65d740e1e130d4d108a")
 		}),
 	)
+
+	sourceFile := filepathext.SmartJoin(dir, "source.txt")
+	require.NoError(t, os.Chtimes(sourceFile, fixedSourceModTime, fixedSourceModTime))
 	NewExecutorTest(t,
 		WithName("build-ts"),
 		WithExecutorOptions(
@@ -2752,7 +2761,7 @@ func TestStatusVariables(t *testing.T) {
 		WithTask("build-ts"),
 		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
 			t.Helper()
-			inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
+			inf, err := os.Stat(sourceFile)
 			require.NoError(t, err)
 			assert.Contains(t, r.Output, fmt.Sprintf("%d", inf.ModTime().Unix()))
 			assert.Contains(t, r.Output, inf.ModTime().String())
@@ -2778,6 +2787,9 @@ func TestCmdsVariables(t *testing.T) {
 			assert.Contains(t, r.Output, "3e464c4b03f4b65d740e1e130d4d108a")
 		}),
 	)
+
+	sourceFile := filepathext.SmartJoin(dir, "source.txt")
+	require.NoError(t, os.Chtimes(sourceFile, fixedSourceModTime, fixedSourceModTime))
 	NewExecutorTest(t,
 		WithName("build-ts"),
 		WithExecutorOptions(
@@ -2787,7 +2799,7 @@ func TestCmdsVariables(t *testing.T) {
 		WithTask("build-ts"),
 		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
 			t.Helper()
-			inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
+			inf, err := os.Stat(sourceFile)
 			require.NoError(t, err)
 			assert.Contains(t, r.Output, fmt.Sprintf("%d", inf.ModTime().Unix()))
 			assert.Contains(t, r.Output, inf.ModTime().String())
@@ -2799,15 +2811,19 @@ func TestFingerprintVarMethod(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name         string
-		dir          string
-		executorOpts []task.ExecutorOption
-		wantErr      bool
-		assertOutput func(t *testing.T, output string)
+		name             string
+		dir              string
+		executorOpts     []task.ExecutorOption
+		wantErr          bool
+		pinSourceModTime bool
+		assertOutput     func(t *testing.T, output string)
 	}{
 		{
 			name: "TIMESTAMP is injected when the method is inherited from the Taskfile",
 			dir:  "testdata/method_taskfile_timestamp",
+			// The output embeds the source file's modification time; pin it
+			// so the value is deterministic across machines and test runs.
+			pinSourceModTime: true,
 			assertOutput: func(t *testing.T, output string) {
 				t.Helper()
 				// An unresolved variable renders as an empty string, so this
@@ -2840,6 +2856,10 @@ func TestFingerprintVarMethod(t *testing.T) {
 	}
 	for _, tt := range tests {
 		_ = os.RemoveAll(filepathext.SmartJoin(tt.dir, ".task"))
+		if tt.pinSourceModTime {
+			sourceFile := filepathext.SmartJoin(tt.dir, "source.txt")
+			require.NoError(t, os.Chtimes(sourceFile, fixedSourceModTime, fixedSourceModTime))
+		}
 
 		opts := []ExecutorTestOption{
 			WithName(tt.name),
@@ -3136,6 +3156,7 @@ func TestGenerates(t *testing.T) {
 			WithName(destTask+" (first run)"),
 			WithExecutorOptions(task.WithDir(dir)),
 			WithTask(destTask),
+			WithFixtureTemplating(),
 			WithAssert(func(t *testing.T, r *ExecutorTestResult) {
 				t.Helper()
 				_, err := os.Stat(srcFile)
