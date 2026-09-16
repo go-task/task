@@ -1,0 +1,2 @@
+task: [reset] echo "shared file source" > src/shared/b
+task: [reset] echo "file source" > src/a

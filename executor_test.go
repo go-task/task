@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
@@ -1476,4 +1477,698 @@ func TestSingleCmdDep(t *testing.T) {
 		WithExecutorOptions(task.WithDir("testdata/single_cmd_dep")),
 		WithTask("foo"),
 	)
+}
+
+func TestShortTaskNotation(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/short_task_notation"),
+			task.WithSilent(true),
+		),
+	)
+}
+
+func TestExitCodeZero(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/exit_code")),
+		WithTask("exit-zero"),
+	)
+}
+
+func TestExitCodeOne(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/exit_code")),
+		WithTask("exit-one"),
+		WithRunError(),
+	)
+}
+
+func TestOutputGroup(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/output_group")),
+		WithTask("bye"),
+	)
+}
+
+func TestOutputGroupErrorOnlySwallowsOutputOnSuccess(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/output_group_error_only")),
+		WithTask("passing"),
+	)
+}
+
+func TestOutputGroupErrorOnlyShowsOutputOnFailure(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/output_group_error_only")),
+		WithTask("failing"),
+		WithRunError(),
+	)
+}
+
+func TestIncludedVars(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/include_with_vars")),
+		WithTask("task1"),
+	)
+}
+
+func TestIncludedVarsMultiLevel(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/include_with_vars_multi_level")),
+	)
+}
+
+func TestTaskfileWalk(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		dir  string
+	}{
+		{name: "walk from root directory", dir: "testdata/taskfile_walk"},
+		{name: "walk from sub directory", dir: "testdata/taskfile_walk/foo"},
+		{name: "walk from sub sub directory", dir: "testdata/taskfile_walk/foo/bar"},
+	}
+	for _, test := range tests {
+		NewExecutorTest(t,
+			WithName(test.name),
+			WithExecutorOptions(task.WithDir(test.dir)),
+		)
+	}
+}
+
+func TestPOSIXShellOptsGlobalLevel(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/shopts/global_level")),
+		WithTask("pipefail"),
+	)
+}
+
+func TestPOSIXShellOptsTaskLevel(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/shopts/task_level")),
+		WithTask("pipefail"),
+	)
+}
+
+func TestPOSIXShellOptsCommandLevel(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/shopts/command_level")),
+		WithTask("pipefail"),
+	)
+}
+
+func TestBashShellOptsGlobalLevel(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/shopts/global_level")),
+		WithTask("globstar"),
+	)
+}
+
+func TestBashShellOptsTaskLevel(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/shopts/task_level")),
+		WithTask("globstar"),
+	)
+}
+
+func TestBashShellOptsCommandLevel(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/shopts/command_level")),
+		WithTask("globstar"),
+	)
+}
+
+func TestSplitArgs(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/split_args"),
+			task.WithSilent(true),
+		),
+		WithVar("CLI_ARGS", "foo bar 'foo bar baz'"),
+	)
+}
+
+func TestWildcard(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		call    string
+		wantErr bool
+	}{
+		{name: "basic wildcard", call: "wildcard-foo"},
+		{name: "double wildcard", call: "foo-wildcard-bar"},
+		{name: "store wildcard", call: "start-foo"},
+		{name: "alias", call: "s-foo"},
+		{name: "matches exactly", call: "matches-exactly-*"},
+		{name: "no matches", call: "no-match", wantErr: true},
+		{name: "multiple matches", call: "wildcard-foo-bar"},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.call),
+			WithExecutorOptions(
+				task.WithDir("testdata/wildcards"),
+				task.WithSilent(true),
+				task.WithForce(true),
+			),
+			WithTask(test.call),
+		}
+		if test.wantErr {
+			opts = append(opts, WithRunError())
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
+
+func TestIgnoreNilElements(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		dir  string
+	}{
+		{"nil cmd", "testdata/ignore_nil_elements/cmds"},
+		{"nil dep", "testdata/ignore_nil_elements/deps"},
+		{"nil include", "testdata/ignore_nil_elements/includes"},
+		{"nil precondition", "testdata/ignore_nil_elements/preconditions"},
+	}
+
+	for _, test := range tests {
+		NewExecutorTest(t,
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir(test.dir),
+				task.WithSilent(true),
+			),
+		)
+	}
+}
+
+func TestRunWhenChanged(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/run_when_changed"),
+			task.WithForceAll(true),
+			task.WithSilent(true),
+		),
+		WithTask("start"),
+	)
+}
+
+func TestRunOnceSharedFailurePropagates(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/run_once_failure")),
+		WithRunError(),
+	)
+}
+
+func TestForce(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		force    bool
+		forceAll bool
+	}{
+		{name: "force", force: true},
+		{name: "force-all", forceAll: true},
+		{name: "force with gentle force experiment", force: true},
+		{name: "force-all with gentle force experiment", forceAll: true},
+	}
+	for _, tt := range tests {
+		NewExecutorTest(t,
+			WithName(tt.name),
+			WithExecutorOptions(
+				task.WithDir("testdata/force"),
+				task.WithForce(tt.force),
+				task.WithForceAll(tt.forceAll),
+			),
+			WithTask("task-with-dep"),
+		)
+	}
+}
+
+func TestIncludesInternal(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		task        string
+		expectedErr bool
+	}{
+		{"included internal task via task", "task-1", false},
+		{"included internal task via dep", "task-2", false},
+		{"included internal direct", "included:task-3", true},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir("testdata/internal_task"),
+				task.WithSilent(true),
+			),
+			WithTask(test.task),
+		}
+		if test.expectedErr {
+			opts = append(opts, WithRunError())
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
+
+func TestInternalTask(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		task        string
+		expectedErr bool
+	}{
+		{"internal task via task", "task-1", false},
+		{"internal task via dep", "task-2", false},
+		{"internal direct", "task-3", true},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir("testdata/internal_task"),
+				task.WithSilent(true),
+			),
+			WithTask(test.task),
+		}
+		if test.expectedErr {
+			opts = append(opts, WithRunError())
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
+
+func TestIncludesInterpolation(t *testing.T) { // nolint:paralleltest // cannot run in parallel
+	const dir = "testdata/includes_interpolation"
+	tests := []struct {
+		name string
+		task string
+	}{
+		{"include", "include"},
+		{"include_with_env_variable", "include-with-env-variable"},
+		{"include_with_dir", "include-with-dir"},
+	}
+	t.Setenv("MODULE", "included")
+
+	for _, test := range tests { // nolint:paralleltest // cannot run in parallel
+		NewExecutorTest(t,
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir(filepath.Join(dir, test.name)),
+				task.WithSilent(true),
+			),
+			WithTask(test.task),
+		)
+	}
+}
+
+func TestIncludesFlatten(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/includes_flatten"
+	tests := []struct {
+		name        string
+		taskfile    string
+		task        string
+		expectedErr bool
+	}{
+		{name: "included flatten", taskfile: "Taskfile.yml", task: "gen"},
+		{name: "included flatten with default", taskfile: "Taskfile.yml", task: "default"},
+		{name: "included flatten can call entrypoint tasks", taskfile: "Taskfile.yml", task: "from_entrypoint"},
+		{name: "included flatten with deps", taskfile: "Taskfile.yml", task: "with_deps"},
+		{name: "included flatten nested", taskfile: "Taskfile.yml", task: "from_nested"},
+		{name: "included flatten multiple same task", taskfile: "Taskfile.multiple.yml", task: "gen", expectedErr: true},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir(dir),
+				task.WithEntrypoint(dir+"/"+test.taskfile),
+				task.WithSilent(true),
+			),
+			WithTask(test.task),
+		}
+		if test.expectedErr {
+			opts = append(opts, WithSetupError())
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
+
+func TestTaskIgnoreErrors(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("task-should-pass"),
+		WithExecutorOptions(task.WithDir("testdata/ignore_errors")),
+		WithTask("task-should-pass"),
+	)
+	NewExecutorTest(t,
+		WithName("task-should-fail"),
+		WithExecutorOptions(task.WithDir("testdata/ignore_errors")),
+		WithTask("task-should-fail"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("cmd-should-pass"),
+		WithExecutorOptions(task.WithDir("testdata/ignore_errors")),
+		WithTask("cmd-should-pass"),
+	)
+	NewExecutorTest(t,
+		WithName("cmd-should-fail"),
+		WithExecutorOptions(task.WithDir("testdata/ignore_errors")),
+		WithTask("cmd-should-fail"),
+		WithRunError(),
+	)
+}
+
+func TestDeferredCmds(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("task-2"),
+		WithExecutorOptions(task.WithDir("testdata/deferred")),
+		WithTask("task-2"),
+		WithRunError(),
+	)
+	NewExecutorTest(t,
+		WithName("parent"),
+		WithExecutorOptions(task.WithDir("testdata/deferred")),
+		WithTask("parent"),
+	)
+}
+
+func TestIncludeCycle(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_cycle"),
+			task.WithSilent(true),
+		),
+		WithSetupError(),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestIncludesIncorrect(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_incorrect"),
+			task.WithSilent(true),
+		),
+		WithSetupError(),
+	)
+}
+
+func TestIncludesMissingTaskfile(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/includes_missing_taskfile"),
+			task.WithSilent(true),
+		),
+		WithSetupError(),
+	)
+}
+
+func TestIncludesOptionalImplicitFalse(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/includes_optional_implicit_false")),
+		WithSetupError(),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestIncludesOptionalExplicitFalse(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/includes_optional_explicit_false")),
+		WithSetupError(),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/dotenv/error_included_envs"),
+			task.WithSummary(true),
+		),
+		WithSetupError(),
+	)
+}
+
+func TestTaskDotenvParseErrorMessage(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dotenv/parse_error")),
+		WithSetupError(),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestDisplaysErrorOnVersion1Schema(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/version/v1"),
+			task.WithVersionCheck(true),
+		),
+		WithSetupError(),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestDisplaysErrorOnVersion2Schema(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/version/v2"),
+			task.WithVersionCheck(true),
+		),
+		WithSetupError(),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestExpand(t *testing.T) {
+	t.Parallel()
+
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/expand")),
+		WithTask("pwd"),
+		WithFixtureTemplateData("HOME", filepath.ToSlash(home)),
+	)
+}
+
+func TestUserWorkingDirectory(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/user_working_dir")),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestAbsPath(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/abs_path"),
+			task.WithSilent(true),
+		),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestPlatforms(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/platforms")),
+		WithTask("build-"+runtime.GOOS),
+		WithFixtureTemplateData("GOOS", runtime.GOOS),
+	)
+}
+
+func TestIncludedTaskfileVarMerging(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		task string
+	}{
+		{"foo", "foo:pwd"},
+		{"bar", "bar:pwd"},
+	}
+	for _, test := range tests {
+		NewExecutorTest(t,
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir("testdata/included_taskfile_var_merging"),
+				task.WithSilent(true),
+			),
+			WithTask(test.task),
+			WithFixtureTemplating(),
+		)
+	}
+}
+
+func TestIncludesRelativePath(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("common:pwd"),
+		WithExecutorOptions(task.WithDir("testdata/includes_rel_path")),
+		WithTask("common:pwd"),
+		WithFixtureTemplating(),
+	)
+	NewExecutorTest(t,
+		WithName("included:common:pwd"),
+		WithExecutorOptions(task.WithDir("testdata/includes_rel_path")),
+		WithTask("included:common:pwd"),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestWhenNoDirAttributeItRunsInSameDirAsTaskfile(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dir")),
+		WithTask("whereami"),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestWhenDirAttributeAndDirExistsItRunsInThatDir(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dir/explicit_exists")),
+		WithTask("whereami"),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestWhenDirAttributeItCreatesMissingAndRunsInThatDir(t *testing.T) {
+	t.Parallel()
+
+	const toBeCreated = "testdata/dir/explicit_doesnt_exist/createme"
+
+	// Ensure that the directory to be created doesn't actually exist.
+	_ = os.RemoveAll(toBeCreated)
+	if _, err := os.Stat(toBeCreated); err == nil {
+		t.Errorf("Directory should not exist: %v", err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(toBeCreated) })
+
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dir/explicit_doesnt_exist/")),
+		WithTask("whereami"),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestDynamicVariablesRunOnTheNewCreatedDir(t *testing.T) {
+	t.Parallel()
+
+	const toBeCreated = "testdata/dir/dynamic_var_on_created_dir/created"
+
+	// Ensure that the directory to be created doesn't actually exist.
+	_ = os.RemoveAll(toBeCreated)
+	if _, err := os.Stat(toBeCreated); err == nil {
+		t.Errorf("Directory should not exist: %v", err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(toBeCreated) })
+
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/dir/dynamic_var_on_created_dir")),
+		WithFixtureTemplating(),
+		// Take only the first line, as Windows may output additional debug info.
+		WithPostProcessFn(PPFirstLine),
+	)
+}
+
+func TestEvaluateSymlinksInPaths(t *testing.T) { // nolint:paralleltest // cannot run in parallel
+	const dir = "testdata/evaluate_symlinks_in_paths"
+	t.Cleanup(func() {
+		_ = os.RemoveAll(dir + "/.task")
+	})
+
+	steps := []struct {
+		name string
+		task string
+	}{
+		{"default (1)", "default"},
+		{"test-sym (1)", "test-sym"},
+		{"default (2)", "default"},
+		{"default (3)", "default"},
+		{"reset", "reset"},
+	}
+	for _, step := range steps { // nolint:paralleltest // cannot run in parallel
+		NewExecutorTest(t,
+			WithName(step.name),
+			WithExecutorOptions(task.WithDir(dir)),
+			WithTask(step.task),
+		)
+	}
+}
+
+func TestIgnoreErrorsOnTimeout(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		task        string
+		expectError bool
+	}{
+		{name: "ignored at task level", task: "task-timeout-should-pass"},
+		{name: "ignored at command level", task: "cmd-timeout-should-pass"},
+		{name: "not ignored", task: "cmd-timeout-should-fail", expectError: true},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.name),
+			WithExecutorOptions(task.WithDir("testdata/ignore_errors")),
+			WithTask(test.task),
+		}
+		if test.expectError {
+			opts = append(opts, WithRunError())
+		}
+		NewExecutorTest(t, opts...)
+	}
 }
