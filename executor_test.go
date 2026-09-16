@@ -5,10 +5,17 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"io/fs"
+	rand "math/rand/v2"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -183,6 +190,21 @@ func (opt *assertTestOption) applyToExecutorTest(t *ExecutorTest) {
 }
 
 // Helpers
+
+// SyncBuffer is a threadsafe buffer for testing.
+// Some times replace stdout/stderr with a buffer to capture output.
+// stdout and stderr are threadsafe, but a regular bytes.Buffer is not.
+// Using this instead helps prevents race conditions with output.
+type SyncBuffer struct {
+	buf bytes.Buffer
+	mu  sync.Mutex
+}
+
+func (sb *SyncBuffer) Write(p []byte) (n int, err error) {
+	sb.mu.Lock()
+	defer sb.mu.Unlock()
+	return sb.buf.Write(p)
+}
 
 // writeFixtureErrRun is a wrapper for writing the output of an error during the
 // run phase of the task to a fixture file.
@@ -1143,7 +1165,6 @@ func TestReference(t *testing.T) {
 }
 
 func TestVarInheritance(t *testing.T) {
-	enableExperimentForTest(t, &experiments.EnvPrecedence, 1)
 	tests := []struct {
 		name string
 		call string
@@ -1206,6 +1227,7 @@ func TestVarInheritance(t *testing.T) {
 				task.WithForce(true),
 			),
 			WithTask(cmp.Or(test.call, "default")),
+			WithExperiment(&experiments.EnvPrecedence, 1),
 		)
 	}
 }
@@ -1258,6 +1280,149 @@ func TestIncludeChecksum(t *testing.T) {
 		WithSetupError(),
 		WithFixtureTemplating(),
 	)
+}
+
+// writeFile writes content to a file, creating any intermediate directories.
+func writeFile(t *testing.T, dir, name, content string) {
+	t.Helper()
+	require.NoError(t, os.WriteFile(filepathext.SmartJoin(dir, name), []byte(content), 0o644))
+}
+
+// gitignoreStep writes a set of files then runs the task once, capturing its
+// output as a golden fixture named run.
+type gitignoreStep struct {
+	write map[string]string
+	run   string
+}
+
+// gitignoreSeq drives a checksum task through a sequence of runs against a
+// fixture dir. create seeds runtime files (removed on cleanup); restore resets
+// tracked files to their committed content on cleanup; artifacts are
+// task-produced files to delete on cleanup.
+type gitignoreSeq struct {
+	dir       string
+	task      string
+	create    map[string]string
+	restore   map[string]string
+	artifacts []string
+	steps     []gitignoreStep
+}
+
+func (s gitignoreSeq) run(t *testing.T) {
+	t.Helper()
+	cleanup := func() {
+		// The fixture manages its own .git marker so that gitignore filtering
+		// resolves a repo root regardless of the build source: an in-tree
+		// checkout would otherwise inherit the go-task .git, but a GitHub
+		// source tarball has none, which would silently disable filtering and
+		// break the golden fixtures.
+		_ = os.RemoveAll(filepathext.SmartJoin(s.dir, ".git"))
+		_ = os.RemoveAll(filepathext.SmartJoin(s.dir, ".task"))
+		for name := range s.create {
+			_ = os.Remove(filepathext.SmartJoin(s.dir, name))
+		}
+		for _, name := range s.artifacts {
+			_ = os.Remove(filepathext.SmartJoin(s.dir, name))
+		}
+		for name, content := range s.restore {
+			writeFile(t, s.dir, name, content)
+		}
+	}
+	cleanup()
+	t.Cleanup(cleanup)
+	require.NoError(t, os.MkdirAll(filepathext.SmartJoin(s.dir, ".git"), 0o755))
+	for name, content := range s.create {
+		writeFile(t, s.dir, name, content)
+	}
+	for _, step := range s.steps {
+		for name, content := range step.write {
+			writeFile(t, s.dir, name, content)
+		}
+		NewExecutorTest(t,
+			WithName(step.run),
+			WithExecutorOptions(task.WithDir(s.dir)),
+			WithTask(s.task),
+		)
+	}
+}
+
+func TestGitignoreChecksum(t *testing.T) { //nolint:paralleltest // shares testdata/gitignore and mutates fixture files
+	gitignoreSeq{
+		dir:       "testdata/gitignore",
+		task:      "build",
+		create:    map[string]string{"ignored.txt": "ignored\n"},
+		restore:   map[string]string{"source.txt": "source content\n"},
+		artifacts: []string{"generated.txt"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"ignored.txt": "ignored modified\n"}},
+			{run: "source file modified", write: map[string]string{"source.txt": "source modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreNegation checks that a `!pattern` in a nested .gitignore
+// re-includes a file excluded by a parent .gitignore.
+func TestGitignoreNegation(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:    "testdata/gitignore_negation",
+		task:   "build",
+		create: map[string]string{"sub/debug.log": "debug\n", "sub/other.log": "other\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"sub/other.log": "other modified\n"}},
+			{run: "reincluded file modified", write: map[string]string{"sub/debug.log": "debug modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreNested checks that a .gitignore in a subdirectory below the task
+// dir is honored when its files are reached by a deep glob.
+func TestGitignoreNested(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:     "testdata/gitignore_nested",
+		task:    "build",
+		create:  map[string]string{"sub/secret.dat": "secret\n"},
+		restore: map[string]string{"sub/keep.txt": "keep\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"sub/secret.dat": "secret modified\n"}},
+			{run: "source file modified", write: map[string]string{"sub/keep.txt": "keep modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreIncluded checks that a top-level use_gitignore in an included
+// Taskfile is propagated onto its tasks during merge.
+func TestGitignoreIncluded(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:    "testdata/gitignore_included",
+		task:   "included:build",
+		create: map[string]string{"ignored.txt": "ignored\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"ignored.txt": "ignored modified\n"}},
+		},
+	}.run(t)
+}
+
+// TestGitignoreIncludedOverride checks that an explicit use_gitignore: false in
+// an included Taskfile is preserved even when the root Taskfile sets it to true.
+func TestGitignoreIncludedOverride(t *testing.T) { //nolint:paralleltest // mutates fixture files
+	gitignoreSeq{
+		dir:    "testdata/gitignore_included_override",
+		task:   "included:build",
+		create: map[string]string{"ignored.txt": "ignored\n"},
+		steps: []gitignoreStep{
+			{run: "first run"},
+			{run: "up to date"},
+			{run: "ignored file modified", write: map[string]string{"ignored.txt": "ignored modified\n"}},
+		},
+	}.run(t)
 }
 
 func TestIncludeSilent(t *testing.T) {
@@ -1453,6 +1618,210 @@ func TestIncludesUnshadowedDefault(t *testing.T) {
 		WithExecutorOptions(task.WithDir("testdata/includes_unshadowed_default")),
 		WithTask("included"),
 	)
+}
+
+func TestIncludesRemote(t *testing.T) {
+	dir := "testdata/includes_remote"
+	os.RemoveAll(filepath.Join(dir, ".task", "remote"))
+
+	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
+	defer srv.Close()
+
+	tcs := []struct {
+		firstRemote  string
+		secondRemote string
+	}{
+		{
+			firstRemote:  srv.URL + "/first/Taskfile.yml",
+			secondRemote: srv.URL + "/first/second/Taskfile.yml",
+		},
+		{
+			firstRemote:  srv.URL + "/first/Taskfile.yml",
+			secondRemote: "./second/Taskfile.yml",
+		},
+		{
+			firstRemote:  srv.URL + "/first/",
+			secondRemote: srv.URL + "/first/second/",
+		},
+	}
+
+	taskCalls := []*task.Call{
+		{Task: "first:write-file"},
+		{Task: "first:second:write-file"},
+	}
+
+	for i, tc := range tcs {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			t.Setenv("FIRST_REMOTE_URL", tc.firstRemote)
+			t.Setenv("SECOND_REMOTE_URL", tc.secondRemote)
+
+			var buff SyncBuffer
+
+			// Extract host from server URL for trust testing
+			parsedURL, err := url.Parse(srv.URL)
+			require.NoError(t, err)
+			trustedHost := parsedURL.Host
+
+			executors := []struct {
+				name     string
+				executor *task.Executor
+			}{
+				{
+					name: "online, always download",
+					executor: task.NewExecutor(
+						task.WithDir(dir),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithTimeout(time.Minute),
+						task.WithInsecure(true),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithVerbose(true),
+
+						// Without caching
+						task.WithAssumeYes(true),
+						task.WithDownload(true),
+					),
+				},
+				{
+					name: "offline, use cache",
+					executor: task.NewExecutor(
+						task.WithDir(dir),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithTimeout(time.Minute),
+						task.WithInsecure(true),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithVerbose(true),
+
+						// With caching
+						task.WithAssumeYes(false),
+						task.WithDownload(false),
+						task.WithOffline(true),
+					),
+				},
+				{
+					name: "with trusted hosts, no prompts",
+					executor: task.NewExecutor(
+						task.WithDir(dir),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithTimeout(time.Minute),
+						task.WithInsecure(true),
+						task.WithStdout(&buff),
+						task.WithStderr(&buff),
+						task.WithVerbose(true),
+
+						// With trusted hosts
+						task.WithTrustedHosts([]string{trustedHost}),
+						task.WithDownload(true),
+					),
+				},
+			}
+
+			for _, e := range executors {
+				t.Run(e.name, func(t *testing.T) {
+					require.NoError(t, e.executor.Setup())
+
+					for k, taskCall := range taskCalls {
+						t.Run(taskCall.Task, func(t *testing.T) {
+							expectedContent := fmt.Sprint(rand.Int64()) //nolint:gosec
+							t.Setenv("CONTENT", expectedContent)
+
+							outputFile := fmt.Sprintf("%d.%d.txt", i, k)
+							t.Setenv("OUTPUT_FILE", outputFile)
+
+							path := filepath.Join(dir, outputFile)
+							require.NoError(t, os.RemoveAll(path))
+
+							require.NoError(t, e.executor.Run(t.Context(), taskCall))
+
+							actualContent, err := os.ReadFile(path)
+							require.NoError(t, err)
+							assert.Equal(t, expectedContent, strings.TrimSpace(string(actualContent)))
+						})
+					}
+				})
+			}
+
+			t.Log("\noutput:\n", buff.buf.String())
+		})
+	}
+}
+
+func TestIncludesHttp(t *testing.T) { //nolint:paralleltest // sets INCLUDE_ROOT per iteration
+	dir, err := filepath.Abs("testdata/includes_http")
+	require.NoError(t, err)
+
+	srv := httptest.NewServer(http.FileServer(http.Dir(dir)))
+	defer srv.Close()
+
+	t.Cleanup(func() {
+		// This test fills the .task/remote directory with cache entries because the include URL
+		// is different on every test due to the dynamic nature of the TCP port in srv.URL
+		if err := os.RemoveAll(filepath.Join(dir, ".task")); err != nil {
+			t.Logf("error cleaning up: %s", err)
+		}
+	})
+
+	taskfiles, err := fs.Glob(os.DirFS(dir), "root-taskfile-*.yml")
+	require.NoError(t, err)
+
+	remotes := []struct {
+		name string
+		root string
+	}{
+		{
+			name: "local",
+			root: ".",
+		},
+		{
+			name: "http-remote",
+			root: srv.URL,
+		},
+	}
+
+	tcs := []struct {
+		name, dir string
+	}{
+		{
+			name: "second-with-dir-1:third-with-dir-1:default",
+			dir:  filepath.Join(dir, "dir-1"),
+		},
+		{
+			name: "second-with-dir-1:third-with-dir-2:default",
+			dir:  filepath.Join(dir, "dir-2"),
+		},
+	}
+
+	for _, taskfile := range taskfiles {
+		for _, remote := range remotes { //nolint:paralleltest // sets INCLUDE_ROOT per iteration
+			t.Setenv("INCLUDE_ROOT", remote.root)
+
+			NewExecutorTest(t,
+				WithName(fmt.Sprintf("%s/%s", taskfile, remote.name)),
+				WithExecutorOptions(
+					task.WithEntrypoint(filepath.Join(dir, taskfile)),
+					task.WithDir(dir),
+					task.WithInsecure(true),
+					task.WithDownload(true),
+					task.WithAssumeYes(true),
+					task.WithVerbose(true),
+					task.WithTimeout(time.Minute),
+				),
+				WithNoRun(),
+				WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+					t.Helper()
+					for _, tc := range tcs {
+						compiled, err := r.Executor.CompiledTask(&task.Call{Task: tc.name})
+						require.NoError(t, err)
+						assert.Equal(t, tc.dir, compiled.Dir)
+					}
+				}),
+			)
+		}
+	}
 }
 
 func TestSupportedFileNames(t *testing.T) {
