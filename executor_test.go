@@ -15,7 +15,6 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -99,112 +98,7 @@ func NewExecutorTest(t *testing.T, opts ...ExecutorTestOption) {
 	tt.run(t)
 }
 
-// Functional options
-
-// WithInput tells the test to create a reader with the given input. This can be
-// used to simulate user input when a task requires it.
-func WithInput(input string) ExecutorTestOption {
-	return &inputTestOption{input}
-}
-
-type inputTestOption struct {
-	input string
-}
-
-func (opt *inputTestOption) applyToExecutorTest(t *ExecutorTest) {
-	t.input = opt.input
-}
-
-// WithRunError tells the test to expect an error during the run phase of the
-// task execution. A fixture will be created with the output of any errors.
-func WithRunError() ExecutorTestOption {
-	return &runErrorTestOption{}
-}
-
-type runErrorTestOption struct{}
-
-func (opt *runErrorTestOption) applyToExecutorTest(t *ExecutorTest) {
-	t.wantRunError = true
-}
-
-// WithStatusError tells the test to make an additional call to
-// [task.Executor.Status] after the task has been run. A fixture will be created
-// with the output of any errors.
-func WithStatusError() ExecutorTestOption {
-	return &statusErrorTestOption{}
-}
-
-type statusErrorTestOption struct{}
-
-func (opt *statusErrorTestOption) applyToExecutorTest(t *ExecutorTest) {
-	t.wantStatusError = true
-}
-
-// WithTasks sets the names of multiple tasks to run in a single call to
-// [task.Executor.Run]. Use this instead of [WithTask] when the test needs to
-// call more than one task at once (e.g. to test summaries spanning several
-// tasks).
-func WithTasks(tasks ...string) ExecutorTestOption {
-	return &tasksTestOption{tasks: tasks}
-}
-
-type tasksTestOption struct {
-	tasks []string
-}
-
-func (opt *tasksTestOption) applyToExecutorTest(t *ExecutorTest) {
-	t.tasks = opt.tasks
-}
-
-// WithNoRun tells the test to stop after a successful setup, without calling
-// [task.Executor.Run]. This is useful for tests that only care about the
-// state of the [task.Executor] (or its parsed Taskfile) after setup, and for
-// tests that construct an [task.Executor] but never actually call a task. No
-// output fixture is written, since no task is run.
-func WithNoRun() ExecutorTestOption {
-	return &noRunTestOption{}
-}
-
-type noRunTestOption struct{}
-
-func (opt *noRunTestOption) applyToExecutorTest(t *ExecutorTest) {
-	t.noRun = true
-}
-
-// WithAssert registers a function to run custom assertions against the
-// [ExecutorTestResult] of the test, in addition to the usual error and golden
-// fixture checks. This is useful for assertions that a golden fixture can't
-// express, such as an error's concrete type, timing bounds, or the
-// [task.Executor]'s internal state. This can be called multiple times to add
-// more than one assertion function.
-func WithAssert(fn func(t *testing.T, r *ExecutorTestResult)) ExecutorTestOption {
-	return &assertTestOption{fn: fn}
-}
-
-type assertTestOption struct {
-	fn func(t *testing.T, r *ExecutorTestResult)
-}
-
-func (opt *assertTestOption) applyToExecutorTest(t *ExecutorTest) {
-	t.assertFns = append(t.assertFns, opt.fn)
-}
-
 // Helpers
-
-// SyncBuffer is a threadsafe buffer for testing.
-// Some times replace stdout/stderr with a buffer to capture output.
-// stdout and stderr are threadsafe, but a regular bytes.Buffer is not.
-// Using this instead helps prevents race conditions with output.
-type SyncBuffer struct {
-	buf bytes.Buffer
-	mu  sync.Mutex
-}
-
-func (sb *SyncBuffer) Write(p []byte) (n int, err error) {
-	sb.mu.Lock()
-	defer sb.mu.Unlock()
-	return sb.buf.Write(p)
-}
 
 // writeFixtureErrRun is a wrapper for writing the output of an error during the
 // run phase of the task to a fixture file.

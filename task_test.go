@@ -8,6 +8,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
@@ -23,10 +24,6 @@ func init() {
 }
 
 type (
-	TestOption interface {
-		ExecutorTestOption
-		FormatterTestOption
-	}
 	TaskTest struct {
 		name                     string
 		experiments              map[*experiments.Experiment]int
@@ -35,6 +32,21 @@ type (
 		fixtureTemplatingEnabled bool
 	}
 )
+
+// SyncBuffer is a threadsafe buffer for testing.
+// Some times replace stdout/stderr with a buffer to capture output.
+// stdout and stderr are threadsafe, but a regular bytes.Buffer is not.
+// Using this instead helps prevents race conditions with output.
+type SyncBuffer struct {
+	buf bytes.Buffer
+	mu  sync.Mutex
+}
+
+func (sb *SyncBuffer) Write(p []byte) (n int, err error) {
+	sb.mu.Lock()
+	defer sb.mu.Unlock()
+	return sb.buf.Write(p)
+}
 
 // goldenFileName makes the file path for fixture files safe for all well-known
 // operating systems. Windows in particular has a lot of restrictions the
@@ -108,11 +120,13 @@ func (tt *TaskTest) writeFixtureErrSetup(
 	tt.writeFixture(t, g, "err-setup", []byte(err.Error()))
 }
 
+//
 // Functional options
+//
 
 // WithName gives the test fixture output a name. This should be used when
 // running multiple tests in a single test function.
-func WithName(name string) TestOption {
+func WithName(name string) *nameTestOption {
 	return &nameTestOption{name: name}
 }
 
@@ -130,7 +144,7 @@ func (opt *nameTestOption) applyToFormatterTest(t *FormatterTest) {
 
 // WithTask sets the name of the task to run. This should be used when the task
 // to run is not the default task.
-func WithTask(task string) TestOption {
+func WithTask(task string) *taskTestOption {
 	return &taskTestOption{task: task}
 }
 
@@ -148,7 +162,7 @@ func (opt *taskTestOption) applyToFormatterTest(t *FormatterTest) {
 
 // WithVar sets a variable to be passed to the task. This can be called multiple
 // times to set more than one variable.
-func WithVar(key string, value any) TestOption {
+func WithVar(key string, value any) *varTestOption {
 	return &varTestOption{key: key, value: value}
 }
 
@@ -167,7 +181,7 @@ func (opt *varTestOption) applyToFormatterTest(t *FormatterTest) {
 
 // WithExecutorOptions sets the [task.ExecutorOption]s to be used when creating
 // a [task.Executor].
-func WithExecutorOptions(executorOpts ...task.ExecutorOption) TestOption {
+func WithExecutorOptions(executorOpts ...task.ExecutorOption) *executorOptionsTestOption {
 	return &executorOptionsTestOption{executorOpts: executorOpts}
 }
 
@@ -185,7 +199,7 @@ func (opt *executorOptionsTestOption) applyToFormatterTest(t *FormatterTest) {
 
 // WithExperiment sets an experiment to be enabled for the test. This can be
 // called multiple times to enable more than one experiment.
-func WithExperiment(experiment *experiments.Experiment, value int) TestOption {
+func WithExperiment(experiment *experiments.Experiment, value int) *experimentTestOption {
 	return &experimentTestOption{experiment: experiment, value: value}
 }
 
@@ -206,7 +220,7 @@ func (opt *experimentTestOption) applyToFormatterTest(t *FormatterTest) {
 // functions are run on the output of the task before a fixture is created. This
 // can be used to remove absolute paths, sort lines, etc. This can be called
 // multiple times to add more than one post-process function.
-func WithPostProcessFn(fn PostProcessFn) TestOption {
+func WithPostProcessFn(fn PostProcessFn) *postProcessFnTestOption {
 	return &postProcessFnTestOption{fn: fn}
 }
 
@@ -224,7 +238,7 @@ func (opt *postProcessFnTestOption) applyToFormatterTest(t *FormatterTest) {
 
 // WithSetupError sets the test to expect an error during the setup phase of the
 // task execution. A fixture will be created with the output of any errors.
-func WithSetupError() TestOption {
+func WithSetupError() *setupErrorTestOption {
 	return &setupErrorTestOption{}
 }
 
@@ -242,7 +256,7 @@ func (opt *setupErrorTestOption) applyToFormatterTest(t *FormatterTest) {
 // the default set of data. This is useful if the golden file is dynamic in some
 // way (e.g. contains user-specific directories). To add more data, see
 // WithFixtureTemplateData.
-func WithFixtureTemplating() TestOption {
+func WithFixtureTemplating() *fixtureTemplatingTestOption {
 	return &fixtureTemplatingTestOption{}
 }
 
@@ -259,7 +273,7 @@ func (opt *fixtureTemplatingTestOption) applyToFormatterTest(t *FormatterTest) {
 // WithFixtureTemplateData adds data to the golden fixture file templates. Keys
 // given here will override any existing values. This option will also enable
 // global templating, so you do not need to call WithFixtureTemplating as well.
-func WithFixtureTemplateData(key string, value any) TestOption {
+func WithFixtureTemplateData(key string, value any) *fixtureTemplateDataTestOption {
 	return &fixtureTemplateDataTestOption{key, value}
 }
 
@@ -278,7 +292,122 @@ func (opt *fixtureTemplateDataTestOption) applyToFormatterTest(t *FormatterTest)
 	t.fixtureTemplateData[opt.k] = opt.v
 }
 
-// Post-processing
+// WithInput tells the test to create a reader with the given input. This can be
+// used to simulate user input when a task requires it.
+func WithInput(input string) *inputTestOption {
+	return &inputTestOption{input}
+}
+
+type inputTestOption struct {
+	input string
+}
+
+func (opt *inputTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.input = opt.input
+}
+
+// WithRunError tells the test to expect an error during the run phase of the
+// task execution. A fixture will be created with the output of any errors.
+func WithRunError() *runErrorTestOption {
+	return &runErrorTestOption{}
+}
+
+type runErrorTestOption struct{}
+
+func (opt *runErrorTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.wantRunError = true
+}
+
+// WithStatusError tells the test to make an additional call to
+// [task.Executor.Status] after the task has been run. A fixture will be created
+// with the output of any errors.
+func WithStatusError() *statusErrorTestOption {
+	return &statusErrorTestOption{}
+}
+
+type statusErrorTestOption struct{}
+
+func (opt *statusErrorTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.wantStatusError = true
+}
+
+// WithTasks sets the names of multiple tasks to run in a single call to
+// [task.Executor.Run]. Use this instead of [WithTask] when the test needs to
+// call more than one task at once (e.g. to test summaries spanning several
+// tasks).
+func WithTasks(tasks ...string) *tasksTestOption {
+	return &tasksTestOption{tasks: tasks}
+}
+
+type tasksTestOption struct {
+	tasks []string
+}
+
+func (opt *tasksTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.tasks = opt.tasks
+}
+
+// WithNoRun tells the test to stop after a successful setup, without calling
+// [task.Executor.Run]. This is useful for tests that only care about the
+// state of the [task.Executor] (or its parsed Taskfile) after setup, and for
+// tests that construct an [task.Executor] but never actually call a task. No
+// output fixture is written, since no task is run.
+func WithNoRun() *noRunTestOption {
+	return &noRunTestOption{}
+}
+
+type noRunTestOption struct{}
+
+func (opt *noRunTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.noRun = true
+}
+
+// WithAssert registers a function to run custom assertions against the
+// [ExecutorTestResult] of the test, in addition to the usual error and golden
+// fixture checks. This is useful for assertions that a golden fixture can't
+// express, such as an error's concrete type, timing bounds, or the
+// [task.Executor]'s internal state. This can be called multiple times to add
+// more than one assertion function.
+func WithAssert(fn func(t *testing.T, r *ExecutorTestResult)) *assertTestOption {
+	return &assertTestOption{fn: fn}
+}
+
+type assertTestOption struct {
+	fn func(t *testing.T, r *ExecutorTestResult)
+}
+
+func (opt *assertTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.assertFns = append(t.assertFns, opt.fn)
+}
+
+// WithListOptions sets the list options for the formatter.
+func WithListOptions(opts task.ListOptions) *listOptionsTestOption {
+	return &listOptionsTestOption{opts}
+}
+
+type listOptionsTestOption struct {
+	listOptions task.ListOptions
+}
+
+func (opt *listOptionsTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.listOptions = opt.listOptions
+}
+
+// WithListError tells the test to expect an error when running the formatter.
+// A fixture will be created with the output of any errors.
+func WithListError() *listErrorTestOption {
+	return &listErrorTestOption{}
+}
+
+type listErrorTestOption struct{}
+
+func (opt *listErrorTestOption) applyToFormatterTest(t *FormatterTest) {
+	t.wantListError = true
+}
+
+//
+// Post-processing functions
+//
 
 // A PostProcessFn is a function that can be applied to the output of a test
 // fixture before the file is written.
