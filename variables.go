@@ -227,6 +227,20 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 				cache.ResetCache()
 			}
 		}
+
+		matchedSources, err := fingerprint.Globs(new.Dir, new.Sources, gitignore)
+		if err != nil {
+			return nil, err
+		}
+
+		for i, m := range matchedSources {
+			if matchedSources[i], err = filepath.Rel(new.Dir, m); err != nil {
+				return nil, err
+			}
+		}
+
+		vars.Set("sources", ast.Var{Live: matchedSources})
+		cache.ResetCache()
 	}
 
 	if len(origTask.Cmds) > 0 {
