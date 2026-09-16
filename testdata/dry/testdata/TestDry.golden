@@ -1,0 +1,1 @@
+task: [build] touch file.txt

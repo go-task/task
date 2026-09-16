@@ -3,16 +3,22 @@ package task_test
 import (
 	"bytes"
 	"cmp"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"testing"
+	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/sebdah/goldie/v2"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-task/task/v3"
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/experiments"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -32,12 +38,25 @@ type (
 	ExecutorTest struct {
 		TaskTest
 		task            string
+		tasks           []string
 		vars            map[string]any
 		input           string
 		executorOpts    []task.ExecutorOption
 		wantSetupError  bool
 		wantRunError    bool
 		wantStatusError bool
+		noRun           bool
+		assertFns       []func(t *testing.T, r *ExecutorTestResult)
+	}
+	// An ExecutorTestResult carries the outcome of an [ExecutorTest] run. It is
+	// passed to any assertion functions registered with [WithAssert], for
+	// checks that a golden fixture can't express, such as an error's concrete
+	// type, timing bounds, or the [task.Executor]'s internal state.
+	ExecutorTestResult struct {
+		Executor *task.Executor
+		Output   string
+		Err      error
+		Duration time.Duration
 	}
 )
 
@@ -114,6 +133,55 @@ func (opt *statusErrorTestOption) applyToExecutorTest(t *ExecutorTest) {
 	t.wantStatusError = true
 }
 
+// WithTasks sets the names of multiple tasks to run in a single call to
+// [task.Executor.Run]. Use this instead of [WithTask] when the test needs to
+// call more than one task at once (e.g. to test summaries spanning several
+// tasks).
+func WithTasks(tasks ...string) ExecutorTestOption {
+	return &tasksTestOption{tasks: tasks}
+}
+
+type tasksTestOption struct {
+	tasks []string
+}
+
+func (opt *tasksTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.tasks = opt.tasks
+}
+
+// WithNoRun tells the test to stop after a successful setup, without calling
+// [task.Executor.Run]. This is useful for tests that only care about the
+// state of the [task.Executor] (or its parsed Taskfile) after setup, and for
+// tests that construct an [task.Executor] but never actually call a task. No
+// output fixture is written, since no task is run.
+func WithNoRun() ExecutorTestOption {
+	return &noRunTestOption{}
+}
+
+type noRunTestOption struct{}
+
+func (opt *noRunTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.noRun = true
+}
+
+// WithAssert registers a function to run custom assertions against the
+// [ExecutorTestResult] of the test, in addition to the usual error and golden
+// fixture checks. This is useful for assertions that a golden fixture can't
+// express, such as an error's concrete type, timing bounds, or the
+// [task.Executor]'s internal state. This can be called multiple times to add
+// more than one assertion function.
+func WithAssert(fn func(t *testing.T, r *ExecutorTestResult)) ExecutorTestOption {
+	return &assertTestOption{fn: fn}
+}
+
+type assertTestOption struct {
+	fn func(t *testing.T, r *ExecutorTestResult)
+}
+
+func (opt *assertTestOption) applyToExecutorTest(t *ExecutorTest) {
+	t.assertFns = append(t.assertFns, opt.fn)
+}
+
 // Helpers
 
 // writeFixtureErrRun is a wrapper for writing the output of an error during the
@@ -169,9 +237,19 @@ func (tt *ExecutorTest) run(t *testing.T) {
 			goldie.WithEqualFn(NormalizedEqual),
 		)
 
+		// runAsserts runs any functions registered with WithAssert against the
+		// current outcome of the test.
+		runAsserts := func(result *ExecutorTestResult) {
+			t.Helper()
+			for _, fn := range tt.assertFns {
+				fn(t, result)
+			}
+		}
+
 		// Call setup and check for errors
 		if err := e.Setup(); tt.wantSetupError {
 			require.Error(t, err)
+			runAsserts(&ExecutorTestResult{Executor: e, Err: err})
 			tt.writeFixtureErrSetup(t, g, err)
 			tt.writeFixtureBuffer(t, g, buffer.buf)
 			return
@@ -179,30 +257,46 @@ func (tt *ExecutorTest) run(t *testing.T) {
 			require.NoError(t, err)
 		}
 
-		// Create the task call
+		// If the test doesn't want to run a task, stop here. There's no
+		// output, so no fixture is written.
+		if tt.noRun {
+			runAsserts(&ExecutorTestResult{Executor: e})
+			return
+		}
+
+		// Create the task call(s)
 		vars := ast.NewVars()
 		for key, value := range tt.vars {
 			vars.Set(key, ast.Var{Value: value})
 		}
-		call := &task.Call{
-			Task: tt.task,
-			Vars: vars,
+		taskNames := tt.tasks
+		if len(taskNames) == 0 {
+			taskNames = []string{tt.task}
+		}
+		calls := make([]*task.Call, 0, len(taskNames))
+		for _, name := range taskNames {
+			calls = append(calls, &task.Call{Task: name, Vars: vars})
 		}
 
 		// Run the task and check for errors
 		ctx := t.Context()
-		if err := e.Run(ctx, call); tt.wantRunError {
+		start := time.Now()
+		err := e.Run(ctx, calls...)
+		duration := time.Since(start)
+		if tt.wantRunError {
 			require.Error(t, err)
+			runAsserts(&ExecutorTestResult{Executor: e, Output: buffer.buf.String(), Err: err, Duration: duration})
 			tt.writeFixtureErrRun(t, g, err)
 			tt.writeFixtureBuffer(t, g, buffer.buf)
 			return
 		} else {
 			require.NoError(t, err)
 		}
+		runAsserts(&ExecutorTestResult{Executor: e, Output: buffer.buf.String(), Duration: duration})
 
 		// If the status flag is set, run the status check
 		if tt.wantStatusError {
-			if err := e.Status(ctx, call); err != nil {
+			if err := e.Status(ctx, calls[0]); err != nil {
 				tt.writeFixtureStatus(t, g, err.Error())
 			}
 		}
@@ -2171,4 +2265,765 @@ func TestIgnoreErrorsOnTimeout(t *testing.T) {
 		}
 		NewExecutorTest(t, opts...)
 	}
+}
+
+func TestExitImmediately(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/exit_immediately"),
+			task.WithSilent(true),
+		),
+		WithRunError(),
+	)
+}
+
+func TestRunOnceSharedDeps(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/run_once_shared_deps"),
+			task.WithForceAll(true),
+		),
+		WithTask("build"),
+		// service-a:build and service-b:build run concurrently, so their
+		// output can interleave in either order, and whichever of them wins
+		// the race is credited with the shared "run: once" library:build dep.
+		WithPostProcessFn(func(t *testing.T, b []byte) []byte {
+			t.Helper()
+			re := regexp.MustCompile(`service-[ab]:library:build`)
+			return re.ReplaceAll(b, []byte("service-x:library:build"))
+		}),
+		WithPostProcessFn(PPSortedLines),
+	)
+}
+
+func TestCommandTimeout(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		task        string
+		expectError bool
+	}{
+		{name: "timeout exceeded", task: "timeout-exceeded", expectError: true},
+		{name: "timeout not exceeded", task: "timeout-not-exceeded"},
+		{name: "no timeout", task: "no-timeout"},
+		{name: "multiple commands with timeout", task: "multiple-cmds-timeout", expectError: true},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.name),
+			WithExecutorOptions(task.WithDir("testdata/timeout")),
+			WithTask(test.task),
+		}
+		if test.expectError {
+			opts = append(opts, WithRunError())
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
+
+func TestIncludesWithExclude(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		task        string
+		expectError bool
+	}{
+		{name: "included:bar", task: "included:bar"},
+		{name: "included:foo", task: "included:foo", expectError: true},
+		{name: "included:foo:child", task: "included:foo:child"},
+		{name: "included:namespace", task: "included:namespace"},
+		{name: "included:namespace:one", task: "included:namespace:one", expectError: true},
+		{name: "included:namespace-other:one", task: "included:namespace-other:one"},
+		{name: "bar", task: "bar", expectError: true},
+		{name: "foo", task: "foo"},
+		{name: "namespace", task: "namespace"},
+		{name: "namespace:two", task: "namespace:two", expectError: true},
+		{name: "namespace-other:one", task: "namespace-other:one"},
+	}
+
+	for _, test := range tests {
+		opts := []ExecutorTestOption{
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir("testdata/includes_with_excludes"),
+				task.WithSilent(true),
+			),
+			WithTask(test.task),
+		}
+		if test.expectError {
+			opts = append(opts, WithRunError())
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
+
+func TestCyclicDep(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/cyclic")),
+		WithTask("task-1"),
+		WithRunError(),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			var taskCalledTooManyTimesError *errors.TaskCalledTooManyTimesError
+			assert.ErrorAs(t, r.Err, &taskCalledTooManyTimesError)
+		}),
+	)
+}
+
+func TestTaskVersion(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("v1"),
+		WithExecutorOptions(
+			task.WithDir("testdata/version/v1"),
+			task.WithVersionCheck(true),
+		),
+		WithSetupError(),
+		WithFixtureTemplating(),
+	)
+	NewExecutorTest(t,
+		WithName("v2"),
+		WithExecutorOptions(
+			task.WithDir("testdata/version/v2"),
+			task.WithVersionCheck(true),
+		),
+		WithSetupError(),
+		WithFixtureTemplating(),
+	)
+	NewExecutorTest(t,
+		WithName("v3"),
+		WithExecutorOptions(
+			task.WithDir("testdata/version/v3"),
+			task.WithVersionCheck(true),
+		),
+		WithNoRun(),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			assert.Equal(t, semver.MustParse("3"), r.Executor.Taskfile.Version)
+			assert.Equal(t, 2, r.Executor.Taskfile.Tasks.Len())
+		}),
+	)
+}
+
+func TestDry(t *testing.T) {
+	t.Parallel()
+
+	_ = os.Remove(filepathext.SmartJoin("testdata/dry", "file.txt"))
+
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/dry"),
+			task.WithDry(true),
+		),
+		WithTask("build"),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			_, err := os.Stat(filepathext.SmartJoin(r.Executor.Dir, "file.txt"))
+			assert.Error(t, err, "file.txt should not exist in dry mode")
+		}),
+	)
+}
+
+func TestDryChecksum(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/dry_checksum"
+	checksumFile := filepathext.SmartJoin(dir, ".task/checksum/default")
+	_ = os.Remove(checksumFile)
+
+	NewExecutorTest(t,
+		WithName("dry"),
+		WithExecutorOptions(
+			task.WithDir(dir),
+			task.WithDry(true),
+		),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			_, err := os.Stat(checksumFile)
+			require.Error(t, err, "checksum file should not exist")
+		}),
+	)
+	NewExecutorTest(t,
+		WithName("not dry"),
+		WithExecutorOptions(task.WithDir(dir)),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			_, err := os.Stat(checksumFile)
+			require.NoError(t, err, "checksum file should exist")
+		}),
+	)
+}
+
+func TestStatusVariables(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/status_vars"
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+	_ = os.Remove(filepathext.SmartJoin(dir, "generated.txt"))
+
+	NewExecutorTest(t,
+		WithName("build-checksum"),
+		WithExecutorOptions(
+			task.WithDir(dir),
+			task.WithVerbose(true),
+		),
+		WithTask("build-checksum"),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			assert.Contains(t, r.Output, "3e464c4b03f4b65d740e1e130d4d108a")
+		}),
+	)
+	NewExecutorTest(t,
+		WithName("build-ts"),
+		WithExecutorOptions(
+			task.WithDir(dir),
+			task.WithVerbose(true),
+		),
+		WithTask("build-ts"),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
+			require.NoError(t, err)
+			assert.Contains(t, r.Output, fmt.Sprintf("%d", inf.ModTime().Unix()))
+			assert.Contains(t, r.Output, inf.ModTime().String())
+		}),
+	)
+}
+
+func TestCmdsVariables(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/cmds_vars"
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+
+	NewExecutorTest(t,
+		WithName("build-checksum"),
+		WithExecutorOptions(
+			task.WithDir(dir),
+			task.WithVerbose(true),
+		),
+		WithTask("build-checksum"),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			assert.Contains(t, r.Output, "3e464c4b03f4b65d740e1e130d4d108a")
+		}),
+	)
+	NewExecutorTest(t,
+		WithName("build-ts"),
+		WithExecutorOptions(
+			task.WithDir(dir),
+			task.WithVerbose(true),
+		),
+		WithTask("build-ts"),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			inf, err := os.Stat(filepathext.SmartJoin(dir, "source.txt"))
+			require.NoError(t, err)
+			assert.Contains(t, r.Output, fmt.Sprintf("%d", inf.ModTime().Unix()))
+			assert.Contains(t, r.Output, inf.ModTime().String())
+		}),
+	)
+}
+
+func TestFingerprintVarMethod(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		dir          string
+		executorOpts []task.ExecutorOption
+		wantErr      bool
+		assertOutput func(t *testing.T, output string)
+	}{
+		{
+			name: "TIMESTAMP is injected when the method is inherited from the Taskfile",
+			dir:  "testdata/method_taskfile_timestamp",
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				// An unresolved variable renders as an empty string, so this
+				// has to match an actual timestamp, not just the prefix.
+				assert.Regexp(t, `ts=\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}`, output)
+			},
+		},
+		{
+			name: "no variable is injected when the effective method is none",
+			dir:  "testdata/method_taskfile_none",
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				assert.Contains(t, output, "cs=\n")
+			},
+		},
+		{
+			name:         "an invalid method doesn't fail a run that skips fingerprinting",
+			dir:          "testdata/method_invalid",
+			executorOpts: []task.ExecutorOption{task.WithForce(true)},
+			assertOutput: func(t *testing.T, output string) {
+				t.Helper()
+				assert.Contains(t, output, "cs=[]\n")
+			},
+		},
+		{
+			name:    "an invalid method is still reported by the up-to-date check",
+			dir:     "testdata/method_invalid",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		_ = os.RemoveAll(filepathext.SmartJoin(tt.dir, ".task"))
+
+		opts := []ExecutorTestOption{
+			WithName(tt.name),
+			WithExecutorOptions(append([]task.ExecutorOption{task.WithDir(tt.dir)}, tt.executorOpts...)...),
+			WithTask("build"),
+		}
+		if tt.wantErr {
+			opts = append(opts, WithRunError())
+		} else {
+			opts = append(opts, WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+				t.Helper()
+				tt.assertOutput(t, r.Output)
+			}))
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
+
+func TestErrorCode(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		task     string
+		expected int
+	}{
+		{name: "direct task", task: "direct", expected: 42},
+		{name: "indirect task", task: "indirect", expected: 42},
+	}
+
+	for _, test := range tests {
+		NewExecutorTest(t,
+			WithName(test.name),
+			WithExecutorOptions(
+				task.WithDir("testdata/error_code"),
+				task.WithSilent(true),
+			),
+			WithTask(test.task),
+			WithRunError(),
+			WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+				t.Helper()
+				var taskRunErr *errors.TaskRunError
+				require.ErrorAs(t, r.Err, &taskRunErr)
+				assert.Equal(t, test.expected, taskRunErr.TaskExitCode(), "unexpected exit code from task")
+			}),
+		)
+	}
+}
+
+func TestRunOnceJoinerHonorsItsOwnTimeout(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/run_once_timeout")),
+		WithRunError(),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			// The joiner used to wait on the shared execution alone, ignoring
+			// its own timeout for as long as that execution took.
+			assert.Less(t, r.Duration, 5*time.Second)
+
+			var timeoutErr *errors.TaskTimeoutError
+			require.ErrorAs(t, r.Err, &timeoutErr)
+			assert.Equal(t, "joiner", timeoutErr.TaskName)
+			assert.NotContains(t, r.Output, "should not be reached")
+		}),
+	)
+}
+
+func TestDeferredTaskTimeout(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/deferred"),
+			task.WithVerbose(true),
+		),
+		WithTask("parent-with-timeout"),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			assert.Less(t, r.Duration, 500*time.Millisecond)
+			assert.Contains(t, r.Output, "parent completed")
+			assert.NotContains(t, r.Output, "\ncleanup completed\n")
+			assert.Contains(t, r.Output, "ignored error in deferred cmd")
+		}),
+	)
+}
+
+func TestExitCodeTimeout(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/exit_code")),
+		WithTask("exit-timeout"),
+		WithRunError(),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			var runErr *errors.TaskRunError
+			require.ErrorAs(t, r.Err, &runErr)
+			assert.Equal(t, errors.TimeoutExitCode, runErr.TaskExitCode())
+		}),
+	)
+}
+
+func TestDepTimeout(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("timeout exceeded"),
+		WithExecutorOptions(task.WithDir("testdata/dep_timeout")),
+		WithTask("timeout-exceeded"),
+		WithRunError(),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			assert.Less(t, r.Duration, 5*time.Second)
+
+			var timeoutErr *errors.TaskTimeoutError
+			require.ErrorAs(t, r.Err, &timeoutErr)
+			assert.Equal(t, "slow", timeoutErr.TaskName)
+			assert.NotContains(t, r.Output, "should not be reached")
+		}),
+	)
+	NewExecutorTest(t,
+		WithName("timeout not exceeded"),
+		WithExecutorOptions(task.WithDir("testdata/dep_timeout")),
+		WithTask("timeout-not-exceeded"),
+	)
+}
+
+func TestCommandTimeoutBoundsIfCondition(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/timeout")),
+		WithTask("slow-if-condition"),
+		WithRunError(),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			assert.Less(t, r.Duration, 5*time.Second)
+
+			var timeoutErr *errors.TaskTimeoutError
+			require.ErrorAs(t, r.Err, &timeoutErr)
+			// A condition that times out fails the command, it does not skip it.
+			assert.NotContains(t, r.Output, "condition was met")
+		}),
+	)
+}
+
+func TestCommandTimeoutAttribution(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		task        string
+		notContains string
+	}{
+		{
+			name:        "a command declaring no timeout is not blamed for one",
+			task:        "inherited-timeout",
+			notContains: "(0s)",
+		},
+		{
+			name:        "a command is not blamed for a timeout it never reached",
+			task:        "larger-child-timeout",
+			notContains: "10m",
+		},
+	}
+
+	for _, test := range tests {
+		NewExecutorTest(t,
+			WithName(test.name),
+			WithExecutorOptions(task.WithDir("testdata/timeout")),
+			WithTask(test.task),
+			WithRunError(),
+			WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+				t.Helper()
+				assert.Contains(t, r.Err.Error(), "command timeout exceeded (500ms)")
+				assert.NotContains(t, r.Err.Error(), test.notContains)
+
+				var timeoutErr *errors.TaskTimeoutError
+				require.ErrorAs(t, r.Err, &timeoutErr)
+				assert.Equal(t, test.task, timeoutErr.TaskName)
+
+				// --watch swallows context errors; a timeout must not look like one.
+				assert.False(t, errors.Is(r.Err, context.DeadlineExceeded))
+			}),
+		)
+	}
+}
+
+func TestUserWorkingDirectoryWithIncluded(t *testing.T) {
+	t.Parallel()
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	wd = filepath.ToSlash(filepathext.SmartJoin(wd, "testdata/user_working_dir_with_includes/somedir"))
+
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/user_working_dir_with_includes"),
+			task.WithUserWorkingDir(wd),
+		),
+		WithTask("included:echo"),
+		WithFixtureTemplating(),
+	)
+}
+
+func TestIncludeWithVarsInInclude(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/include_with_vars_inside_include")),
+		WithNoRun(),
+	)
+}
+
+func TestGitignoreTaskListFallback(t *testing.T) { //nolint:paralleltest // shares testdata/gitignore with TestGitignoreChecksum
+	NewExecutorTest(t,
+		WithExecutorOptions(task.WithDir("testdata/gitignore")),
+		WithNoRun(),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			listed, err := r.Executor.CompiledTaskForTaskList(&task.Call{Task: "build"})
+			require.NoError(t, err)
+			assert.True(t, listed.ShouldUseGitignore(),
+				"task list should reflect the global use_gitignore fallback")
+
+			listedOff, err := r.Executor.CompiledTaskForTaskList(&task.Call{Task: "build-no-use_gitignore"})
+			require.NoError(t, err)
+			assert.False(t, listedOff.ShouldUseGitignore(),
+				"explicit use_gitignore: false must be preserved in the list path")
+		}),
+	)
+}
+
+func TestSummary(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/summary"),
+			task.WithSummary(true),
+			task.WithSilent(true),
+		),
+		WithTasks("task-with-summary", "other-task-with-summary"),
+	)
+}
+
+func TestSilence(t *testing.T) {
+	t.Parallel()
+
+	tests := []string{
+		"silent",
+		"chatty",
+		"task-test-silent-calls-chatty-non-silenced",
+		"task-test-silent-calls-chatty-silenced",
+		"task-test-chatty-calls-chatty-non-silenced",
+		"task-test-chatty-calls-chatty-silenced",
+		"task-test-no-cmds-calls-chatty-silenced",
+		"task-test-chatty-calls-silenced-cmd",
+		"task-test-is-silent-depends-on-chatty-non-silenced",
+		"task-test-is-silent-depends-on-chatty-silenced",
+		"task-test-is-chatty-depends-on-chatty-silenced",
+	}
+
+	for i, taskName := range tests {
+		opts := []ExecutorTestOption{
+			WithName(taskName),
+			WithExecutorOptions(task.WithDir("testdata/silent")),
+			WithTask(taskName),
+		}
+		if i == 0 {
+			// Verify that the silent flag is in place before running anything.
+			opts = append(opts, WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+				t.Helper()
+				fetchedTask, err := r.Executor.GetTask(&task.Call{Task: "task-test-silent-calls-chatty-silenced"})
+				require.NoError(t, err, "Unable to look up task task-test-silent-calls-chatty-silenced")
+				require.True(t, fetchedTask.Cmds[0].Silent, "The task task-test-silent-calls-chatty-silenced should have a silent call to chatty")
+			}))
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
+
+func TestGenerates(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/generates"
+	const srcTask = "sub/src.txt"
+	srcFile := filepathext.SmartJoin(dir, srcTask)
+
+	destTasks := []string{"rel.txt", "abs.txt", "my text file.txt"}
+	for _, f := range append([]string{srcTask}, destTasks...) {
+		_ = os.Remove(filepathext.SmartJoin(dir, f))
+	}
+
+	for _, destTask := range destTasks {
+		destFile := filepathext.SmartJoin(dir, destTask)
+		NewExecutorTest(t,
+			WithName(destTask+" (first run)"),
+			WithExecutorOptions(task.WithDir(dir)),
+			WithTask(destTask),
+			WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+				t.Helper()
+				_, err := os.Stat(srcFile)
+				assert.NoError(t, err, "File should exist")
+				_, err = os.Stat(destFile)
+				assert.NoError(t, err, "File should exist")
+			}),
+		)
+		NewExecutorTest(t,
+			WithName(destTask+" (up to date)"),
+			WithExecutorOptions(task.WithDir(dir)),
+			WithTask(destTask),
+		)
+	}
+}
+
+func TestStatusChecksum(t *testing.T) { // nolint:paralleltest // cannot run in parallel
+	const dir = "testdata/checksum"
+
+	tests := []struct {
+		files []string
+		task  string
+	}{
+		{[]string{"generated.txt", ".task/checksum/build"}, "build"},
+		{[]string{"generated-wildcard.txt", ".task/checksum/build-wildcard"}, "build-wildcard"},
+		{[]string{"generated.txt", ".task/checksum/build-with-status"}, "build-with-status"},
+	}
+
+	for _, test := range tests { // nolint:paralleltest // cannot run in parallel
+		for _, f := range test.files {
+			_ = os.Remove(filepathext.SmartJoin(dir, f))
+		}
+		checksumFile := filepathext.SmartJoin(dir, test.files[1])
+
+		var capturedTime time.Time
+		NewExecutorTest(t,
+			WithName(test.task+" (first run)"),
+			WithExecutorOptions(task.WithDir(dir)),
+			WithTask(test.task),
+			WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+				t.Helper()
+				for _, f := range test.files {
+					_, err := os.Stat(filepathext.SmartJoin(dir, f))
+					require.NoError(t, err)
+				}
+				// Capture the modification time, so we can ensure the
+				// checksum file is not regenerated when the hash hasn't
+				// changed.
+				s, err := os.Stat(checksumFile)
+				require.NoError(t, err)
+				capturedTime = s.ModTime()
+			}),
+		)
+		NewExecutorTest(t,
+			WithName(test.task+" (up to date)"),
+			WithExecutorOptions(task.WithDir(dir)),
+			WithTask(test.task),
+			WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+				t.Helper()
+				s, err := os.Stat(checksumFile)
+				require.NoError(t, err)
+				assert.Equal(t, capturedTime, s.ModTime())
+			}),
+		)
+	}
+}
+
+// TestStatusTimestamp is a regression test for https://github.com/go-task/task/issues/1230.
+// When using method: timestamp, deleting a generated file should cause the task to re-run,
+// not be skipped because the timestamp file is still present.
+func TestStatusTimestamp(t *testing.T) { // nolint:paralleltest // cannot run in parallel
+	const dir = "testdata/timestamp"
+	generatedFile := filepathext.SmartJoin(dir, "generated.txt")
+
+	_ = os.Remove(generatedFile)
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+
+	NewExecutorTest(t,
+		WithName("first run"),
+		WithExecutorOptions(task.WithDir(dir)),
+		WithTask("build"),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			_, err := os.Stat(generatedFile)
+			require.NoError(t, err, "generated.txt should exist after first run")
+		}),
+	)
+	NewExecutorTest(t,
+		WithName("up to date"),
+		WithExecutorOptions(task.WithDir(dir)),
+		WithTask("build"),
+	)
+
+	// Delete the generated file (simulate a clean), but leave the timestamp file.
+	require.NoError(t, os.Remove(generatedFile))
+
+	NewExecutorTest(t,
+		WithName("re-run after generated file removed"),
+		WithExecutorOptions(task.WithDir(dir)),
+		WithTask("build"),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			// This is the regression: previously the task was incorrectly
+			// skipped because the timestamp file was still present.
+			assert.NotContains(t, r.Output, "is up to date", "task should re-run when generated file is missing")
+			_, err := os.Stat(generatedFile)
+			require.NoError(t, err, "generated.txt should be recreated after third run")
+		}),
+	)
+}
+
+// TestStatusChecksumMissingGenerated is a regression test for https://github.com/go-task/task/issues/1230.
+// When using method: checksum, deleting a generated file should cause the task to re-run,
+// not be skipped because the checksum file still matches.
+func TestStatusChecksumMissingGenerated(t *testing.T) { // nolint:paralleltest // cannot run in parallel
+	const dir = "testdata/checksum"
+	generatedFile := filepathext.SmartJoin(dir, "generated.txt")
+
+	_ = os.Remove(generatedFile)
+	_ = os.RemoveAll(filepathext.SmartJoin(dir, ".task"))
+
+	NewExecutorTest(t,
+		WithName("first run"),
+		WithExecutorOptions(task.WithDir(dir)),
+		WithTask("build"),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			_, err := os.Stat(generatedFile)
+			require.NoError(t, err, "generated.txt should exist after first run")
+		}),
+	)
+	NewExecutorTest(t,
+		WithName("up to date"),
+		WithExecutorOptions(task.WithDir(dir)),
+		WithTask("build"),
+	)
+
+	// Delete the generated file (simulate a clean), but leave the checksum file.
+	require.NoError(t, os.Remove(generatedFile))
+
+	NewExecutorTest(t,
+		WithName("re-run after generated file removed"),
+		WithExecutorOptions(task.WithDir(dir)),
+		WithTask("build"),
+		WithAssert(func(t *testing.T, r *ExecutorTestResult) {
+			t.Helper()
+			// This is the regression: previously the task was incorrectly
+			// skipped because the checksum file still matched.
+			assert.NotContains(t, r.Output, "is up to date", "task should re-run when generated file is missing")
+			_, err := os.Stat(generatedFile)
+			require.NoError(t, err, "generated.txt should be recreated after third run")
+		}),
+	)
 }
