@@ -341,3 +341,67 @@ remote:
 		assert.Equal(t, []string{"github.com", "gitlab.com"}, base.Remote.TrustedHosts)
 	})
 }
+
+func TestGetConfig_RemoteHeaders(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+	_, _, localDir := setupDirs(t)
+
+	configYAML := `
+remote:
+  headers:
+    - host: gitlab.com
+      headers:
+        PRIVATE-TOKEN: '{{env "GITLAB_TOKEN"}}'
+    - host: example.com:8080
+      headers:
+        Authorization: Bearer token
+        Accept: application/yaml
+        X-Custom-Header: custom-value
+`
+	writeFile(t, localDir, ".taskrc.yml", configYAML)
+
+	cfg, err := GetConfig(localDir)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	assert.Equal(t, []ast.RemoteHeaders{
+		{Host: "gitlab.com", Headers: map[string]string{"PRIVATE-TOKEN": `{{env "GITLAB_TOKEN"}}`}}, //nolint:gosec // an env var reference, not a credential
+		{Host: "example.com:8080", Headers: map[string]string{
+			"Authorization":   "Bearer token",
+			"Accept":          "application/yaml",
+			"X-Custom-Header": "custom-value",
+		}},
+	}, cfg.Remote.Headers)
+}
+
+func TestGetConfig_RemoteHeadersMerge(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+	xdgConfigDir, homeDir, localDir := setupDirs(t)
+
+	writeFile(t, xdgConfigDir, "taskrc.yml", `
+remote:
+  headers:
+    - host: gitlab.com
+      headers:
+        PRIVATE-TOKEN: from-xdg
+        X-Extra: from-xdg
+    - host: example.com
+      headers:
+        Authorization: from-xdg
+`)
+
+	// The closer file redefines gitlab.com as a whole and leaves example.com
+	// untouched.
+	writeFile(t, homeDir, ".taskrc.yml", `
+remote:
+  headers:
+    - host: gitlab.com
+      headers:
+        JOB-TOKEN: from-home
+`)
+
+	cfg, err := GetConfig(localDir)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	assert.Equal(t, []ast.RemoteHeaders{
+		{Host: "example.com", Headers: map[string]string{"Authorization": "from-xdg"}},
+		{Host: "gitlab.com", Headers: map[string]string{"JOB-TOKEN": "from-home"}},
+	}, cfg.Remote.Headers)
+}
