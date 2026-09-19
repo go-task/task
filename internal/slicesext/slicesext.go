@@ -30,3 +30,7 @@ func Convert[T, U any](s []T, f func(T) U) []U {
 
 	return result
 }
+
+func AsAny[T any](s []T) []any {
+	return Convert(s, func(v T) any { return v })
+}
