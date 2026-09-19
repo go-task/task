@@ -115,11 +115,16 @@ homebrew_casks:
     # Binaries are not signed/notarized, so remove the quarantine attribute
     # set by Homebrew on downloaded cask artifacts to avoid Gatekeeper blocking
     # them. See https://goreleaser.com/customization/homebrew_casks/
+    #
+    # Requires goreleaser >= TODO (https://github.com/goreleaser/goreleaser/pull/7156)
+    # for `hooks.use_steps`, which uses Homebrew's non-deprecated
+    # `postflight_steps` stanza instead of `postflight`.
     hooks:
+      use_steps: true
       post:
         install: |
-          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/task"]
+          on_macos do
+            run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{staged_path}}/task"]
           end
     directory: Casks
     repository:
