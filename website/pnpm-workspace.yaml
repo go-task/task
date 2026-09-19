@@ -8,4 +8,4 @@ allowBuilds:
   unix-dgram: true
 
 patchedDependencies:
-  vitepress-plugin-llms@1.13.5: patches/vitepress-plugin-llms@1.13.5.patch
+  vitepress-plugin-llms@1.14.0: patches/vitepress-plugin-llms@1.14.0.patch
