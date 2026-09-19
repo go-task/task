@@ -1,0 +1,6 @@
+build a
+build b
+build library
+task: [service-a:build] echo "build a"
+task: [service-b:build] echo "build b"
+task: [service-x:library:build] echo "build library"

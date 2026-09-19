@@ -1,0 +1,6 @@
+task: [gen] echo main
+main
+task: [included:gen] echo included_with_yaml_extension
+included_with_yaml_extension
+task: [custom:gen] echo included_with_custom_file
+included_with_custom_file

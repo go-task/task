@@ -1,0 +1,2 @@
+task: [timeout-not-exceeded] echo "quick command"
+quick command

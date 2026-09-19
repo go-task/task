@@ -3,4 +3,4 @@ version: '3'
 tasks:
   default:
     cmds:
-      - echo "included" > file.txt
+      - echo "included"

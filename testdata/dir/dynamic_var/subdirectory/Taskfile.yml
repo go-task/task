@@ -7,13 +7,11 @@ vars:
 tasks:
   from-included-taskfile:
     cmds:
-      - echo '{{.TASKFILE_DIR}}' > from_included_taskfile.txt
-    silent: true
+      - echo '{{.TASKFILE_DIR}}'
 
   from-included-taskfile-task:
     cmds:
-      - echo '{{.TASKFILE_TASK_DIR}}' > from_included_taskfile_task.txt
-    silent: true
+      - echo '{{.TASKFILE_TASK_DIR}}'
     vars:
       TASKFILE_TASK_DIR:
         sh: basename "$(pwd)"

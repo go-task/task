@@ -1,0 +1,4 @@
+task: [bar] echo bar
+bar
+task: [foo] echo foo
+foo

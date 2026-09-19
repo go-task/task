@@ -6,4 +6,4 @@ includes:
 tasks:
   root-task:
     cmds:
-      - echo "root task" > root_task.txt
+      - echo "root task"

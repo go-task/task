@@ -1,0 +1,3 @@
+task: Task "indirect" is up to date
+task: [task-with-dep] echo "direct"
+direct

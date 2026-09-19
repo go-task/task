@@ -1,0 +1,8 @@
+task: [from-root-taskfile] echo 'subdirectory'
+subdirectory
+task: [sub:from-included-taskfile] echo 'subdirectory'
+subdirectory
+task: [sub:from-included-taskfile-task] echo 'subdirectory'
+subdirectory
+task: [from-interpolated-dir] echo 'subdirectory'
+subdirectory
