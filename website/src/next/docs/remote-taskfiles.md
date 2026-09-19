@@ -1,59 +1,124 @@
 ---
+title: Remote Taskfiles
 description:
   Guide to loading and securely using Taskfiles from HTTP and Git sources
+section: Guide
+docType: guide
 outline: deep
 ---
 
 # Remote Taskfiles
 
+Use a remote Taskfile to share tasks across projects without copying the file
+into each repository. You can call it directly or include it under a namespace.
+
 ::: danger
 
-Never run remote Taskfiles from sources that you do not trust.
+Only run remote Taskfiles from sources you trust. Their commands execute on your
+machine, just like commands from a local Taskfile.
 
 :::
 
-Task allows you to use Taskfiles which are stored in remote locations. This
-applies to both the root Taskfile (aka. Entrypoint) and also when including
-Taskfiles.
+The examples use Task's public sample, whose `hello` task prints `Hello Task!`.
+On first use, Task asks you to trust the downloaded file. Review it before
+accepting; see [trust and checksums](#security) for subsequent changes and CI.
 
-Task uses "nodes" to reference remote Taskfiles. There are a few different types
-of node which you can use:
+## Run a remote Taskfile {#specifying-a-remote-entrypoint}
+
+Pass the remote location to `--taskfile` (or `-t`). With no task name, Task runs
+the remote file's `default` task. Choose a transport below:
 
 ::: code-group
 
-```text [HTTP/HTTPS]
-https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
+```shell [HTTP/HTTPS]
+$ task --taskfile https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
+task: [hello] echo "Hello Task!"
+Hello Task!
 ```
 
-```text [Git over HTTP]
-https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
+```shell [Git over HTTP]
+$ task --taskfile 'https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main'
+task: [hello] echo "Hello Task!"
+Hello Task!
 ```
 
-```text [Git over SSH]
-git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
+```shell [Git over SSH]
+$ task --taskfile 'git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main'
+task: [hello] echo "Hello Task!"
+Hello Task!
 ```
 
 :::
 
-## Node Types
+## Include shared tasks {#including-remote-taskfiles}
+
+Set the include location to a remote URL instead of a local path. The tasks
+become available under the namespace you choose, just like
+[local includes](./guide/includes.md):
+
+::: code-group
+
+```yaml [HTTP/HTTPS]
+version: '3'
+
+includes:
+  shared: https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
+```
+
+```yaml [Git over HTTP]
+version: '3'
+
+includes:
+  shared: https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
+```
+
+```yaml [Git over SSH]
+version: '3'
+
+includes:
+  shared: git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
+```
+
+:::
+
+```shell
+$ task shared:hello
+task: [hello] echo "Hello Task!"
+Hello Task!
+```
+
+### Supply authentication {#authenticating-using-environment-variables}
+
+The Taskfile location is processed by the templating system, so you can
+reference environment variables in your URL if you need to add authentication.
+For example:
+
+```yaml
+version: '3'
+
+includes:
+  shared: https://{{.TOKEN}}@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
+```
+
+## Choose a source {#node-types}
 
 ### HTTP/HTTPS
 
 `https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml`
 
-This is the most basic type of remote node and works by downloading the file
-from the specified URL. The file must be a valid Taskfile and can be of any
-name. If a file is not found at the specified URL, Task will append each of the
-supported file names in turn until it finds a valid file. If it still does not
-find a valid Taskfile, an error is returned.
+Use a direct URL when the server exposes the Taskfile as plain text. Task
+downloads the file from that URL. The file must be a valid Taskfile and can be
+of any name. If a file is not found at the specified URL, Task will append each
+of the supported file names in turn until it finds a valid file. If it still
+does not find a valid Taskfile, an error is returned.
 
 ### Git over HTTP
 
 `https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main`
 
-This type of node works by downloading the file from a Git repository over
-HTTP/HTTPS. The first part of the URL is the base URL of the Git repository.
-This is the same URL that you would use to clone the repo over HTTP.
+Use a Git URL to select a file from a repository over HTTP/HTTPS. The first part
+of the URL is the base URL of the Git repository. This is the same URL that you
+would use to clone the repo over HTTP.
 
 - You can optionally add the path to the Taskfile in the repository by appending
   `//<path>` to the URL.
@@ -65,9 +130,9 @@ This is the same URL that you would use to clone the repo over HTTP.
 
 `git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main`
 
-This type of node works by downloading the file from a Git repository over SSH.
-The first part of the URL is the user and base URL of the Git repository. This
-is the same URL that you would use to clone the repo over SSH.
+Use an SSH Git URL when repository access depends on your SSH credentials. The
+first part of the URL is the user and base URL of the Git repository. This is
+the same URL that you would use to clone the repo over SSH.
 
 To use Git over SSH, you need to make sure that your SSH agent has your private
 SSH keys added so that they can be used during authentication.
@@ -78,119 +143,24 @@ SSH keys added so that they can be used during authentication.
   `?ref=<ref>` to the end of the URL. If you omit a reference, the default
   branch will be used.
 
-Task has an example remote Taskfile in our repository that you can use for
-testing and that we will use throughout this document:
+## Locate files and directories {#special-variables}
 
-```yaml
-version: '3'
-
-tasks:
-  default:
-    cmds:
-      - task: hello
-
-  hello:
-    cmds:
-      - echo "Hello Task!"
-```
-
-## Specifying a remote entrypoint
-
-By default, Task will look for one of the supported file names on your local
-filesystem. If you want to use a remote file instead, you can pass its URI into
-the `--taskfile`/`-t` flag just like you would to specify a different local
-file. For example:
-
-::: code-group
-
-```shell [HTTP/HTTPS]
-$ task --taskfile https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
-task: [hello] echo "Hello Task!"
-Hello Task!
-```
-
-```shell [Git over HTTP]
-$ task --taskfile https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
-task: [hello] echo "Hello Task!"
-Hello Task!
-```
-
-```shell [Git over SSH]
-$ task --taskfile git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
-task: [hello] echo "Hello Task!"
-Hello Task!
-```
-
-:::
-
-## Including remote Taskfiles
-
-Including a remote file works exactly the same way that including a local file
-does. You just need to replace the local path with a remote URI. Any tasks in
-the remote Taskfile will be available to run from your main Taskfile.
-
-::: code-group
-
-```yaml [HTTP/HTTPS]
-version: '3'
-
-includes:
-  my-remote-namespace: https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
-```
-
-```yaml [Git over HTTP]
-version: '3'
-
-includes:
-  my-remote-namespace: https://github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
-```
-
-```yaml [Git over SSH]
-version: '3'
-
-includes:
-  my-remote-namespace: git@github.com/go-task/task.git//website/src/public/Taskfile.yml?ref=main
-```
-
-:::
-
-```shell
-$ task my-remote-namespace:hello
-task: [hello] echo "Hello Task!"
-Hello Task!
-```
-
-### Authenticating using environment variables
-
-The Taskfile location is processed by the templating system, so you can
-reference environment variables in your URL if you need to add authentication.
-For example:
-
-```yaml
-version: '3'
-
-includes:
-  my-remote-namespace: https://{{.TOKEN}}@raw.githubusercontent.com/my-org/my-repo/main/Taskfile.yml
-```
-
-## Special Variables
-
-The file-path [special variables](../docs/reference/templating.md#file-paths)
-behave differently when a Taskfile is loaded from a remote source, because there
-is no local file or directory that corresponds 1:1 to the Taskfile:
+The file-path [special variables](./reference/templating.md#file-paths) behave
+differently when a Taskfile is loaded from a remote source, because there is no
+local file or directory that corresponds 1:1 to the Taskfile:
 
 | Variable                     | Value when loaded remotely                                                                                                                              |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `TASKFILE` / `ROOT_TASKFILE` | The original URL, unchanged                                                                                                                             |
-| `TASKFILE_DIR` / `ROOT_DIR`  | Empty string — a directory variable cannot point to a URL                                                                                               |
+| `TASKFILE_DIR` / `ROOT_DIR`  | Empty string, a directory variable cannot point to a URL                                                                                                |
 | `TASK_DIR`                   | Resolved against `USER_WORKING_DIR` (relative `dir:` → joined with `USER_WORKING_DIR`, empty `dir:` → `USER_WORKING_DIR`, absolute `dir:` → kept as-is) |
 
 If a remote Taskfile includes a local Taskfile (or vice-versa), each variable
 reflects the source of the Taskfile it refers to.
 
-## Security
+## Review trust and changes {#security}
 
-### Automatic checksums
+### Review changed files {#automatic-checksums}
 
 Running commands from sources that you do not control is always a potential
 security risk. For this reason, we have added some automatic checks when using
@@ -223,7 +193,7 @@ in Task. You can also configure trusted hosts in your
    containing a commit hash) to prevent Task from automatically accepting a
    prompt that says a remote Taskfile has changed.
 
-### Manual checksum pinning
+### Pin reviewed contents {#manual-checksum-pinning}
 
 Alternatively, if you expect the contents of your remote files to be a constant
 value, you can pin the checksum of the included file instead:
@@ -233,14 +203,15 @@ version: '3'
 
 includes:
   included:
-    taskfile: https://taskfile.dev
-    checksum: c153e97e0b3a998a7ed2e61064c6ddaddd0de0c525feefd6bba8569827d8efe9
+    taskfile: https://raw.githubusercontent.com/go-task/task/main/website/src/public/Taskfile.yml
+    checksum: '<sha256-of-reviewed-file>'
 ```
 
-This will disable the automatic checksum prompts discussed above. However, if
-the checksums do not match, Task will exit immediately with an error. When
-setting this up for the first time, you may not know the correct value of the
-checksum. There are a couple of ways you can obtain this:
+Replace the placeholder with the SHA-256 checksum of the file you reviewed. A
+pinned checksum disables the automatic checksum prompts discussed above.
+However, if the checksums do not match, Task will exit immediately with an
+error. When setting this up for the first time, you may not know the correct
+value of the checksum. There are a couple of ways you can obtain this:
 
 1. Add the include normally without the `checksum` key. The first time you run
    the included Taskfile, a `.task/remote` temporary directory is created. Find
@@ -253,7 +224,7 @@ checksum. There are a couple of ways you can obtain this:
    will report the incorrect expected checksum and the actual checksum. You can
    copy the actual checksum and replace your temporary random value.
 
-### TLS
+### Use TLS {#tls}
 
 Task currently supports both `http` and `https` URLs. However, the `http`
 requests will not execute by default unless you run the task with the
@@ -262,7 +233,7 @@ Taskfile that is downloaded via an unencrypted connection. Sources that are not
 protected by TLS are vulnerable to man-in-the-middle attacks and should be
 avoided unless you know what you are doing.
 
-#### Custom Certificates
+#### Add certificates {#custom-certificates}
 
 If your remote Taskfiles are hosted on a server that uses a custom CA
 certificate (e.g., a corporate internal server), you can specify the CA
@@ -295,7 +266,17 @@ openssl rsa -in encrypted.key -out decrypted.key
 These options can also be configured in the
 [configuration file](#configuration).
 
-## Caching & Running Offline
+## Reuse cached files {#caching-running-offline}
+
+| What do you need?                            | Option          |
+| -------------------------------------------- | --------------- |
+| Reuse a downloaded copy for one hour         | `--expiry 1h`   |
+| Use an existing cache without network access | `--offline`     |
+| Fetch a fresh copy now                       | `--download`    |
+| Remove cached remote files                   | `--clear-cache` |
+
+For example, run `task --offline shared:hello` after downloading and trusting
+the include above. Offline mode needs an existing cached copy.
 
 Whenever you run a remote Taskfile, the latest copy will be downloaded from the
 internet and cached locally. This cached file will be used for all future
@@ -308,8 +289,7 @@ version. However, the cache expiry duration can be modified by setting the
 If for any reason you lose access to the internet or you are running Task in
 offline mode (via the `--offline` flag or `TASK_REMOTE_OFFLINE` environment
 variable), Task will run any available cached files _even if they are expired_.
-This means that you should never be stuck without the ability to run your tasks
-as long as you have downloaded a remote Taskfile at least once.
+An uncached remote file cannot run offline.
 
 By default, Task will timeout requests to download remote files after 10 seconds
 and look for a cached copy instead. This timeout can be configured by setting
@@ -328,7 +308,7 @@ the `--download` flag.
 
 You can use the `--clear-cache` flag to clear all cached remote files.
 
-## Configuration
+## Set remote defaults {#configuration}
 
 It is possible to configure the default behavior of remote Taskfiles using
 configuration. Check out the following references for more information on how to
