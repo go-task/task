@@ -16,7 +16,7 @@ export const guideAnchors: Record<string, string> = {
   task: '/docs/guide/environment#task',
   'env-files': '/docs/guide/environment#env-files',
   'including-other-taskfiles': '/docs/guide/includes',
-  'remote-taskfiles': '/docs/guide/includes#remote-taskfiles',
+  'remote-taskfiles': '/docs/remote-taskfiles#including-remote-taskfiles',
   'os-specific-taskfiles': '/docs/guide/includes#os-specific-taskfiles',
   'directory-of-included-taskfile':
     '/docs/guide/includes#directory-of-included-taskfile',
