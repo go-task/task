@@ -1,5 +1,6 @@
 # Dependencies
 /node_modules
+/docsearch-export/
 
 npm-debug.log*
 yarn-debug.log*
