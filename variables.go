@@ -191,6 +191,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 
 	new.Env = ast.NewVars()
 	new.Env.Merge(templater.ReplaceVars(e.Taskfile.Env, cache), nil)
+	new.Env.Merge(templater.ReplaceVars(origTask.IncludedDotenvEnv, cache), nil)
 	new.Env.Merge(templater.ReplaceVars(dotenvEnvs, cache), nil)
 	new.Env.Merge(templater.ReplaceVars(origTask.Env, cache), nil)
 	if evaluateShVars {
