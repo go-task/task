@@ -1,0 +1,8 @@
+version: '3'
+
+includes:
+  group: ./group
+
+tasks:
+  build:
+    deps: [group:build]

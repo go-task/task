@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  build:
+    run: once
+    deps: [':setup']
+    cmds:
+      - echo "build library"
