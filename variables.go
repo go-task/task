@@ -170,6 +170,25 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 		new.Prefix = new.Task
 	}
 
+	// Sources and generates are resolved after the task directory and glob
+	// templates are compiled. Keep the fast compilation path filesystem-free;
+	// it is used for metadata and platform checks before the task is run.
+	taskSources := []string{}
+	taskGenerates := []string{}
+	if evaluateShVars {
+		taskSources, err = expandTaskGlobs(new.Dir, new.Sources, gitignore)
+		if err != nil {
+			return nil, err
+		}
+		taskGenerates, err = expandTaskGlobs(new.Dir, new.Generates, gitignore)
+		if err != nil {
+			return nil, err
+		}
+	}
+	vars.Set("TASK_SOURCES", ast.Var{Value: taskSources})
+	vars.Set("TASK_GENERATES", ast.Var{Value: taskGenerates})
+	cache.ResetCache()
+
 	dotenvEnvs := ast.NewVars()
 	if len(new.Dotenv) > 0 {
 		for _, dotEnvPath := range new.Dotenv {
@@ -371,6 +390,20 @@ func resolvedAsAnySlice(v any) ([]any, bool) {
 	return nil, false
 }
 
+func expandTaskGlobs(dir string, globs []*ast.Glob, gitignore bool) ([]string, error) {
+	list, err := fingerprint.Globs(dir, globs, gitignore)
+	if err != nil {
+		return nil, err
+	}
+	for i, path := range list {
+		list[i], err = filepath.Rel(dir, path)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
 func itemsFromFor(
 	f *ast.For,
 	dir string,
@@ -400,29 +433,17 @@ func itemsFromFor(
 	}
 	// Get the list from the task sources
 	if f.From == "sources" {
-		glist, err := fingerprint.Globs(dir, sources, gitignore)
+		glist, err := expandTaskGlobs(dir, sources, gitignore)
 		if err != nil {
 			return nil, nil, err
-		}
-		// Make the paths relative to the task dir
-		for i, v := range glist {
-			if glist[i], err = filepath.Rel(dir, v); err != nil {
-				return nil, nil, err
-			}
 		}
 		values = asAnySlice(glist)
 	}
 	// Get the list from the task generates
 	if f.From == "generates" {
-		glist, err := fingerprint.Globs(dir, generates, gitignore)
+		glist, err := expandTaskGlobs(dir, generates, gitignore)
 		if err != nil {
 			return nil, nil, err
-		}
-		// Make the paths relative to the task dir
-		for i, v := range glist {
-			if glist[i], err = filepath.Rel(dir, v); err != nil {
-				return nil, nil, err
-			}
 		}
 		values = asAnySlice(glist)
 	}
