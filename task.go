@@ -147,6 +147,12 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		return nil
 	}
 
+	// Create a statically resolvable task directory before evaluating dynamic
+	// variables, since those variables use the task directory as their cwd.
+	if err := e.mkdir(t); err != nil {
+		e.Logger.Errf(logger.Red, "task: cannot make directory %q: %v\n", t.Dir, err)
+	}
+
 	// Check required vars early (before template compilation) if we can't prompt.
 	// This gives a clear "missing required variables" error instead of a template error.
 	if !e.canPrompt() {
