@@ -12,6 +12,15 @@
   include URL, where it would leak into error messages and the confirmation
   prompt (#2329 by @vmaerten).
 
+- Added a `status` output mode, which prints one line per task instead of its
+  output: whether the task ran, was skipped as up to date, succeeded or failed,
+  and how long it took. Output from a task that succeeds is hidden, and a task
+  that fails shows all of it. It works under `--dry` too, so
+  `task --dry --output status <name>` prints the whole plan and marks the steps
+  that are already up to date. The line is labelled with the task's `prefix`,
+  with the control characters removed so that a `prefix` cannot write over a
+  line the mode already printed (#3049 by @jcmuller).
+
 ### 🐛 Fixes
 
 - Fixed a bug on Windows where watching source paths did not work as expected
