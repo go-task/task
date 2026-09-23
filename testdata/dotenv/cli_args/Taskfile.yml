@@ -1,0 +1,8 @@
+version: '3'
+
+dotenv: ['.env']
+
+tasks:
+  default:
+    cmds:
+      - echo "args={{.CLI_ARGS}}"
