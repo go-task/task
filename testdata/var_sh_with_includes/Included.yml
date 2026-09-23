@@ -1,0 +1,6 @@
+version: '3'
+
+tasks:
+  noop:
+    cmds:
+      - "true"
