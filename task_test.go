@@ -2237,6 +2237,25 @@ func TestTaskDotenvParseErrorMessage(t *testing.T) {
 	require.ErrorContains(t, err, expected)
 }
 
+func TestDotenvAvailableToEnvTemplate(t *testing.T) {
+	// Regression for https://github.com/go-task/task/issues/3048:
+	// {{ env "NAME" }} must resolve variables loaded from dotenv the same way
+	// shell-provided environment variables do.
+	t.Parallel()
+
+	tt := fileContentTest{
+		Dir:       "testdata/dotenv_env_template",
+		Target:    "try-vars",
+		TrimSpace: true,
+		Files: map[string]string{
+			"out_env.txt":      "Token from env vars 'super-secure-stuff'",
+			"out_sh.txt":       "Token from task vars 'super-secure-stuff'",
+			"out_template.txt": "Token from env template 'super-secure-stuff'",
+		},
+	}
+	tt.Run(t)
+}
+
 func TestTaskDotenv(t *testing.T) {
 	t.Parallel()
 

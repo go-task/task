@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"maps"
+	"os"
 	"strings"
 
 	"github.com/go-task/template"
@@ -31,6 +32,34 @@ func (r *Cache) Err() error {
 	return r.err
 }
 
+// envFunc returns a template function that resolves environment variables the
+// same way shell-provided env does, while also seeing values that Task has
+// loaded into the template data (notably dotenv / Taskfile env). Process
+// environment always wins when the key is set, matching env.GetFromVars.
+func envFunc(data map[string]any) func(string) string {
+	return func(key string) string {
+		if v, ok := os.LookupEnv(key); ok {
+			return v
+		}
+		if data != nil {
+			if v, ok := data[key]; ok {
+				if s, ok := v.(string); ok {
+					return s
+				}
+			}
+		}
+		return ""
+	}
+}
+
+// funcsForData returns the template FuncMap with env bound to the current
+// template data so {{ env "NAME" }} can resolve dotenv-backed variables.
+func funcsForData(data map[string]any) template.FuncMap {
+	funcs := maps.Clone(templateFuncs)
+	funcs["env"] = envFunc(data)
+	return funcs
+}
+
 func ResolveRef(ref string, cache *Cache) any {
 	// If there is already an error, do nothing
 	if cache.err != nil {
@@ -45,7 +74,7 @@ func ResolveRef(ref string, cache *Cache) any {
 	if ref == "." {
 		return cache.cacheMap
 	}
-	t, err := template.New("resolver").Funcs(templateFuncs).Parse(fmt.Sprintf("{{%s}}", ref))
+	t, err := template.New("resolver").Funcs(funcsForData(cache.cacheMap)).Parse(fmt.Sprintf("{{%s}}", ref))
 	if err != nil {
 		cache.err = err
 		return nil
@@ -93,7 +122,7 @@ func ReplaceWithExtra[T any](v T, cache *Cache, extra map[string]any) T {
 		if !strings.Contains(v, "{{") {
 			return v, nil
 		}
-		tpl, err := template.New("").Funcs(templateFuncs).Parse(v)
+		tpl, err := template.New("").Funcs(funcsForData(data)).Parse(v)
 		if err != nil {
 			return v, err
 		}

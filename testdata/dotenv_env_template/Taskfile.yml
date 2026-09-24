@@ -1,0 +1,16 @@
+version: "3"
+
+dotenv:
+  - .env
+
+tasks:
+  try-vars:
+    silent: true
+    vars:
+      TOKEN_VAR:
+        sh: echo ${DOTENV_ENV_TEMPLATE_TOKEN}
+      TOKEN_VAR_TEMPLATE: '{{ env "DOTENV_ENV_TEMPLATE_TOKEN" }}'
+    cmds:
+      - echo "Token from env vars '${DOTENV_ENV_TEMPLATE_TOKEN}'" > out_env.txt
+      - echo "Token from task vars '{{ .TOKEN_VAR }}'" > out_sh.txt
+      - echo "Token from env template '{{ .TOKEN_VAR_TEMPLATE }}'" > out_template.txt
