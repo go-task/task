@@ -51,12 +51,20 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 		}
 	}
 
+	// Format bash options into a slice that mvdan/sh understands
+	var bashOpts []string
+	if len(opts.BashOpts) > 0 {
+		bashOpts = append(bashOpts, "-s")
+		bashOpts = append(bashOpts, opts.BashOpts...)
+	}
+
 	environ := opts.Env
 	if len(environ) == 0 {
 		environ = os.Environ()
 	}
 
 	r, err := interp.New(
+		interp.BashOpts(bashOpts...),
 		interp.Params(params...),
 		interp.Env(expand.ListEnviron(environ...)),
 		interp.ExecHandlers(execHandlers()...),
@@ -69,18 +77,6 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 	}
 
 	parser := syntax.NewParser()
-
-	// Run any shopt commands
-	if len(opts.BashOpts) > 0 {
-		shoptCmdStr := fmt.Sprintf("shopt -s %s", strings.Join(opts.BashOpts, " "))
-		shoptCmd, err := parser.Parse(strings.NewReader(shoptCmdStr), "")
-		if err != nil {
-			return err
-		}
-		if err := r.Run(ctx, shoptCmd); err != nil {
-			return err
-		}
-	}
 
 	// Run the user-defined command
 	p, err := parser.Parse(strings.NewReader(opts.Command), "")
