@@ -21,6 +21,13 @@
   instead of retrying every default Taskfile name and concluding that no
   Taskfile exists (#2329 by @vmaerten).
 
+- `task --completion <shell>` now serves a new completion engine that unifies
+  Bash, Fish, Zsh, Nushell and PowerShell behind a single `task __complete`
+  command, so every shell offers the same suggestions: task names, aliases,
+  flags, flag values and per-task CLI variables. The Zsh `show-aliases` and
+  `verbose` zstyles keep working, now backed by the `--no-aliases` and
+  `--no-descriptions` completion flags (#2897 by @vmaerten).
+
 ### 📦 Package API
 
 - Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
