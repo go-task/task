@@ -28,6 +28,11 @@
   window, and is now tested against 1.26 and 1.27. This only affects projects
   importing Task as a Go module (#2920 by @vmaerten).
 
+### Other
+
+- Refactored some functional options to always return a concrete type instead of
+  an interface and moved options into their own file (#3037 by @pd93).
+
 ## v3.53.1 - 2026-08-18
 
 ### 🚀 Features
