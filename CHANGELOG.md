@@ -14,6 +14,8 @@
 
 ### 🐛 Fixes
 
+- Fixed tasks cancelled by the user returning exit code `201` instead of `205`
+  (#3040, #3041 by @r3wretrhy).
 - Fixed a bug on Windows where watching source paths did not work as expected
   (#2863, #3028 by @pd93).
 - Fixed a remote Taskfile whose server refuses the credentials being reported as
