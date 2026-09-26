@@ -1,0 +1,2 @@
+task: [default] echo "INCLUDE1='$INCLUDE1' INCLUDE2='$INCLUDE2'"
+INCLUDE1='from_include1' INCLUDE2='from_include2'

@@ -4,4 +4,4 @@ includes:
   'three': ./three/Taskfile.yml
 
 tasks:
-  default: echo two > called_two.txt
+  default: echo two

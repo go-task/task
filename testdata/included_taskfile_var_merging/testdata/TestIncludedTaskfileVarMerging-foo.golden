@@ -1,0 +1,2 @@
+foo
+{{.TEST_DIR}}/testdata/included_taskfile_var_merging/foo

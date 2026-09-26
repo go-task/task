@@ -1,0 +1,9 @@
+task: [task-2] echo 'cmd ran'
+cmd ran
+task: [task-2] exit 1
+task: [task-2] echo 'failing' && exit 2
+failing
+echo ran
+task-1 ran successfully
+task: [task-1] echo 'task-1 ran successfully'
+task-1 ran successfully

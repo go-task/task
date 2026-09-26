@@ -7,4 +7,4 @@ includes:
 tasks:
   included:
     cmds:
-      - echo "shadowed" > file.txt
+      - echo "shadowed"

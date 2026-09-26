@@ -1,0 +1,4 @@
+task: [indirect] echo "indirect"
+indirect
+task: [task-with-dep] echo "direct"
+direct

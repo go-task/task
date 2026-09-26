@@ -1,0 +1,8 @@
+task: "parent-with-timeout" started
+task: [parent-with-timeout] echo 'parent completed'
+parent completed
+task: "parent-with-timeout" finished
+task: "slow-cleanup" started
+task: [slow-cleanup] sleep 1 && echo 'cleanup completed'
+task: "slow-cleanup" failed: context deadline exceeded
+task: ignored error in deferred cmd: task: [parent-with-timeout] command timeout exceeded (100ms)
