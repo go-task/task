@@ -2,10 +2,10 @@
 # Runtimes
 go = "1.27.1"
 node = "24"
-pnpm = "12.4.2"
+pnpm = "12.6.0"
 
 # Dev tools
-golangci-lint = "2.13.2"
+golangci-lint = "2.14.0"
 mockery = "3.8.0"
 gotestsum = "latest"
 goreleaser = "2.18.2"
