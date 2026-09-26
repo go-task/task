@@ -1,0 +1,11 @@
+version: '3'
+
+# run_when_changed, included one level deeper, so its two paths to the
+# library diverge below the outermost namespace.
+includes:
+  group: ../run_when_changed
+
+tasks:
+  start:
+    cmds:
+      - task: group:start
