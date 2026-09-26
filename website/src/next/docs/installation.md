@@ -718,11 +718,3 @@ $env.config.completions.external.completer = {|spans|
 Two engine directives behave differently under Nushell by design: it never
 appends a space after an external completion (so `NoSpace` is a no-op) and never
 re-sorts the results (so `KeepOrder` is always honoured).
-
-### Legacy completion scripts
-
-Before the engine, every shell carried its own hand-written completion script,
-each with its own idea of what to suggest. Those scripts are still shipped and
-available through `task --legacy-completion <shell>`, as an escape hatch should
-the engine misbehave in your setup. They are deprecated, will not receive further
-fixes, and will be removed in a future release.
