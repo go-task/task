@@ -209,10 +209,6 @@ task --completion nu | save --force ($nu.data-dir | path join "vendor/autoload/t
 The [installation docs][install] cover saving scripts to completion directories,
 Nushell's external completer and the Zsh `verbose` and `show-aliases` settings.
 
-If the engine misbehaves in your setup, `task --legacy-completion <shell>` still
-generates the old script. Those scripts are deprecated and will be removed in a
-future release.
-
 ## Feedback
 
 Please tell us how it behaves in your shell. If a suggestion is missing or
