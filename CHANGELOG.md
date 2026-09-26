@@ -16,7 +16,6 @@
 
 - Fixed a bug on Windows where watching source paths did not work as expected
   (#2863, #3028 by @pd93).
-
 - Fixed a remote Taskfile whose server refuses the credentials being reported as
   a missing Taskfile. A `401` now stops the search and reports the status code,
   instead of retrying every default Taskfile name and concluding that no
@@ -32,6 +31,8 @@
 
 - Refactored some functional options to always return a concrete type instead of
   an interface and moved options into their own file (#3037 by @pd93).
+- Refactored the execext package to use mvdan/sh's new BashOpts API (#3035 by
+  @pd93).
 
 ## v3.53.1 - 2026-08-18
 
