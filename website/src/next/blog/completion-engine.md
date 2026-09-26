@@ -21,13 +21,14 @@ contains and what flags Task accepts. Over the years, they drifted.
 
 <!-- more -->
 
-[v3.4X.0][release] ships a new completion engine that replaces all five with a
-single source of truth. It is opt-in for now. Let me show you what it fixes.
+[Task v3.54.0][release] brings a shared completion engine to Bash, Zsh, Fish,
+PowerShell and Nushell. It is the default behind `task --completion <shell>`.
+Let me show you what it fixes.
 
 ## The same TAB, five different answers
 
-Ask Task to complete the value of `--output` and the answer depends on where you
-are typing:
+With the old scripts, asking Task to complete the value of `--output` could
+produce different answers depending on the shell:
 
 ```shell
 # bash, zsh, fish
@@ -42,53 +43,44 @@ build  deploy
 PowerShell had no idea `--output` takes a value, so it fell back to listing task
 names where a value was expected.
 
-Change directory and things get worse:
+The differences also affected which Taskfile was read:
 
 ```shell
 $ task --dir ./sub <TAB>
 ```
 
-Zsh, Fish and PowerShell answer with the tasks of the _current_ directory, since
-none of them looked at `--dir` before asking Task for a task list. Bash and
-Nushell get it right.
+The old Zsh, Fish and PowerShell scripts suggested tasks from the _current_
+directory, since none of them passed `--dir` along when asking Task for a task
+list. Bash and Nushell handled it correctly.
 
 Behind these symptoms was one structural problem: the logic lived in the
-scripts. Every Task flag was hand-copied into five files, with five sets of
-descriptions that slowly diverged, so adding a flag meant patching five scripts
-and forgetting at least one. And to learn about your tasks, the scripts parsed
-the output of `--list-all`, which is meant to be read by a human. Here is what
-the Fish completion had to do:
+scripts. Several scripts maintained their own lists of flags and descriptions,
+so adding a flag meant updating each of them. Some also parsed the
+human-readable output of `--list-all` to learn about your tasks. Here is part of
+what the Fish completion had to do:
 
 ```fish
 sed -e '1d; s/\* \(.*\):[[:space:]]\{2,\}\(.*\)[[:space:]]\{2,\}(\(aliases.*\))/\1\t\2\t\3/'
 ```
 
-Reformatting a line of `task --list-all` was a breaking change nobody could see
-coming.
+Even reformatting a line of `task --list-all` could break those completions.
 
 ## One engine instead of five scripts
 
-The scripts no longer decide anything. They hand the command line over to a new
-hidden `task __complete` command and print back whatever it returns. All the
-knowledge about your Taskfile lives in the binary now, in one place.
+The new scripts hand the command line over to a hidden `task __complete`
+command. The binary returns suggestions and instructions for the shell, such as
+whether to offer files or preserve the order of the results.
 
-The protocol is the one [cobra][cobra] uses: one line per suggestion, followed
-by a directive telling the shell what to do with the result, such as "do not add
-a space after this" or "keep my order". Reusing it means we inherit years of
-shell edge cases someone else already ran into, and a future move to cobra stays
-cheap.
-
-What is left in each wrapper is the part that genuinely differs between shells:
-how to read the words under the cursor, and how to feed suggestions back. No
-flag list, no `sed`, no regex over human output.
+Each wrapper still handles the details of its shell: reading the words under the
+cursor, quoting values and displaying suggestions. Task names, required
+variables and flags now come from one implementation in the binary.
 
 ## What this unlocks
 
 ### Completing required variables
 
-This is the one I wanted for a long time. A static script could never know that
-a task has [required variables][requires], let alone which values they accept.
-The engine does:
+This is the one I wanted for a long time. The old scripts did not suggest a
+task's [required variables][requires] or their allowed values. The engine does:
 
 ```yaml
 version: '3'
@@ -111,9 +103,19 @@ ENVIRONMENT=dev  ENVIRONMENT=staging  ENVIRONMENT=prod  REGION=
 ```
 
 Variables with an `enum` give you the allowed values directly. Variables without
-one give you `VAR=` with the cursor ready for typing. The order of your
-`requires` block is preserved instead of being alphabetically sorted by the
-shell.
+one give you `VAR=`. The engine returns these suggestions in the order of your
+`requires` block.
+
+Assignments already on the command line are left out of the suggestions:
+
+```shell
+$ task deploy ENVIRONMENT=prod <TAB>
+REGION=
+```
+
+Once both variables are supplied, completion offers task names again so you can
+add another task to the same command. When several tasks are already named, the
+engine combines their required variables without suggesting a name twice.
 
 Enums defined by reference work too:
 
@@ -132,81 +134,96 @@ tasks:
             ref: .ALLOWED_ENVS
 ```
 
-That is the same resolution the interactive prompt uses, which I wrote about in
-[a previous post][prompt-post]. Completion and prompting now agree on what a
-valid value is.
+This uses the same enum resolver as the [interactive prompt][prompt-post], with
+one important limit: completion does not run `sh:` variables. If an enum needs a
+shell command to produce its values, completion offers `ENVIRONMENT=` instead.
 
 ### Everything else, everywhere
 
-Since there is only one implementation left, a fix lands in every shell at once.
-Flag values, aliases and flag descriptions are identical whichever shell you
-type into. `--dir`, `--taskfile` and `--global` are honoured before the Taskfile
-is even read, so completing inside another directory works. Completing
-`--taskfile` filters on `.yml` and `.yaml`.
+All five shells now get their task names, aliases, flags and flag values from
+the engine. `--dir`, `--taskfile` and `--global` are honoured when loading the
+Taskfile, so completing inside another directory works. Completing `--taskfile`
+offers `.yml` and `.yaml` files, plus directories you can navigate into.
 
 Flags gated behind an [experiment][experiments] are another good example. They
 are read from Task's own flag set at the moment you press TAB, so they show up
-exactly when the experiment is enabled. Before that, the shells either forked a
-`task --experiments | grep` on every keystroke, or, in Nushell, offered them
-unconditionally because the command signature was static.
+when the experiment is enabled. The wrappers no longer need separate flag lists
+or their own checks of `task --experiments`.
+
+The suggestions are shared, but the shells still control how they are inserted
+and displayed. For example, PowerShell can add a space after `VAR=`, older Bash
+versions may sort the results, and Nushell does not append a trailing space.
 
 ## Completions should never surprise you
 
 Completion runs on a keystroke, so it is allowed to do very little:
 
-- No network access, even when your Taskfile has remote `includes:`. An uncached
-  remote Taskfile used to freeze the shell until the 10 second timeout expired.
-- Nothing is read from stdin, so no prompt can ever block your terminal.
+- No remote Taskfile downloads. Completion uses local files and cached remote
+  Taskfiles. If an uncached include prevents the Taskfile from loading, task
+  suggestions are unavailable until it has been fetched by a normal Task run.
+- Nothing is read from stdin. A Taskfile supplied with `--taskfile -` is skipped
+  during completion.
 - No `sh:` variable is evaluated. Pressing TAB never runs a command from your
   Taskfile.
 - A broken or missing Taskfile still leaves you with flag completion.
 
-## Try it today
+## Load the new completions
 
-The engine is opt-in. Swap `--completion` for `--new-completion` in whatever you
-have in your shell config:
+Starting with Task v3.54.0, `--completion` generates the new wrappers. If your
+shell configuration already runs that command at startup, restart your shell
+after upgrading. If you saved a completion script to a file, regenerate it with
+the updated binary.
+
+Here are the startup commands for each shell:
 
 ::: code-group
 
 ```shell [bash]
 # ~/.bashrc
-eval "$(task --new-completion bash)"
+eval "$(task --completion bash)"
 ```
 
 ```shell [zsh]
 # ~/.zshrc
-eval "$(task --new-completion zsh)"
+eval "$(task --completion zsh)"
 ```
 
 ```shell [fish]
 # ~/.config/fish/config.fish
-task --new-completion fish | source
+task --completion fish | source
 ```
 
 ```powershell [powershell]
-# $PROFILE\Microsoft.PowerShell_profile.ps1
-Invoke-Expression (&task --new-completion powershell | Out-String)
+# Add to your PowerShell profile ($PROFILE)
+Invoke-Expression (&task --completion powershell | Out-String)
+```
+
+```nu [nushell]
+# Add to config.nu; completions are loaded in the next shell
+mkdir ($nu.data-dir | path join "vendor/autoload")
+task --completion nu | save --force ($nu.data-dir | path join "vendor/autoload/task-completions.nu")
 ```
 
 :::
 
-`--completion` keeps serving the old scripts, so nothing changes for you until
-you ask for it. Once we are confident the new engine behaves well everywhere, it
-will become what `--completion` returns. The [installation docs][install] cover
-Nushell and the Zsh `verbose` and `show-aliases` zstyles, which still work.
+The [installation docs][install] cover saving scripts to completion directories,
+Nushell's external completer and the Zsh `verbose` and `show-aliases` settings.
+
+If the engine misbehaves in your setup, `task --legacy-completion <shell>` still
+generates the old script. Those scripts are deprecated and will be removed in a
+future release.
 
 ## Feedback
 
-Please tell us how it behaves in your shell. That is exactly where the remaining
-surprises are, and a report costs us much less than a bug found after we flip
-the default. You can find us on our [Discord server][discord] or [open an
-issue][gh-issue].
+Please tell us how it behaves in your shell. If a suggestion is missing or
+inserted incorrectly, include your Task version, shell version and a small
+Taskfile that reproduces it. You can find us on our [Discord server][discord] or
+[open an issue][gh-issue].
 
-[release]: https://github.com/go-task/task/releases/tag/v3.4X.0
-[cobra]: https://github.com/spf13/cobra
+[release]: https://github.com/go-task/task/releases/tag/v3.54.0
 [requires]: /docs/reference/schema#requires
 [prompt-post]: /blog/if-and-variable-prompt
 [experiments]: /docs/experiments/
-[install]: /docs/installation#trying-the-new-completion-engine-experimental
+[install]: /docs/installation#setup-completions
 [discord]: https://discord.com/invite/6TY36E39UK
 [gh-issue]: https://github.com/go-task/task/issues
