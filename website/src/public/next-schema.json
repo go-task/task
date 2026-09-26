@@ -183,7 +183,7 @@
           "default": false
         },
         "prefix": {
-          "description": "Defines a string to prefix the output of tasks running in parallel. Only used when the output mode is `prefixed`.",
+          "description": "Defines a label for this task in the output. Only used when the output mode is `prefixed`, which prefixes each output line with it, or `status`, which names the task with it. Defaults to the task name.",
           "type": "string"
         },
         "ignore_error": {
@@ -688,7 +688,7 @@
     },
     "outputString": {
       "type": "string",
-      "enum": ["interleaved", "prefixed", "group"],
+      "enum": ["interleaved", "prefixed", "group", "status"],
       "default": "interleaved"
     },
     "outputObject": {

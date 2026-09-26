@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  foo:
+    prefix: foobar
+    status:
+      - exit 0
