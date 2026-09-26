@@ -237,6 +237,16 @@ tasks:
 - **Type**: `string`
 - **Description**: Absolute path where the task is executed
 
+#### `TASK_SOURCES`
+
+- **Type**: `[]string`
+- **Description**: Files matched by the current task's `sources`, relative to `TASK_DIR`
+
+#### `TASK_GENERATES`
+
+- **Type**: `[]string`
+- **Description**: Existing files matched by the current task's `generates`, relative to `TASK_DIR`
+
 #### `USER_WORKING_DIR`
 
 - **Type**: `string`
