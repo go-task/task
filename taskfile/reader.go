@@ -42,6 +42,7 @@ type (
 	// [ast.TaskfileGraph] from them.
 	Reader struct {
 		graph               *ast.TaskfileGraph
+		automaticOverride   bool
 		insecure            bool
 		download            bool
 		offline             bool
@@ -156,6 +157,11 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 	if err != nil {
 		return err
 	}
+	if local, ok := node.(*FileNode); ok && node.Parent() == nil && r.automaticOverride {
+		if err := r.readAutomaticOverride(local, vertex.Taskfile); err != nil {
+			return err
+		}
+	}
 
 	// Create an error group to wait for all included Taskfiles to be read
 	var g errgroup.Group
@@ -256,8 +262,18 @@ func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error)
 		return nil, err
 	}
 
+	return decodeTaskfile(b, node.Location(), false)
+}
+
+func decodeTaskfile(b []byte, location string, override bool) (*ast.Taskfile, error) {
 	var tf ast.Taskfile
-	if err := yaml.Unmarshal(b, &tf); err != nil {
+	var err error
+	if override {
+		err = yaml.Unmarshal(b, (*taskfileOverride)(&tf))
+	} else {
+		err = yaml.Unmarshal(b, &tf)
+	}
+	if err != nil {
 		// Decode the taskfile and add the file info the any errors
 		if taskfileDecodeErr, ok := errors.AsType[*errors.TaskfileDecodeError](err); ok {
 			snippet := NewSnippet(b,
@@ -265,18 +281,18 @@ func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error)
 				WithColumn(taskfileDecodeErr.Column),
 				WithPadding(2),
 			)
-			return nil, taskfileDecodeErr.WithFileInfo(node.Location(), snippet.String())
+			return nil, taskfileDecodeErr.WithFileInfo(location, snippet.String())
 		}
-		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
+		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(location), Err: err}
 	}
 
 	// Check that the Taskfile is set and has a schema version
 	if tf.Version == nil {
-		return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
+		return nil, &errors.TaskfileVersionCheckError{URI: location}
 	}
 
 	// Set the taskfile/task's locations
-	tf.Location = node.Location()
+	tf.Location = location
 	for task := range tf.Tasks.Values(nil) {
 		// If the task is not defined, create a new one
 		if task == nil {
