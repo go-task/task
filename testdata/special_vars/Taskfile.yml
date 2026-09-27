@@ -23,3 +23,18 @@ tasks:
   print-task-dir:
     dir: 'foo'
     cmd: echo {{.TASK_DIR}}
+  print-task-file-lists:
+    dir: sources-as-var
+    sources:
+      - '**/*.txt'
+      - exclude: ignored.txt
+      - does-not-exist-*.txt
+    generates:
+      - generated/*.generated
+      - generated/does-not-exist-*.generated
+    cmds:
+      - for: { var: TASK_SOURCES }
+        cmd: printf '<%s>\n' '{{.ITEM}}'
+      - echo '---'
+      - for: { var: TASK_GENERATES }
+        cmd: printf '<%s>\n' '{{.ITEM}}'

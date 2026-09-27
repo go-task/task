@@ -486,6 +486,17 @@ func TestSpecialVars(t *testing.T) {
 				WithFixtureTemplating(),
 			)
 		}
+		NewExecutorTest(t,
+			WithName(fmt.Sprintf("%s-print-task-file-lists", dir)),
+			WithExecutorOptions(
+				task.WithDir(dir),
+				task.WithSilent(true),
+				task.WithVersionCheck(true),
+				task.WithForce(true),
+			),
+			WithTask("print-task-file-lists"),
+			WithFixtureTemplating(),
+		)
 	}
 }
 

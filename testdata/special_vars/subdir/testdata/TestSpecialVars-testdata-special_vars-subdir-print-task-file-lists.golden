@@ -1,0 +1,5 @@
+<file.txt>
+<subdir1/file with space.txt>
+<subdir2/file.txt>
+---
+<generated/result.generated>
