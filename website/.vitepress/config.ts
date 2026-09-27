@@ -18,6 +18,7 @@ import { fileURLToPath, URL } from 'node:url';
 import llmstxt from 'vitepress-plugin-llms';
 import { sidebar as nextSidebar } from './sidebar/next.ts';
 import { sidebar as latestSidebar } from './sidebar/latest.ts';
+import { createBlogDateResolver } from './blog-date';
 
 const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
@@ -41,6 +42,10 @@ const docsSidebar = isLatest ? latestSidebar : nextSidebar;
 // Builds the "/blog/" sidebar from each blog post's frontmatter.
 function buildBlogSidebar() {
   const blogDir = resolve(__dirname, `../src/${channel}/blog`);
+  const blogDate = createBlogDateResolver(
+    channel,
+    resolve(__dirname, '../src/latest/blog')
+  );
   const posts = readdirSync(blogDir)
     .filter((file) => file.endsWith('.md') && file !== 'index.md')
     .map((file) => {
@@ -50,14 +55,14 @@ function buildBlogSidebar() {
       return {
         slug: file.replace(/\.md$/, ''),
         title: frontmatter.sidebarTitle ?? frontmatter.title,
-        date: new Date(frontmatter.date)
+        date: blogDate(file, frontmatter.date)
       };
     })
     .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const byYear = new Map<number, { text: string; link: string }[]>();
   for (const post of posts) {
-    const year = post.date.getFullYear();
+    const year = post.date.getUTCFullYear();
     if (!byYear.has(year)) byYear.set(year, []);
     byYear.get(year)!.push({ text: post.title, link: `/blog/${post.slug}` });
   }
