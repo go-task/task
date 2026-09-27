@@ -4,7 +4,7 @@ description:
   A new completion engine that gives every shell the same suggestions, and that
   can finally complete your required variables.
 author: vmaerten
-date: 2026-08-11
+date: 2026-09-29
 tags: ['new-features', 'completion']
 outline: deep
 editLink: false
