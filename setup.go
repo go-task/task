@@ -54,6 +54,7 @@ func (e *Executor) Setup() error {
 }
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
+	e.automaticOverride = e.Entrypoint == ""
 	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout,
 		taskfile.WithCACert(e.CACert),
 		taskfile.WithCert(e.Cert),
@@ -82,6 +83,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		return e.Logger.Prompt(logger.Yellow, s, "n", "y", "yes")
 	}
 	reader := taskfile.NewReader(
+		taskfile.WithAutomaticOverride(e.automaticOverride),
 		taskfile.WithInsecure(e.Insecure),
 		taskfile.WithDownload(e.Download),
 		taskfile.WithOffline(e.Offline),
