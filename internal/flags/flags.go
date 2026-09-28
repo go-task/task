@@ -14,6 +14,7 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/experiments"
+	"github.com/go-task/task/v3/internal/complete"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
 	"github.com/go-task/task/v3/taskfile"
@@ -93,6 +94,11 @@ var (
 )
 
 func init() {
+	cliArgs := os.Args[1:]
+	if complete.IsActive() {
+		_, cliArgs = complete.ParseOptions(complete.Words())
+	}
+
 	// Config files can enable experiments which alter the availability and/or
 	// behavior of some flags, so we need to parse the experiments before the
 	// flags. However, we need the --taskfile and --dir flags before we can
@@ -106,7 +112,7 @@ func init() {
 	fs.StringVarP(&dir, "dir", "d", "", "")
 	fs.StringVarP(&entrypoint, "taskfile", "t", "", "")
 	fs.Usage = func() {}
-	_ = fs.Parse(os.Args[1:])
+	_ = fs.Parse(cliArgs)
 
 	// Parse the experiments
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
@@ -176,6 +182,16 @@ func init() {
 		pflag.BoolVar(&ForceAll, "force-all", false, "Forces execution of the called task and all its dependant tasks.")
 	} else {
 		pflag.BoolVarP(&ForceAll, "force", "f", false, "Forces execution even when the task is up-to-date.")
+	}
+
+	// The words being completed hold partially typed and unknown flags, yet the
+	// flags deciding which Taskfile is loaded must still reach the engine.
+	// ContinueOnError keeps what was parsed and prints nothing.
+	if complete.IsActive() {
+		pflag.CommandLine.Init(pflag.CommandLine.Name(), pflag.ContinueOnError)
+		pflag.CommandLine.ParseErrorsAllowlist.UnknownFlags = true
+		_ = pflag.CommandLine.Parse(cliArgs)
+		return
 	}
 
 	pflag.Parse()
@@ -269,6 +285,9 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		sorter = sort.NoSort
 	case "alphanumeric":
 		sorter = sort.AlphaNumeric
+	default:
+		// Not nil: this overwrites the sorter NewExecutor already set.
+		sorter = sort.AlphaNumericWithRootTasksFirst
 	}
 
 	// Change the directory to the user's home directory if the global flag is set

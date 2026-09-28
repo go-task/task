@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+// Thin wrappers around the `task __complete` engine, served by `--completion`.
+
 //go:embed completion/bash/task.bash
 var completionBash string
 
@@ -20,20 +22,20 @@ var completionPowershell string
 //go:embed completion/zsh/_task
 var completionZsh string
 
-func Completion(completion string) (string, error) {
-	// Get the file extension for the selected shell
-	switch completion {
-	case "bash":
-		return completionBash, nil
-	case "fish":
-		return completionFish, nil
-	case "nu", "nushell":
-		return completionNu, nil
-	case "powershell":
-		return completionPowershell, nil
-	case "zsh":
-		return completionZsh, nil
-	default:
-		return "", fmt.Errorf("unknown shell: %s", completion)
+// Accept `nushell` as an alias of `nu`.
+var completionScripts = map[string]string{
+	"bash":       completionBash,
+	"fish":       completionFish,
+	"nu":         completionNu,
+	"nushell":    completionNu,
+	"powershell": completionPowershell,
+	"zsh":        completionZsh,
+}
+
+func Completion(shell string) (string, error) {
+	script, ok := completionScripts[shell]
+	if !ok {
+		return "", fmt.Errorf("unknown shell: %s", shell)
 	}
+	return script, nil
 }
