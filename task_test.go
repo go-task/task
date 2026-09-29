@@ -2377,6 +2377,24 @@ func TestRunOnceSharedDeps(t *testing.T) {
 	assert.Contains(t, buff.String(), `task: [service-b:build] echo "build b"`)
 }
 
+func TestRunOnceNestedIncludes(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_once_nested_includes"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "all"}))
+
+	assert.Equal(t, 1, strings.Count(buff.String(), "building tool\n"))
+}
+
 func TestRunOnceSharedFailurePropagates(t *testing.T) {
 	t.Parallel()
 
