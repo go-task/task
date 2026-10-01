@@ -2142,7 +2142,7 @@ func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
 	})
 }
 
-func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
+func TestDotenvShouldAllowIncludedDotenvs(t *testing.T) {
 	t.Parallel()
 
 	var buff bytes.Buffer
@@ -2154,8 +2154,7 @@ func TestDotenvShouldErrorWhenIncludingDependantDotenvs(t *testing.T) {
 	)
 
 	err := e.Setup()
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "move the dotenv")
+	require.NoError(t, err)
 }
 
 func TestDotenvShouldAllowMissingEnv(t *testing.T) {
