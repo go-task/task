@@ -7,22 +7,22 @@ tasks:
   dotenv:
     dotenv: ['.env']
     cmds:
-      - echo "$FOO" > dotenv.txt
+      - echo "$FOO"
 
   dotenv-overridden-by-env:
     dotenv: ['.env']
     env:
       FOO: overridden
     cmds:
-      - echo "$FOO" > dotenv-overridden-by-env.txt
+      - echo "$FOO"
 
   dotenv-with-var-name:
     vars:
       DOTENV: .env
     dotenv: ['{{.DOTENV}}']
     cmds:
-      - echo "$FOO" > dotenv-with-var-name.txt
+      - echo "$FOO"
 
   no-dotenv:
     cmds:
-      - echo "$FOO" > no-dotenv.txt
+      - echo "$FOO"

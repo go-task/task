@@ -1,0 +1,6 @@
+task: [deploy:infra] echo "Deploy infra"
+Deploy infra
+task: [deploy:js] echo "Deploy js"
+Deploy js
+task: [deploy:go] echo "Deploy go"
+Deploy go

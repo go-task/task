@@ -1,0 +1,1 @@
+task: [build] cp ./source.txt ./generated.txt

@@ -1,0 +1,1 @@
+error reading env file {{.TEST_DIR}}/testdata/dotenv/parse_error/.env-with-error: unexpected character "/n" in variable name near "SOME_VAR/n"

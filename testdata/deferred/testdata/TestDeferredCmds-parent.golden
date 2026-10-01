@@ -1,0 +1,4 @@
+task: [child] echo "child task immediate value-from-parent"
+child task immediate value-from-parent
+task: [child] echo "child task deferred value-from-parent"
+child task deferred value-from-parent

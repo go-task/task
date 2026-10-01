@@ -1,0 +1,2 @@
+task: [dotenv-with-var-name] echo "$FOO"
+foo

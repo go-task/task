@@ -1,0 +1,2 @@
+task: [default] echo "called_dep"
+called_dep

@@ -1,0 +1,2 @@
+task: [default] echo "VAR='$VAR_IN_DOTENV'"
+VAR='var_in_dot_env_1'

@@ -8,4 +8,4 @@ dotenv: [".env.{{.LOCAL_ENV}}"]
 tasks:
   default:
     cmds:
-      - echo "VAR='$VAR_IN_DOTENV'" > var.txt
+      - echo "VAR='$VAR_IN_DOTENV'"
