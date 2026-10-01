@@ -1021,6 +1021,11 @@ execution itself, which only the caller that started it can bound.
 
 ## Shell Options
 
+Global and task-level `set` and `shopt` options also apply to `status` commands.
+For example, `set: [pipefail]` makes a failing command anywhere in a status
+pipeline cause the task to be considered out of date. Command-level options
+only apply to that command.
+
 ### Set Options
 
 Available `set` options for POSIX shell features:
