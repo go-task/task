@@ -1,6 +1,8 @@
 ---
 title: 'Gentle Force (#1200)'
 description: Experiment to modify the behavior of the --force flag in Task
+section: Project
+docType: project
 outline: deep
 ---
 

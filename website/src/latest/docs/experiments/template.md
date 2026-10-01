@@ -1,5 +1,6 @@
 ---
 title: '--- Template ---'
+description: Template for documenting a new experiment.
 ---
 
 # \{Name of Experiment\} (#\{Issue\})
@@ -33,4 +34,4 @@ information.
 
 \{Short explanation of how users should migrate to the new behavior\}
 
-[enabling-experiments]: /docs/experiments/#enabling-experiments
+[enabling-experiments]: ./index.md#enabling-experiments

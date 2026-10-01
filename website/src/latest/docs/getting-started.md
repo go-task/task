@@ -1,14 +1,17 @@
 ---
-title: Getting Started
+title: Quick Start
 description: Guide for getting started with Task
+section: Getting Started
+docType: guide
 outline: deep
 ---
 
-# Getting Started
+# Quick Start {#getting-started}
 
 The following guide will help introduce you to the basics of Task. We'll cover
 how to create a Taskfile, how to write a basic task and how to call it. If you
-haven't installed Task yet, head over to our [installation guide](installation).
+haven't installed Task yet, head over to our
+[installation guide](./installation.md).
 
 ## Creating your first Taskfile
 
@@ -72,9 +75,9 @@ task default
 
 Note that we don't have to specify the name of the Taskfile. Task will
 automatically look for a file called `Taskfile.yml` (or any of Task's
-[supported file names](/docs/guide#supported-file-names)) in the current
-directory. Additionally, tasks with the name `default` are special. They can
-also be run without specifying the task name.
+[supported file names](./guide/running-tasks.md#supported-file-names)) in the
+current directory. Additionally, tasks with the name `default` are special. They
+can also be run without specifying the task name.
 
 If you created a Taskfile in a different directory, you can run it by passing
 the absolute or relative path to the directory as an argument using the `--dir`
@@ -131,5 +134,6 @@ task build
 That's about it for the basics, but there's _so much_ more that you can do with
 Task. Check out the rest of the documentation to learn more about all the
 features Task has to offer! We recommend taking a look at the
-[usage guide](/docs/guide) next. Alternatively, you can check out our reference
-docs for the [Taskfile schema](reference/schema) and [CLI](reference/cli).
+[usage guide](./guide/index.md) next. Alternatively, you can check out our
+reference docs for the [Taskfile schema](./reference/schema.md) and
+[CLI](./reference/cli.md).

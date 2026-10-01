@@ -3,6 +3,8 @@ title: Integrations
 description:
   Official and community integrations for Task, including VS Code, JSON schemas,
   and other tools
+section: Getting Started
+docType: guide
 outline: deep
 ---
 

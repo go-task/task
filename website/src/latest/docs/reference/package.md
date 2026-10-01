@@ -1,6 +1,8 @@
 ---
 title: Package API Reference
 description: A reference for Task's Golang package API
+section: Reference
+docType: reference
 ---
 
 # Package API Reference
