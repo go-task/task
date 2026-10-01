@@ -2355,6 +2355,68 @@ func TestRunOnlyRunsJobsHashOnceWithWildcard(t *testing.T) {
 	})
 }
 
+func TestRunOnceSharedDepsNested(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_once_shared_deps_nested"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+
+	rx := regexp.MustCompile(`task: \[group:service-[a,b]:library:build\] echo "build library"`)
+	matches := rx.FindAllStringSubmatch(buff.String(), -1)
+	assert.Len(t, matches, 1)
+	assert.Contains(t, buff.String(), `task: [group:service-a:build] echo "build a"`)
+	assert.Contains(t, buff.String(), `task: [group:service-b:build] echo "build b"`)
+}
+
+func TestRunOnceEscapedDeps(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_once_escaped_deps"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+
+	// The library's `:setup` names each service's own setup, so each path's
+	// call to the library runs, and each setup with it.
+	assert.Equal(t, 2, strings.Count(buff.String(), `echo "build library"`))
+	assert.Contains(t, buff.String(), `task: [service-a:setup] echo "setup a"`)
+	assert.Contains(t, buff.String(), `task: [service-b:setup] echo "setup b"`)
+}
+
+func TestRunOnceCyclicRefs(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_once_cyclic_refs"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+	)
+	require.NoError(t, e.Setup())
+	// The two tasks reference each other; keying either must terminate.
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "countdown"}))
+	assert.Contains(t, buff.String(), `task: [countdown] echo "countdown"`)
+}
+
 func TestRunOnceSharedDeps(t *testing.T) {
 	t.Parallel()
 
@@ -2446,6 +2508,50 @@ login server=foo user=foo
 login server=bar user=bar
 `)
 	assert.Contains(t, buff.String(), expectedOutputOrder)
+}
+
+func TestRunWhenChangedNested(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_when_changed_nested"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+		task.WithSilent(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "start"}))
+	expectedOutputOrder := strings.TrimSpace(`
+login server=fubar user=fubar
+login server=foo user=foo
+login server=bar user=bar
+`)
+	assert.Contains(t, buff.String(), expectedOutputOrder)
+}
+
+func TestRunWhenChangedSharedDepsNested(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_when_changed_shared_deps_nested"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+
+	assert.Equal(t, 1, strings.Count(buff.String(), `echo "build library"`))
+	assert.Equal(t, 1, strings.Count(buff.String(), `echo "generate library"`))
+	assert.Contains(t, buff.String(), `task: [group:service-a:build] echo "build a"`)
+	assert.Contains(t, buff.String(), `task: [group:service-b:build] echo "build b"`)
 }
 
 func TestDeferredCmds(t *testing.T) {
