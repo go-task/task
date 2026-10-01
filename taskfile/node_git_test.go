@@ -1,8 +1,10 @@
 package taskfile
 
 import (
+	"context"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -263,8 +265,121 @@ func TestRepoCacheKey_BlocksTraversalRef(t *testing.T) {
 	assert.NotContains(t, key, "..", "cache key must not contain traversal components")
 
 	// Joined under the cache root, the resolved path must stay inside it.
-	root := filepath.Join(os.TempDir(), "task-git-repos")
+	root, err := gitCacheRoot()
+	require.NoError(t, err)
 	resolved := filepath.Clean(filepath.Join(root, key))
 	assert.True(t, strings.HasPrefix(resolved, root+string(os.PathSeparator)),
 		"cache dir %q must stay within %q", resolved, root)
+}
+
+func setUserCacheDir(t *testing.T, dir string) {
+	t.Helper()
+	switch runtime.GOOS {
+	case "windows":
+		t.Setenv("LocalAppData", dir)
+	case "darwin":
+		t.Setenv("HOME", dir)
+	default:
+		t.Setenv("XDG_CACHE_HOME", dir)
+	}
+}
+
+func unsetUserCacheDir(t *testing.T) {
+	t.Helper()
+	switch runtime.GOOS {
+	case "windows":
+		t.Setenv("LocalAppData", "")
+	case "darwin":
+		t.Setenv("HOME", "")
+	default:
+		t.Setenv("XDG_CACHE_HOME", "")
+		t.Setenv("HOME", "")
+	}
+}
+
+func TestGitCacheRoot_NotInSharedTempDir(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
+	dir := t.TempDir()
+	setUserCacheDir(t, dir)
+
+	root, err := gitCacheRoot()
+	require.NoError(t, err)
+	assert.True(t, strings.HasPrefix(root, dir), "cache root %q must live under the user cache dir %q", root, dir)
+	assert.NotEqual(t, filepath.Join(os.TempDir(), gitCacheDirName), root)
+
+	require.NoError(t, prepareGitCacheRoot(root))
+	info, err := os.Stat(root)
+	require.NoError(t, err)
+	if runtime.GOOS != "windows" {
+		assert.Equal(t, os.FileMode(0o700), info.Mode().Perm(), "cache root must be private to the current user")
+	}
+}
+
+func TestGitCacheRoot_FallbackIsPrivate(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
+	// No user cache dir: the fallback must be private and unpredictable.
+	unsetUserCacheDir(t)
+
+	root, err := gitCacheRoot()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.RemoveAll(root) })
+
+	assert.True(t, strings.HasPrefix(root, os.TempDir()), "fallback %q must live under the temp dir", root)
+	assert.NotEqual(t, filepath.Join(os.TempDir(), gitCacheDirName), root, "fallback name must not be predictable")
+	if runtime.GOOS != "windows" {
+		info, err := os.Stat(root)
+		require.NoError(t, err)
+		assert.Equal(t, os.FileMode(0o700), info.Mode().Perm(), "fallback must be private to the current user")
+	}
+}
+
+func TestPrepareGitCacheRoot_RejectsSymlink(t *testing.T) {
+	t.Parallel()
+
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink creation requires privileges on Windows")
+	}
+
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target")
+	require.NoError(t, os.Mkdir(target, 0o700))
+
+	root := filepath.Join(dir, "task-git-repos")
+	require.NoError(t, os.Symlink(target, root))
+
+	err := prepareGitCacheRoot(root)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not a directory")
+}
+
+func TestGetOrCloneRepo_ReusesCompletedClone(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
+	setUserCacheDir(t, t.TempDir())
+
+	node, err := NewGitNode("file:///nonexistent/repo.git//Taskfile.yml?ref=main", "", false)
+	require.NoError(t, err)
+
+	// A .git entry is reused without a clone; the remote does not exist, so a clone would fail.
+	root, err := gitCacheRoot()
+	require.NoError(t, err)
+	cacheDir := filepath.Join(root, node.repoCacheKey())
+	require.NoError(t, os.MkdirAll(filepath.Join(cacheDir, ".git"), 0o700))
+
+	got, err := node.getOrCloneRepo(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, cacheDir, got)
+}
+
+func TestGetOrCloneRepo_ReclonesWithoutGitDir(t *testing.T) { //nolint:paralleltest // t.Setenv cannot be used in parallel tests
+	setUserCacheDir(t, t.TempDir())
+
+	node, err := NewGitNode("file:///nonexistent/repo.git//Taskfile.yml?ref=main", "", false)
+	require.NoError(t, err)
+
+	// A directory without .git must trigger a fresh clone.
+	root, err := gitCacheRoot()
+	require.NoError(t, err)
+	cacheDir := filepath.Join(root, node.repoCacheKey())
+	require.NoError(t, os.MkdirAll(cacheDir, 0o700))
+
+	_, err = node.getOrCloneRepo(context.Background())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to clone repository")
 }

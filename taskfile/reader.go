@@ -92,7 +92,9 @@ func (r *Reader) Options(opts ...ReaderOption) {
 func (r *Reader) Read(ctx context.Context, node Node) (*ast.TaskfileGraph, error) {
 	// Clean up git cache after reading all taskfiles
 	defer func() {
-		_ = CleanGitCache()
+		if err := CleanGitCache(); err != nil {
+			r.debugf("failed to clean git cache: %s\n", err.Error())
+		}
 	}()
 
 	if err := r.include(ctx, node); err != nil {

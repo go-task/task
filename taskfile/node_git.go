@@ -48,14 +48,56 @@ var globalGitRepoCache = &gitRepoCache{
 	locks: make(map[string]*sync.Mutex),
 }
 
+const gitCacheDirName = "task-git-repos"
+
+var (
+	fallbackGitCacheOnce sync.Once
+	fallbackGitCacheDir  string
+	fallbackGitCacheErr  error
+)
+
+// gitCacheRoot must stay private to the current user: a shared, predictable
+// location lets another local user plant an entry Task would read as the remote's.
+func gitCacheRoot() (string, error) {
+	if userCacheDir, err := os.UserCacheDir(); err == nil {
+		return filepath.Join(userCacheDir, "task", gitCacheDirName), nil
+	}
+	// No user cache dir (e.g. a container with no HOME): a randomly named dir in
+	// the shared temp dir is unpredictable, so it cannot be pre-planted.
+	fallbackGitCacheOnce.Do(func() {
+		fallbackGitCacheDir, fallbackGitCacheErr = os.MkdirTemp("", gitCacheDirName+"-")
+	})
+	return fallbackGitCacheDir, fallbackGitCacheErr
+}
+
+func prepareGitCacheRoot(root string) error {
+	if err := os.MkdirAll(root, 0o700); err != nil {
+		return fmt.Errorf("failed to create git cache directory: %w", err)
+	}
+
+	// Lstat, not Stat: a symlink here would redirect both the clone and the cleanup.
+	info, err := os.Lstat(root)
+	if err != nil {
+		return fmt.Errorf("failed to inspect git cache directory: %w", err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("git cache directory %q is not a directory", root)
+	}
+
+	return nil
+}
+
 func CleanGitCache() error {
 	// Clear the in-memory locks map to prevent memory leak
 	globalGitRepoCache.mu.Lock()
 	globalGitRepoCache.locks = make(map[string]*sync.Mutex)
 	globalGitRepoCache.mu.Unlock()
 
-	cacheDir := filepath.Join(os.TempDir(), "task-git-repos")
-	return os.RemoveAll(cacheDir)
+	root, err := gitCacheRoot()
+	if err != nil {
+		return err
+	}
+	return os.RemoveAll(root)
 }
 
 func NewGitNode(
@@ -120,7 +162,7 @@ func (node *GitNode) buildURL() string {
 // This function is thread-safe: multiple goroutines cloning the same repo+ref
 // will synchronize, and only one clone operation will occur.
 //
-// The cache directory is /tmp/task-git-repos/{cache_key}/
+// The cache directory is {user cache dir}/task/task-git-repos/{cache_key}/
 func (node *GitNode) getOrCloneRepo(ctx context.Context) (string, error) {
 	cacheKey := node.repoCacheKey()
 
@@ -128,9 +170,17 @@ func (node *GitNode) getOrCloneRepo(ctx context.Context) (string, error) {
 	repoMutex.Lock()
 	defer repoMutex.Unlock()
 
-	cacheDir := filepath.Join(os.TempDir(), "task-git-repos", cacheKey)
+	root, err := gitCacheRoot()
+	if err != nil {
+		return "", err
+	}
+	if err := prepareGitCacheRoot(root); err != nil {
+		return "", err
+	}
+	cacheDir := filepath.Join(root, cacheKey)
 
-	// Check cache FIRST - if already cloned, no network needed, timeout irrelevant
+	// A .git here means a completed clone: partial clones stay in staging and are
+	// only published, whole, by the atomic rename below.
 	gitDir := filepath.Join(cacheDir, ".git")
 	if _, err := os.Stat(gitDir); err == nil {
 		return cacheDir, nil
@@ -141,18 +191,36 @@ func (node *GitNode) getOrCloneRepo(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("context cancelled while waiting for repository lock: %w", err)
 	}
 
-	getterURL := node.buildURL()
+	parent := filepath.Dir(cacheDir)
+	if err := os.MkdirAll(parent, 0o700); err != nil {
+		return "", fmt.Errorf("failed to create git cache directory: %w", err)
+	}
 
+	// Clone into staging, publish with a single rename.
+	staging, err := os.MkdirTemp(parent, ".staging-")
+	if err != nil {
+		return "", fmt.Errorf("failed to create git cache directory: %w", err)
+	}
+	defer os.RemoveAll(staging)
+
+	clonedDir := filepath.Join(staging, "repo")
 	client := &getter.Client{
 		Ctx:  ctx,
-		Src:  getterURL,
-		Dst:  cacheDir,
+		Src:  node.buildURL(),
+		Dst:  clonedDir,
 		Mode: getter.ClientModeDir,
 	}
 
 	if err := client.Get(); err != nil {
-		_ = os.RemoveAll(cacheDir)
 		return "", fmt.Errorf("failed to clone repository: %w", err)
+	}
+
+	if err := os.Rename(clonedDir, cacheDir); err != nil {
+		// Another process may have published the same entry while we were cloning.
+		if _, statErr := os.Stat(gitDir); statErr == nil {
+			return cacheDir, nil
+		}
+		return "", fmt.Errorf("failed to publish git cache entry: %w", err)
 	}
 
 	return cacheDir, nil
