@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 	"testing"
 
 	"github.com/fatih/color"
@@ -190,3 +191,38 @@ func TestPrefixedWithColor(t *testing.T) {
 		}
 	})
 }
+
+func TestPrefixedConcurrentStdoutStderr(t *testing.T) {
+	// WrapWriter returns the same writer for stdout and stderr; concurrent
+	// writes must not race on the shared line buffer (issue #2945).
+	var b bytes.Buffer
+	l := &logger.Logger{Color: false}
+	var o output.Output = output.NewPrefixed(l)
+	stdOut, stdErr, cleanup := o.WrapWriter(&b, io.Discard, "prefix", nil)
+
+	var wg sync.WaitGroup
+	const writers = 2
+	const iters = 200
+	wg.Add(writers)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < iters; i++ {
+			fmt.Fprintf(stdOut, "out-%d\n", i)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for i := 0; i < iters; i++ {
+			fmt.Fprintf(stdErr, "err-%d\n", i)
+		}
+	}()
+	wg.Wait()
+	require.NoError(t, cleanup(nil))
+
+	lines := bytes.Split(bytes.TrimSuffix(b.Bytes(), []byte("\n")), []byte("\n"))
+	assert.Len(t, lines, iters*2)
+	for _, line := range lines {
+		assert.True(t, bytes.HasPrefix(line, []byte("[prefix] ")), "line=%q", line)
+	}
+}
+
