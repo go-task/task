@@ -14,6 +14,8 @@
 
 ### 🐛 Fixes
 
+- Fixed remote Git Taskfile cache poisoning on shared hosts (GHSA-679p-658w-m3wr,
+  reported by @danielcadev, fixed by @vmaerten).
 - Fixed tasks cancelled by the user returning exit code `201` instead of `205`
   (#3040, #3041 by @r3wretrhy).
 - Fixed a bug on Windows where watching source paths did not work as expected
