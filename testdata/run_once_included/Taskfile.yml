@@ -1,0 +1,22 @@
+version: '3'
+
+includes:
+  library: ./library
+
+tasks:
+  build:
+    deps:
+      - service-a
+      - service-b
+
+  service-a:
+    deps:
+      - library:build
+    cmds:
+      - echo "build a"
+
+  service-b:
+    deps:
+      - library:build
+    cmds:
+      - echo "build b"
