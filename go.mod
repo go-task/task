@@ -17,6 +17,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-task/slim-sprig/v3 v3.0.0
 	github.com/go-task/template v0.2.0
+	github.com/gofrs/flock v0.12.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-getter v1.8.9
 	github.com/joho/godotenv v1.5.1
