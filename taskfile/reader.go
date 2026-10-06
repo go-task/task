@@ -90,9 +90,24 @@ func (r *Reader) Options(opts ...ReaderOption) {
 // building an [ast.TaskfileGraph] as it goes. If any errors occur, they will be
 // returned immediately.
 func (r *Reader) Read(ctx context.Context, node Node) (*ast.TaskfileGraph, error) {
+	root, err := gitCacheRoot()
+	if err != nil {
+		return nil, err
+	}
+	// The Task timeout applies to remote I/O, not waiting for local cache
+	// cleanup; local Taskfiles must still be readable when the timeout is zero.
+	unlock, err := lockGitCache(context.Background(), root, true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lock git cache while reading Taskfiles: %w", err)
+	}
+
 	// Clean up git cache after reading all taskfiles
 	defer func() {
-		if err := CleanGitCache(); err != nil {
+		if err := unlock(); err != nil {
+			r.debugf("failed to unlock git cache: %s\n", err.Error())
+			return
+		}
+		if err := cleanGitCache(root); err != nil {
 			r.debugf("failed to clean git cache: %s\n", err.Error())
 		}
 	}()
