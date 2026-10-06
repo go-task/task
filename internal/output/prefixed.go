@@ -38,9 +38,13 @@ type prefixWriter struct {
 	prefixed *Prefixed
 	prefix   string
 	buff     bytes.Buffer
+	mu       sync.Mutex
 }
 
 func (pw *prefixWriter) Write(p []byte) (int, error) {
+	pw.mu.Lock()
+	defer pw.mu.Unlock()
+
 	n, err := pw.buff.Write(p)
 	if err != nil {
 		return n, err
@@ -50,6 +54,9 @@ func (pw *prefixWriter) Write(p []byte) (int, error) {
 }
 
 func (pw *prefixWriter) close() error {
+	pw.mu.Lock()
+	defer pw.mu.Unlock()
+
 	return pw.writeOutputLines(true)
 }
 
