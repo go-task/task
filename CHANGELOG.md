@@ -4,6 +4,12 @@
 
 ### 🚀 Features
 
+- Task's [watch functionality](https://taskfile.dev/docs/guide/watch)
+  (`--watch` or `watch: true`) was partly rewritten to be significantly more
+  reliable, specially when it comes to detecting duplicated events.
+  We're now using [@helshabini](https://github.com/helshabini)'s
+  [`fsbroker`](https://github.com/helshabini/fsbroker) package which is a lot
+  smarter than the custom code we had before.
 - Interactive selection prompts for `enum` variables now handle long lists: they
   show a scrollable window of choices, support case-insensitive search with `/`,
   and add Page Up/Page Down and Home/End navigation (#3071 by @vmaerten).

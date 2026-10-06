@@ -171,6 +171,8 @@ github.com/hashicorp/go-getter v1.8.10 h1:uufJp+uacA0fSDRxclsHkiE6yUQTKgwv5b25Qe
 github.com/hashicorp/go-getter v1.8.10/go.mod h1:5HyKGCQmT+I3MGAM76vk/fWpktjwxn7xruCUr9CrVuo=
 github.com/hashicorp/go-version v1.9.0 h1:CeOIz6k+LoN3qX9Z0tyQrPtiB1DFYRPfCIBtaXPSCnA=
 github.com/hashicorp/go-version v1.9.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
+github.com/helshabini/fsbroker v1.0.5 h1:XXbLbq67AWsmiszsfzT6wvNe5WDLEgXR81ooASh5axE=
+github.com/helshabini/fsbroker v1.0.5/go.mod h1:aOjlwOw26/rSNtzFcSPchbuXAgxWWI6GYw7e8YIV4hs=
 github.com/hexops/gotextdiff v1.0.3 h1:gitA9+qJrrTCsiCl7+kh75nPqQt1cx4ZkudSTLoUqJM=
 github.com/hexops/gotextdiff v1.0.3/go.mod h1:pSWU5MAI3yDq+fZBTazCSJysOMbxWL1BSow5/V2vxeg=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
