@@ -632,6 +632,7 @@ tasks:
       - echo "OS {{OS}}"                    # linux, darwin, windows, etc.
       - echo "Architecture {{ARCH}}"        # amd64, arm64, etc.
       - echo "CPU cores {{numCPU}}"         # Number of CPU cores
+      - echo "Executable suffix {{exeExt}}" # .exe on Windows, empty elsewhere
       - echo "Building for {{OS}}/{{ARCH}}"
 ```
 
