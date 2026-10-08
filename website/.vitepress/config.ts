@@ -516,7 +516,8 @@ export default defineConfig({
             'Disallow: /',
             '',
             'User-agent: *',
-            'Disallow: /',
+            // Search engines must crawl the public next site to read noindex.
+            'Allow: /',
             '',
             'Sitemap: https://next.taskfile.dev/sitemap.xml',
             ''
