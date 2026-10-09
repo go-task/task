@@ -1,0 +1,12 @@
+task: [included1:task1] echo "VAR_1 is included1-var1"
+VAR_1 is included1-var1
+task: [included1:task1] echo "VAR_2 is included-default-var2"
+VAR_2 is included-default-var2
+task: [included2:task1] echo "VAR_1 is included2-var1"
+VAR_1 is included2-var1
+task: [included2:task1] echo "VAR_2 is included-default-var2"
+VAR_2 is included-default-var2
+task: [included3:task1] echo "VAR_1 is included-default-var1"
+VAR_1 is included-default-var1
+task: [included3:task1] echo "VAR_2 is included-default-var2"
+VAR_2 is included-default-var2

@@ -8,4 +8,4 @@ includes:
 tasks:
   default:
     cmds:
-      - echo "called_dep" > called_dep.txt
+      - echo "called_dep"

@@ -29,4 +29,4 @@ tasks:
 
   gen:
     cmds:
-      - echo main > main.txt
+      - echo main

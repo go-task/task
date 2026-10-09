@@ -1,0 +1,1 @@
+task: [task-should-fail] exit 1

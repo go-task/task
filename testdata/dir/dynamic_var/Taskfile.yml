@@ -17,16 +17,15 @@ tasks:
 
   from-root-taskfile:
     cmds:
-      - echo '{{.TASK_DIR}}' > from_root_taskfile.txt
+      - echo '{{.TASK_DIR}}'
     dir: subdirectory
     vars:
       TASK_DIR:
         sh: basename "$(pwd)"
-    silent: true
 
   from-interpolated-dir:
     cmds:
-      - echo '{{.INTERPOLATED_DIR}}' > from_interpolated_dir.txt
+      - echo '{{.INTERPOLATED_DIR}}'
     dir: '{{.DIRECTORY}}'
     vars:
       INTERPOLATED_DIR:

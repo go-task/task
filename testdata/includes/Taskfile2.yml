@@ -3,4 +3,4 @@ version: '3'
 tasks:
   gen:
     cmds:
-      - echo included_taskfile > included_taskfile.txt
+      - echo included_taskfile
