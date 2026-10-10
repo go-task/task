@@ -72,7 +72,7 @@ jobs:
       - name: ⬇️ Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.26.x
+          go-version: 1.27.x
 
       - name: ⬇️ Setup Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
@@ -90,7 +90,7 @@ jobs:
       # Nushell ships in no runner image and is not packaged by apt, so it comes
       # from its own release archives.
       - name: ⬇️ Install Nushell
-        uses: hustcer/setup-nu@f3fd65374ffc4d60974c0dd2f7263c6c5c285f81 # v3.26
+        uses: hustcer/setup-nu@95cd3bfe252450ef7d35dd9a7ddecf3484341134 # v3.28
         with:
           version: "*"
 
@@ -153,7 +153,7 @@ jobs:
           go-version: 1.27.x
 
       - name: ⬇️ Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
 
