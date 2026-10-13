@@ -28,18 +28,24 @@ const recordExtractor = ({ $, helpers, url }) => {
   // items. Copy code blocks into crawler-only paragraphs so experienced
   // users can search for exact Taskfile keys and command syntax without
   // changing the page rendered to readers.
-  $('.vp-doc pre code').each((_, element) => {
-    const code = $(element).text().trim();
+  // The crawler editor types $ as accepting strings only. Use eq() to
+  // access selected nodes without passing a Cheerio Element back to $.
+  const codeBlocks = $('.vp-doc pre code');
+  codeBlocks.each((index) => {
+    const block = codeBlocks.eq(index);
+    const code = block.text().trim();
     if (!code) return;
     const paragraph = $('<p></p>').addClass('docsearch-code').text(code);
-    $(element).closest('pre').replaceWith(paragraph);
+    block.closest('pre').replaceWith(paragraph);
   });
 
   // Select each text subtree once. A list item may contain paragraphs and
   // nested lists; selecting both parent and child repeats their content.
-  $('.vp-doc p, .vp-doc li, .vp-doc td, .vp-doc th').each((_, element) => {
-    if (!$(element).parents('.docsearch-content').length) {
-      $(element).addClass('docsearch-content');
+  const contentElements = $('.vp-doc p, .vp-doc li, .vp-doc td, .vp-doc th');
+  contentElements.each((index) => {
+    const content = contentElements.eq(index);
+    if (!content.parents('.docsearch-content').length) {
+      content.addClass('docsearch-content');
     }
   });
 
@@ -49,6 +55,7 @@ const recordExtractor = ({ $, helpers, url }) => {
   // Remove this URL inference once the refactored documentation is live
   // and every indexed page exposes the DocSearch metadata.
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
+  const isNavigationPage = pathname === '/docs' || pathname === '/docs/guide';
   const inferredSection = (() => {
     if (pathname === '/docs') return 'Overview';
     if (
@@ -72,24 +79,38 @@ const recordExtractor = ({ $, helpers, url }) => {
     $('meta[name="docsearch:section"]').attr('content') || inferredSection;
   const docType =
     $('meta[name="docsearch:doc_type"]').attr('content') ||
-    ({
+    {
       Overview: 'overview',
       Reference: 'reference',
       Contributing: 'contributing',
       Project: 'project',
       Guide: 'guide',
       'Getting Started': 'guide'
-    }[section] ??
-      'guide');
+    }[section] ||
+    'guide';
 
   const keywordsByAnchor = new Map();
-  $('.vp-doc [data-search-keywords]').each((_, element) => {
-    const heading = $(element);
+  const keywordHeadings = $('.vp-doc [data-search-keywords]');
+  keywordHeadings.each((index) => {
+    const heading = keywordHeadings.eq(index);
     keywordsByAnchor.set(
       heading.attr('id'),
       heading.attr('data-search-keywords')
     );
   });
+
+  // Common task-oriented phrases should lead to their practical guide.
+  // These aliases also cover deployed pages that don't yet emit them in HTML.
+  const guideKeywords = {
+    '/docs/guide/includes': {
+      'including-other-taskfiles':
+        'include another taskfile including taskfiles'
+    },
+    '/docs/guide/running-tasks': {
+      'dry-run-mode': 'dry run preview commands'
+    }
+  };
+  const pageKeywords = guideKeywords[pathname] || {};
 
   const records = helpers.docsearch({
     recordProps: {
@@ -122,7 +143,11 @@ const recordExtractor = ({ $, helpers, url }) => {
       },
       // Deprecation notices remain findable, but don't outrank the page
       // that documents the supported replacement.
-      pageRank: pathname.startsWith('/docs/deprecations/') ? '-10' : '0'
+      pageRank: pathname.startsWith('/docs/deprecations/')
+        ? '-10'
+        : /^\/docs\/experiments(\/|$)/.test(pathname)
+          ? '-5'
+          : '0'
     },
     indexHeadings: true,
     aggregateContent: true,
@@ -131,10 +156,41 @@ const recordExtractor = ({ $, helpers, url }) => {
 
   // Matching an alternate term should open its exact section. Adding
   // page-wide keywords would make every section on the page compete.
-  return records.map((record) => ({
-    ...record,
-    keywords: keywordsByAnchor.get(record.anchor) || ''
-  }));
+  return records
+    .filter((record) => {
+      // Navigation hubs contain summaries of other pages. Keep their page
+      // title findable without indexing each card or summary as a result.
+      if (isNavigationPage) return record.type === 'lvl1';
+      // These headings organize template variables; their child entries
+      // (ALIAS, CHECKSUM, EXIT_CODE, etc.) remain indexed with breadcrumbs.
+      return (
+        pathname !== '/docs/reference/templating' ||
+        !['task', 'status', 'loop', 'defer'].includes(record.anchor)
+      );
+    })
+    .map((record) => {
+      // Rank a section by its own title, independently of its heading depth.
+      // VitePress adds a zero-width space for the heading permalink.
+      const title =
+        [
+          record.hierarchy.lvl6,
+          record.hierarchy.lvl5,
+          record.hierarchy.lvl4,
+          record.hierarchy.lvl3,
+          record.hierarchy.lvl2,
+          record.hierarchy.lvl1
+        ].find(Boolean) || '';
+      return {
+        ...record,
+        title: title.replace(/\u200b/g, '').trim(),
+        keywords: [
+          keywordsByAnchor.get(record.anchor) || '',
+          pageKeywords[record.anchor] || ''
+        ]
+          .filter(Boolean)
+          .join(' ')
+      };
+    });
 };
 
 const indexSettings = {
@@ -154,32 +210,30 @@ const indexSettings = {
   ],
   attributesToHighlight: ['hierarchy', 'content'],
   attributesToSnippet: ['content:10'],
-  camelCaseAttributes: ['hierarchy', 'content'],
+  camelCaseAttributes: ['title', 'hierarchy', 'content'],
   searchableAttributes: [
-    'unordered(hierarchy.lvl0)',
-    'unordered(hierarchy.lvl1)',
-    'unordered(hierarchy.lvl2)',
-    'unordered(hierarchy.lvl3)',
-    'unordered(hierarchy.lvl4)',
-    'unordered(hierarchy.lvl5)',
-    'unordered(hierarchy.lvl6)',
+    // Ordered titles favor a query at the beginning of the section title.
+    'title',
     'unordered(keywords)',
+    // Breadcrumb headings provide context at the same priority, without
+    // favoring a page title over a more specific section heading.
+    'hierarchy.lvl1,hierarchy.lvl2,hierarchy.lvl3,hierarchy.lvl4,hierarchy.lvl5,hierarchy.lvl6',
+    'unordered(hierarchy.lvl0)',
     'content'
   ],
   distinct: true,
   attributeForDistinct: 'url',
-  customRanking: [
-    'desc(weight.pageRank)',
-    'desc(weight.level)',
-    'asc(weight.position)'
-  ],
+  customRanking: ['desc(weight.level)', 'asc(weight.position)'],
   ranking: [
     'words',
     'filters',
     'typo',
+    // Exact words beat prefixes such as "for" matching "force". Apply
+    // deprecation penalties before considering the matched attribute.
+    'exact',
+    'desc(weight.pageRank)',
     'attribute',
     'proximity',
-    'exact',
     'custom'
   ],
   highlightPreTag: '<span class="algolia-docsearch-suggestion--highlight">',
@@ -188,13 +242,28 @@ const indexSettings = {
   minWordSizefor2Typos: 7,
   allowTyposOnNumericTokens: false,
   minProximity: 1,
-  ignorePlurals: true,
+  // The documentation is English. Applying every language's plural rules
+  // can turn an unfinished query such as "completi" into another word.
+  queryLanguages: ['en'],
+  ignorePlurals: ['en'],
+  // Exact words in a long paragraph or an ancestor's title shouldn't beat
+  // an exact match in the destination section's own title or keywords.
+  disableExactOnAttributes: [
+    'content',
+    'hierarchy.lvl0',
+    'hierarchy.lvl1',
+    'hierarchy.lvl2',
+    'hierarchy.lvl3',
+    'hierarchy.lvl4',
+    'hierarchy.lvl5',
+    'hierarchy.lvl6'
+  ],
   advancedSyntax: true,
   attributeCriteriaComputedByMinProximity: true,
   removeWordsIfNoResults: 'allOptional',
   separatorsToIndex: '_',
   paginationLimitedTo: 1000,
-  exactOnSingleWordQuery: 'attribute',
+  exactOnSingleWordQuery: 'word',
   queryType: 'prefixLast',
   snippetEllipsisText: '',
   alternativesAsExact: ['ignorePlurals', 'singleWordSynonym']

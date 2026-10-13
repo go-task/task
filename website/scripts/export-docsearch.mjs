@@ -52,5 +52,11 @@ for (const [name, settings] of Object.entries(config.initialIndexSettings)) {
 		`${name}.settings.json`,
 		JSON.stringify(settings, null, 2) + '\n'
 	);
+	// Dashboard imports use an export envelope, unlike the settings API.
+	// Select only Settings when importing this file.
+	await write(
+		`${name}.dashboard.json`,
+		JSON.stringify({ settings, rules: [], synonyms: [] }, null, 2) + '\n'
+	);
 }
 console.log('Export only: no changes were sent to Algolia.');
