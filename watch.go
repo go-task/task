@@ -20,13 +20,14 @@ import (
 	"github.com/go-task/task/v3/internal/fsnotifyext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/slicesext"
+	"github.com/go-task/task/v3/internal/telemetry"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
 const defaultWaitTime = 100 * time.Millisecond
 
 // watchTasks start watching the given tasks
-func (e *Executor) watchTasks(calls ...*Call) error {
+func (e *Executor) watchTasks(parent context.Context, calls ...*Call) error {
 	tasks := make([]string, len(calls))
 	for i, c := range calls {
 		tasks[i] = c.Task
@@ -34,7 +35,8 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 
 	e.Logger.Errf(logger.Green, "task: Started watching for tasks: %s\n", strings.Join(tasks, ", "))
 
-	ctx, cancel := context.WithCancel(context.Background())
+	// parent carries the caller's trace (TRACEPARENT): every run's spans join it.
+	ctx, cancel := context.WithCancel(parent)
 	for _, c := range calls {
 		go func() {
 			err := e.RunTask(ctx, c)
@@ -79,7 +81,7 @@ func (e *Executor) watchTasks(calls ...*Call) error {
 				e.Logger.VerboseErrf(logger.Magenta, "task: received watch event: %v\n", event)
 
 				cancel()
-				ctx, cancel = context.WithCancel(context.Background())
+				ctx, cancel = context.WithCancel(parent)
 
 				e.Compiler.ResetCache()
 
@@ -158,6 +160,7 @@ func closeOnInterrupt(w *fsnotify.Watcher) {
 	go func() {
 		<-ch
 		w.Close()
+		telemetry.Flush() // os.Exit skips the deferred shutdown
 		os.Exit(0)
 	}()
 }

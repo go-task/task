@@ -1,8 +1,8 @@
 ---
 title: Output and logging
 description:
-  Choose an output mode, hide command echoes, and display colors and failure
-  annotations in CI.
+  Choose an output mode, hide command echoes, display colors and failure
+  annotations in CI, and trace runs with OpenTelemetry.
 section: Guide
 docType: guide
 outline: deep
@@ -212,3 +212,43 @@ To continue after a selected failure, use `ignore_error`. See
 scope and examples.
 
 :::
+
+## Trace task runs {#tracing}
+
+Task can send an [OpenTelemetry](https://opentelemetry.io) trace of each run:
+one span per task, with a child span for each of its commands and deps. A
+tracing backend such as [Jaeger](https://www.jaegertracing.io) then shows how
+long each step took and where a run failed.
+
+Tracing is off by default. Point Task at an OTLP/HTTP endpoint to turn it on:
+
+```shell
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 task build
+```
+
+Task reads the standard `OTEL_EXPORTER_OTLP_*` variables for the endpoint,
+headers, compression, certificate and timeout. Spans are only sent over
+OTLP/HTTP (protobuf); gRPC and other exporters are not supported. See the
+[environment reference](../reference/environment.md#opentelemetry-variables).
+
+### Spans
+
+| Span          | For                                       |
+| ------------- | ----------------------------------------- |
+| `<task name>` | a task, including deps and `task:` calls  |
+| `shell[<n>]`  | the task's `n`th command, a shell command |
+| `task:<name>` | a command that calls another task         |
+
+A task span has `task.name`, `task.dir` and `task.outcome`: `executed`, `failed`
+or `skipped`, with `task.skip_reason` (`up_to_date`, `if`, `platform`,
+`deduplicated`, `dry_run`). A task whose own command failed also has
+`process.exit.code`. A command span has `command.type`, `command.outcome` and,
+for a shell command, `command.shell`, with
+[secret variables](./secret-variables.md) masked.
+
+### Join an existing trace
+
+When `TRACEPARENT` (and `TRACESTATE`) is set, as by a CI job or a script that
+started a trace of its own, Task's spans join that trace instead of starting a
+new one. Task also sets `TRACEPARENT` for every command it runs, so a program
+that reads it, including a nested `task`, puts its spans under the command's.

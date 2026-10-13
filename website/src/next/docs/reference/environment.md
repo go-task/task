@@ -215,3 +215,28 @@ A table of variables and their defaults can be found below:
 | `TASK_COLOR_BRIGHT_CYAN`    | `96`    |
 
 [ansi]: https://en.wikipedia.org/wiki/ANSI_escape_code
+
+## OpenTelemetry Variables
+
+The following variables control [tracing](../guide/output.md#tracing). Task
+reads the standard OpenTelemetry variables; the ones below are the most common.
+
+### `OTEL_EXPORTER_OTLP_ENDPOINT`
+
+Base URL of the OTLP/HTTP collector, e.g. `http://localhost:4318`. Setting it
+turns tracing on. `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` sets the full traces URL
+instead.
+
+### `OTEL_TRACES_EXPORTER`
+
+`otlp` turns tracing on (with `http://localhost:4318` when no endpoint is set);
+`none` or any other value turns it off.
+
+### `OTEL_SERVICE_NAME`
+
+Service name of the spans. Defaults to `task`.
+
+### `TRACEPARENT`
+
+A [W3C trace context](https://www.w3.org/TR/trace-context/) to join: Task's
+spans become part of that trace. `TRACESTATE` is passed along with it.
