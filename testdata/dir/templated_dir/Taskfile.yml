@@ -1,0 +1,14 @@
+version: '3'
+
+vars:
+  DIRECTORY: subdirectory
+
+tasks:
+  default:
+    cmds:
+      - echo '{{.TASK_DIR}}' > from_templated_dir.txt
+    dir: '{{.DIRECTORY}}'
+    vars:
+      TASK_DIR:
+        sh: basename "$(pwd)"
+    silent: true
