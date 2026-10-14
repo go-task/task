@@ -1,0 +1,14 @@
+version: '3'
+
+includes:
+  library:
+    taskfile: ../library/Taskfile.yml
+    dir: ../library
+
+tasks:
+  build:
+    deps: [library:build]
+
+  setup:
+    cmds:
+      - echo "setup a"
