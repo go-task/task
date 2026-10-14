@@ -2,6 +2,7 @@ package fingerprint
 
 import (
 	"context"
+	"slices"
 
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/execext"
@@ -22,9 +23,11 @@ func NewStatusChecker(logger *logger.Logger) StatusCheckable {
 func (checker *StatusChecker) IsUpToDate(ctx context.Context, t *ast.Task) (bool, error) {
 	for _, s := range t.Status {
 		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
-			Command: s,
-			Dir:     t.Dir,
-			Env:     env.Get(t),
+			Command:   s,
+			Dir:       t.Dir,
+			Env:       env.Get(t),
+			PosixOpts: slices.Clone(t.Set),
+			BashOpts:  t.Shopt,
 		})
 		if err != nil {
 			checker.logger.VerboseOutf(logger.Yellow, "task: status command %s exited non-zero: %s\n", s, err)
