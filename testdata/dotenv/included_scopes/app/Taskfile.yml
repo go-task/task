@@ -1,0 +1,20 @@
+version: '3'
+vars:
+  CONFIG: config
+env:
+  CONFIG_ENV: config
+dotenv: [override.env, '{{.CONFIG}}/base.env', '{{.CONFIG_ENV}}/env-path.env', missing.env]
+includes:
+  child: child/Taskfile.yml
+  common: ../common/Taskfile.yml
+tasks:
+  inspect:
+    cmds:
+      - 'echo "{{.DOTENV_CHOICE}}|$DOTENV_CHOICE|$DOTENV_APP"'
+      - 'echo "explicit=$DOTENV_EXPLICIT root=$DOTENV_ROOT base=$DOTENV_BASE env-path=$DOTENV_ENV_PATH"'
+  task-env:
+    env: {DOTENV_CHOICE: task}
+    cmds: ['echo "$DOTENV_CHOICE"', 'echo "explicit=$DOTENV_EXPLICIT root=$DOTENV_ROOT base=$DOTENV_BASE env-path=$DOTENV_ENV_PATH"']
+  task-dotenv:
+    dotenv: ['{{.TASKFILE_DIR}}/task.env']
+    cmds: ['echo "$DOTENV_CHOICE"', 'echo "explicit=$DOTENV_EXPLICIT root=$DOTENV_ROOT base=$DOTENV_BASE env-path=$DOTENV_ENV_PATH"']

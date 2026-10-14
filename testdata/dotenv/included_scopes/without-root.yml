@@ -1,0 +1,3 @@
+version: '3'
+includes:
+  app: app/Taskfile.yml
