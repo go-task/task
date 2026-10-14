@@ -936,6 +936,7 @@ func TestForCmds(t *testing.T) {
 		},
 		{name: "loop-sources"},
 		{name: "loop-sources-glob"},
+		{name: "sources-variable"},
 		{name: "loop-generates"},
 		{name: "loop-generates-glob"},
 		{name: "loop-vars"},
