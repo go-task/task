@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### 🐛 Fixes
+
+- Fixed `--interactive` showing a text prompt instead of a selection menu for
+  `enum.ref` values computed by `sh:` variables (#2958, #3070 by @vmaerten).
+
 ## v3.54.0 - 2026-10-01
 
 ### 🚀 Features
