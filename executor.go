@@ -164,6 +164,22 @@ func (o *entrypointOption) ApplyToExecutor(e *Executor) {
 	e.Entrypoint = o.entrypoint
 }
 
+// WithUserWorkingDir sets the directory that Task was originally invoked from
+// by the user. By default, this is set to the user's current working
+// directory. This is used to resolve relative paths in variables such as
+// USER_WORKING_DIR.
+func WithUserWorkingDir(dir string) ExecutorOption {
+	return &userWorkingDirOption{dir}
+}
+
+type userWorkingDirOption struct {
+	dir string
+}
+
+func (o *userWorkingDirOption) ApplyToExecutor(e *Executor) {
+	e.UserWorkingDir = o.dir
+}
+
 // WithTempDir sets the temporary directory that will be used by [Executor] for
 // storing temporary files like checksums and cached remote files. By default,
 // the temporary directory is set to the user's temporary directory.

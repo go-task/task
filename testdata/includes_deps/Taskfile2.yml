@@ -4,13 +4,13 @@ tasks:
   default:
     deps: [called_dep]
     cmds:
-      - echo "default" > default.txt
+      - echo "default"
       - task: called_task
 
   called_dep:
     cmds:
-      - echo "called_dep" > called_dep.txt
+      - echo "called_dep"
 
   called_task:
     cmds:
-      - echo "called_task" > called_task.txt
+      - echo "called_task"

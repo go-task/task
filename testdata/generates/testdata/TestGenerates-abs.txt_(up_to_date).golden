@@ -1,0 +1,2 @@
+task: Task "sub/src.txt" is up to date
+task: Task "abs.txt" is up to date

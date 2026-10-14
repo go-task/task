@@ -1,0 +1,8 @@
+task: [hello] echo 'Hello!'
+::group::hello
+Hello!
+::endgroup::
+task: [bye] echo 'Bye!'
+::group::bye
+Bye!
+::endgroup::

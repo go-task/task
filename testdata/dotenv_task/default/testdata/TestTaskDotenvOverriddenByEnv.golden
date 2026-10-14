@@ -1,0 +1,2 @@
+task: [dotenv-overridden-by-env] echo "$FOO"
+overridden

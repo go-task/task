@@ -1,0 +1,2 @@
+task: [build-{{.GOOS}}] echo 'Running task on {{.GOOS}}'
+Running task on {{.GOOS}}
