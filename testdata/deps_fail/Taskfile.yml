@@ -1,0 +1,15 @@
+version: '3'
+
+tasks:
+  default:
+    deps: [fail-1, fail-2]
+    cmds:
+      - echo 'default'
+
+  fail-1:
+    cmds:
+      - exit 1
+
+  fail-2:
+    cmds:
+      - exit 1
