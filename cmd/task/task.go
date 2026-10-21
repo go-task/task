@@ -17,6 +17,7 @@ import (
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/flags"
 	"github.com/go-task/task/v3/internal/logger"
+	"github.com/go-task/task/v3/internal/telemetry"
 	"github.com/go-task/task/v3/internal/version"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -137,6 +138,27 @@ func run() error {
 		flags.WithFlags(),
 		task.WithVersionCheck(true),
 	)
+	ctx := context.Background()
+	// Sending spans never gets in the way: its errors (a collector that is
+	// down) show only with --verbose, and it delays the exit at most
+	// telemetry.FlushTimeout.
+	otelError := func(err error) {
+		if flags.Verbose {
+			log.Errf(logger.Yellow, "task: OpenTelemetry: %v\n", err)
+		}
+	}
+	otel_shutdown, err := telemetry.Initialize(ctx, otelError)
+	if err != nil {
+		return err
+	}
+	// Task's spans join the trace of whoever ran it (TRACEPARENT).
+	ctx = telemetry.ParentFromEnv(ctx)
+	defer func() {
+		if err := otel_shutdown(ctx); err != nil {
+			otelError(err)
+		}
+	}()
+
 	if err := e.Setup(); err != nil {
 		return err
 	}
@@ -199,8 +221,6 @@ func run() error {
 	if !flags.Watch {
 		e.InterceptInterruptSignals()
 	}
-
-	ctx := context.Background()
 
 	if flags.Status {
 		return e.Status(ctx, calls...)

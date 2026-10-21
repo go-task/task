@@ -58,7 +58,7 @@ references.
 - [Platforms and shells](./platforms.md): selecting platform-specific commands,
   understanding shell context and setting shell options.
 - [Output and logging](./output.md): streaming, grouping and prefixing output,
-  hiding command echoes and displaying CI annotations.
+  hiding command echoes, displaying CI annotations and tracing runs.
 
 ## Including Taskfiles {#composing-taskfiles}
 

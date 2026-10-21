@@ -1,0 +1,49 @@
+version: '3'
+
+vars:
+  TOKEN:
+    value: "hunter2"
+    secret: true
+
+tasks:
+  ok:
+    cmds:
+      - echo ok
+
+  fail:
+    cmds:
+      - exit 3
+
+  dep-fails:
+    deps: [fail]
+    cmds:
+      - echo never
+
+  timeout:
+    cmds:
+      - cmd: sleep 5
+        timeout: 100ms
+
+  ignored:
+    cmds:
+      - cmd: exit 2
+        ignore_error: true
+
+  deferred:
+    cmds:
+      - defer: echo deferred
+      - echo body
+
+  once:
+    run: once
+    cmds:
+      - echo once
+
+  twice:
+    cmds:
+      - task: once
+      - task: once
+
+  secret:
+    cmds:
+      - echo "token={{.TOKEN}}"
