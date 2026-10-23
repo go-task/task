@@ -2125,6 +2125,41 @@ func TestShortTaskNotation(t *testing.T) {
 	assert.Equal(t, "string-slice-1\nstring-slice-2\nstring\n", buff.String())
 }
 
+func TestDotenvNestedTemplates(t *testing.T) {
+	t.Parallel()
+
+	for range 50 {
+		var output bytes.Buffer
+		e := task.NewExecutor(
+			task.WithDir("testdata/dotenv/nested"),
+			task.WithStdout(&output),
+			task.WithStderr(io.Discard),
+		)
+		require.NoError(t, e.Setup())
+		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "default"}))
+		assert.Equal(t, "/home/user/nested/deeper/file.txt|/home/user/nested/deeper/file.txt\n", output.String())
+	}
+}
+
+func TestTaskDotenvDeclarationOrder(t *testing.T) {
+	t.Parallel()
+
+	for range 50 {
+		e := task.NewExecutor(
+			task.WithDir("testdata/dotenv/nested"),
+			task.WithEntrypoint("testdata/dotenv/nested/Taskfile.local.yml"),
+		)
+		require.NoError(t, e.Setup())
+
+		compiled, err := e.CompiledTask(&task.Call{Task: "local"})
+		require.NoError(t, err)
+		assert.Equal(t, []string{"BASE_DIR", "MID_DIR", "FINAL_DIR", "FULL_PATH", "MID_DIR_2", "FINAL_DIR_2", "FULL_PATH_2", "EXTRA"}, slices.Collect(compiled.Env.Keys()))
+		base, ok := compiled.Env.Get("BASE_DIR")
+		require.True(t, ok)
+		assert.Equal(t, "/home/user", base.Value)
+	}
+}
+
 func TestDotenvShouldIncludeAllEnvFiles(t *testing.T) {
 	t.Parallel()
 
