@@ -1,0 +1,12 @@
+version: '3'
+
+vars:
+  PORT: 4000
+
+env:
+  TASK_OVERRIDE_ENV: local
+
+tasks:
+  added:
+    cmds:
+      - echo {{.TASKFILE}} {{.ROOT_TASKFILE}}

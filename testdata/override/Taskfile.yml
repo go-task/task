@@ -1,0 +1,12 @@
+version: '3'
+
+vars:
+  PORT: 3000
+
+env:
+  TASK_OVERRIDE_ENV: main
+
+tasks:
+  dev:
+    cmds:
+      - echo {{.PORT}} $TASK_OVERRIDE_ENV
