@@ -17,9 +17,9 @@ var defaultOverrides = []string{
 	"taskfile.override.yaml",
 }
 
-func (r *Reader) readAutomaticOverride(node *FileNode, tf *ast.Taskfile) error {
+func readAutomaticOverride(dir string, tf *ast.Taskfile) error {
 	for _, name := range defaultOverrides {
-		path := filepath.Join(filepath.Dir(node.Location()), name)
+		path := filepath.Join(dir, name)
 		// Check existence separately so a dangling symlink is an error too.
 		if _, err := os.Lstat(path); errors.Is(err, os.ErrNotExist) {
 			continue
