@@ -179,55 +179,28 @@ vars:
 
 :::
 
-`task dev` prints `PORT=4000`. Add `Taskfile.override.yml` to your project's
-`.gitignore` to keep this configuration local.
+`task dev` prints `PORT=4000`. Add `Taskfile.override.yml` to `.gitignore` to
+keep it personal.
 
-The override accepts only these root fields:
+Besides `version`, which must match the main Taskfile, an override accepts:
 
-- `version` is required and must match the main Taskfile's schema version.
-  Equivalent versions such as `'3'` and `'3.0.0'` match.
-- `vars` and `env` merge by key, with override values taking priority over the
-  main file's values. Structured values, including maps, are replaced entirely.
-- `tasks` adds new tasks and replaces existing task definitions entirely. A
-  replacement does not retain the original task's variables, aliases,
-  dependencies, preconditions or other settings.
+- `vars` and `env`, merged by key with the override winning. An overridden
+  variable keeps its position in the main Taskfile, so it can only reference
+  variables declared before it.
+- `tasks`, which adds new tasks or replaces existing ones whole: a replaced task
+  keeps nothing from the original. To change a single value of a task, move it
+  into a variable in the main Taskfile and override that variable.
 
-Other root fields, including `includes` and `dotenv`, cause an error. There is
-no deletion syntax: empty and `null` values use the usual Taskfile decoding
-rules.
+Any other root key, such as `includes` or `dotenv`, is an error.
 
-Task searches for the following override names in order and loads only the
-first one present:
+`taskfile.override.yml`, `Taskfile.override.yaml` and `taskfile.override.yaml`
+are also recognized; only the first one present is loaded. Overrides apply
+before includes are resolved, so a variable can change which file is included,
+but an override cannot redefine an included task such as `docs:build`.
+Included, remote and stdin Taskfiles never load an override.
 
-1. `Taskfile.override.yml`
-2. `taskfile.override.yml`
-3. `Taskfile.override.yaml`
-4. `taskfile.override.yaml`
-
-An absent override is ignored. An unreadable or invalid override causes an
-error; Task does not try the next name. An override alone cannot serve as an
-automatically discovered root Taskfile.
-
-This also works with `.dist` Taskfiles, when running from a subdirectory, with
-`--dir`, and with `--global`. Only the directory containing the discovered root
-Taskfile is searched. Included Taskfiles, remote roots and Taskfiles read from
-stdin do not load automatic overrides.
-
-To ignore the override, select the main file explicitly:
+Naming the file with `--taskfile` skips the override:
 
 ```shell
-task -t Taskfile.yml dev
+task -t Taskfile.yml dev # prints PORT=3000
 ```
-
-With the example above, this prints `PORT=3000`.
-
-Overrides are applied before resolving include paths, so an overridden variable
-can change which file is included. The usual inclusion rules still apply:
-defining `docs:build` in an override conflicts with an included task of that
-name. Overrides do not change the precedence rules for included variables,
-task variables, command-line arguments or the process environment.
-
-The main Taskfile remains `ROOT_TASKFILE`. For tasks added or replaced by the
-override, `TASKFILE` and diagnostic locations point to the override file.
-Overrides are loaded at startup; this does not add Taskfile reloading to
-[watch mode](./watch.md).
