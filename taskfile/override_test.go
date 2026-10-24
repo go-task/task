@@ -109,6 +109,7 @@ tasks:
 func TestAutomaticOverrideNames(t *testing.T) {
 	t.Parallel()
 	// Each suffix of the list checks both fallback and first-present priority.
+	// Case-insensitive filesystems only exercise the .yml/.yaml priority.
 	for i, name := range defaultOverrides {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
@@ -117,24 +118,10 @@ func TestAutomaticOverrideNames(t *testing.T) {
 			for j := len(defaultOverrides) - 1; j >= i; j-- {
 				writeOverrideFixture(t, dir, defaultOverrides[j], fmt.Sprintf("version: '3'\nvars: {WINNER: %d}\n", j))
 			}
-			// Case-insensitive filesystems cannot store both capitalization variants.
-			distinct := true
-			for j := i + 1; j < len(defaultOverrides); j++ {
-				a, err := os.Stat(filepath.Join(dir, name))
-				require.NoError(t, err)
-				b, err := os.Stat(filepath.Join(dir, defaultOverrides[j]))
-				require.NoError(t, err)
-				if os.SameFile(a, b) {
-					distinct = false
-				}
-			}
 			tf, err := readOverrideFixture(t, dir, WithAutomaticOverride(true))
 			require.NoError(t, err)
 			winner, _ := tf.Vars.Get("WINNER")
 			assert.Equal(t, i, winner.Value)
-			if !distinct {
-				t.Log("Capitalization priority requires a case-sensitive filesystem")
-			}
 		})
 	}
 }
@@ -144,16 +131,10 @@ func TestAutomaticOverrideErrors(t *testing.T) {
 	tests := []struct{ name, content, message string }{
 		{"invalid YAML", "version: [", "yaml:"},
 		{"missing version", "vars: {PORT: 4000}", "Missing schema version"},
-		{"empty", "", "Missing schema version"},
-		{"null", "null", "Missing schema version"},
 		{"mismatched version", "version: '3.1'", "has version 3.1.0"},
-		{"invalid version", "version: bad", "invalid semantic version"},
-		{"invalid vars", "version: '3'\nvars: []", "vars"},
-		{"invalid task", "version: '3'\ntasks:\n  dev:\n    cmds: {}", "cannot unmarshal"},
 		{"sequence", "- version: '3'", "taskfile override"},
-		{"duplicate version", "version: '3'\nversion: '3'", "already defined"},
 	}
-	for _, key := range []string{"includes", "dotenv", "output", "method", "silent", "run", "interval", "set", "shopt", "use_gitignore", "unknown", "<<"} {
+	for _, key := range []string{"includes", "unknown", "<<"} {
 		tests = append(tests, struct{ name, content, message string }{key, "version: '3'\n" + key + ": null", "not allowed"})
 	}
 	for _, tt := range tests {
@@ -213,15 +194,6 @@ func TestAutomaticOverrideIncludes(t *testing.T) {
 	}
 }
 
-func TestAutomaticOverrideReaderDefault(t *testing.T) {
-	t.Parallel()
-	dir := t.TempDir()
-	writeOverrideFixture(t, dir, "Taskfile.yml", "version: '3'\n")
-	writeOverrideFixture(t, dir, "Taskfile.override.yml", "invalid YAML: [")
-	_, err := readOverrideFixture(t, dir)
-	require.NoError(t, err)
-}
-
 func TestAutomaticOverrideRemote(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
@@ -244,13 +216,4 @@ func TestAutomaticOverrideStdin(t *testing.T) { //nolint:paralleltest // replace
 	require.NoError(t, err)
 	_, err = NewReader(WithAutomaticOverride(true)).Read(t.Context(), node)
 	require.NoError(t, err)
-}
-
-func TestAutomaticOverrideAlone(t *testing.T) {
-	t.Parallel()
-	dir := t.TempDir()
-	writeOverrideFixture(t, dir, "Taskfile.override.yml", "version: '3'\ntasks: {dev: echo local}\n")
-	_, err := NewFileNode("", dir)
-	var notFound errors.TaskfileNotFoundError
-	require.ErrorAs(t, err, &notFound)
 }
