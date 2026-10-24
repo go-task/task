@@ -152,9 +152,9 @@ override instead.
 
 ## Customize a Taskfile locally {#local-overrides}
 
-When Task discovers the root Taskfile automatically, it also loads an optional
-`Taskfile.override.yml` from the same directory. Keep the shared configuration
-in the main file and put personal changes in the override:
+To change a few settings for yourself without touching the shared Taskfile,
+create a `Taskfile.override.yml` next to it. Task loads it on top of the main
+file:
 
 ::: code-group
 
@@ -179,27 +179,35 @@ vars:
 
 :::
 
-`task dev` prints `PORT=4000`. Add `Taskfile.override.yml` to `.gitignore` to
-keep it personal.
+`task dev` now prints `PORT=4000`. Add `Taskfile.override.yml` to `.gitignore`
+so it stays on your machine.
 
-Besides `version`, which must match the main Taskfile, an override accepts:
+An override can set `vars`, `env` and `tasks`, and its `version` must match the
+main Taskfile's:
 
-- `vars` and `env`, merged by key with the override winning. An overridden
-  variable keeps its position in the main Taskfile, so it can only reference
-  variables declared before it.
-- `tasks`, which adds new tasks or replaces existing ones whole: a replaced task
-  keeps nothing from the original. To change a single value of a task, move it
-  into a variable in the main Taskfile and override that variable.
+- Variables and environment variables are merged: yours win, the others are
+  kept.
+- A task with the same name replaces the original entirely. To tweak a single
+  value of a shared task, have the main Taskfile read it from a variable, then
+  override that variable.
 
-Any other root key, such as `includes` or `dotenv`, is an error.
+Anything else at the root, such as `includes` or `dotenv`, is rejected.
 
-`taskfile.override.yml`, `Taskfile.override.yaml` and `taskfile.override.yaml`
-are also recognized; only the first one present is loaded. Overrides apply
-before includes are resolved, so a variable can change which file is included,
-but an override cannot redefine an included task such as `docs:build`.
-Included, remote and stdin Taskfiles never load an override.
+::: tip
 
-Naming the file with `--taskfile` skips the override:
+An overridden variable keeps its place in the main Taskfile, so its value can
+only use variables declared above it.
+
+:::
+
+The lowercase and `.yaml` spellings (`taskfile.override.yml`,
+`Taskfile.override.yaml`, `taskfile.override.yaml`) work too. Task only looks
+next to the root Taskfile it finds: included, remote and stdin Taskfiles never
+get an override. Since the override is read before includes, a variable can
+change which file gets included, but it can't redefine an included task like
+`docs:build`.
+
+To run without your override, name the Taskfile explicitly:
 
 ```shell
 task -t Taskfile.yml dev # prints PORT=3000
