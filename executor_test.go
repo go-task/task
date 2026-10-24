@@ -1316,4 +1316,9 @@ func TestAutomaticOverride(t *testing.T) {
 		WithExecutorOptions(task.WithDir(dir), task.WithEntrypoint(dir+"/Taskfile.yml"), task.WithSilent(true)),
 		WithTask("dev"),
 	)
+	NewExecutorTest(t,
+		WithName("explicit directory"),
+		WithExecutorOptions(task.WithDir(dir), task.WithEntrypoint(dir), task.WithSilent(true)),
+		WithTask("dev"),
+	)
 }

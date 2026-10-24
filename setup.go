@@ -25,7 +25,7 @@ import (
 
 func (e *Executor) Setup() error {
 	e.setupLogger()
-	automaticOverride := e.Entrypoint == ""
+	automaticOverride := discoversTaskfile(e.Entrypoint)
 	node, err := e.getRootNode()
 	if err != nil {
 		return err
@@ -52,6 +52,16 @@ func (e *Executor) Setup() error {
 	e.setupDefaults()
 	e.setupConcurrencyState()
 	return nil
+}
+
+// discoversTaskfile reports whether Task picks the Taskfile name itself, as
+// opposed to the user naming the file.
+func discoversTaskfile(entrypoint string) bool {
+	if entrypoint == "" {
+		return true
+	}
+	info, err := os.Stat(entrypoint)
+	return err == nil && info.IsDir()
 }
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
