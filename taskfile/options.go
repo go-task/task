@@ -2,9 +2,8 @@ package taskfile
 
 import "time"
 
-// WithAutomaticOverride enables loading a local override beside the root
-// Taskfile. It is disabled by default and does not apply to remote Taskfiles,
-// stdin, or included Taskfiles.
+// WithAutomaticOverride loads a Taskfile override beside a local root Taskfile.
+// Remote, stdin and included Taskfiles never load one.
 func WithAutomaticOverride(enabled bool) *automaticOverrideOption {
 	return &automaticOverrideOption{enabled: enabled}
 }
