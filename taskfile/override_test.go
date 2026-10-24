@@ -131,7 +131,7 @@ func TestAutomaticOverrideErrors(t *testing.T) {
 	tests := []struct{ name, content, message string }{
 		{"invalid YAML", "version: [", "yaml:"},
 		{"missing version", "vars: {PORT: 4000}", "Missing schema version"},
-		{"mismatched version", "version: '3.1'", "has version 3.1.0"},
+		{"mismatched version", "version: '3.1'", "(3.1.0) must match the main Taskfile (3.0.0)"},
 		{"sequence", "- version: '3'", "taskfile override"},
 	}
 	for _, key := range []string{"includes", "unknown", "<<"} {
@@ -162,7 +162,8 @@ func TestAutomaticOverrideReadError(t *testing.T) {
 	require.NoError(t, os.Mkdir(filepath.Join(dir, "Taskfile.override.yml"), 0o755))
 	writeOverrideFixture(t, dir, "Taskfile.override.yaml", "version: '3'\n")
 	_, err := readOverrideFixture(t, dir, WithAutomaticOverride(true))
-	require.ErrorContains(t, err, "Taskfile.override.yml")
+	require.ErrorContains(t, err, "task: Failed to read Taskfile override")
+	assert.Contains(t, err.Error(), "Taskfile.override.yml")
 }
 
 func TestAutomaticOverrideIncludes(t *testing.T) {

@@ -1,6 +1,7 @@
 package taskfile
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -24,11 +25,11 @@ func readAutomaticOverride(dir string, tf *ast.Taskfile) error {
 		if _, err := os.Lstat(path); errors.Is(err, os.ErrNotExist) {
 			continue
 		} else if err != nil {
-			return err
+			return fmt.Errorf("task: Failed to read Taskfile override: %w", err)
 		}
 		b, err := os.ReadFile(path)
 		if err != nil {
-			return err
+			return fmt.Errorf("task: Failed to read Taskfile override: %w", err)
 		}
 		override, err := decodeTaskfile(b, path, true)
 		if err != nil {
