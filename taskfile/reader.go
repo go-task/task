@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"slices"
 	"sync"
 	"time"
@@ -157,8 +158,8 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 	if err != nil {
 		return err
 	}
-	if local, ok := node.(*FileNode); ok && node.Parent() == nil && r.automaticOverride {
-		if err := r.readAutomaticOverride(local, vertex.Taskfile); err != nil {
+	if _, ok := node.(*FileNode); ok && node.Parent() == nil && r.automaticOverride {
+		if err := readAutomaticOverride(filepath.Dir(node.Location()), vertex.Taskfile); err != nil {
 			return err
 		}
 	}

@@ -25,6 +25,7 @@ import (
 
 func (e *Executor) Setup() error {
 	e.setupLogger()
+	automaticOverride := e.Entrypoint == ""
 	node, err := e.getRootNode()
 	if err != nil {
 		return err
@@ -32,7 +33,7 @@ func (e *Executor) Setup() error {
 	if err := e.setupTempDir(); err != nil {
 		return err
 	}
-	if err := e.readTaskfile(node); err != nil {
+	if err := e.readTaskfile(node, automaticOverride); err != nil {
 		return err
 	}
 	e.setupStdFiles()
@@ -54,7 +55,6 @@ func (e *Executor) Setup() error {
 }
 
 func (e *Executor) getRootNode() (taskfile.Node, error) {
-	e.automaticOverride = e.Entrypoint == ""
 	node, err := taskfile.NewRootNode(e.Entrypoint, e.Dir, e.Insecure, e.Timeout,
 		taskfile.WithCACert(e.CACert),
 		taskfile.WithCert(e.Cert),
@@ -73,7 +73,7 @@ func (e *Executor) getRootNode() (taskfile.Node, error) {
 	return node, err
 }
 
-func (e *Executor) readTaskfile(node taskfile.Node) error {
+func (e *Executor) readTaskfile(node taskfile.Node, automaticOverride bool) error {
 	ctx, cf := context.WithTimeout(context.Background(), e.Timeout)
 	defer cf()
 	debugFunc := func(s string) {
@@ -83,7 +83,7 @@ func (e *Executor) readTaskfile(node taskfile.Node) error {
 		return e.Logger.Prompt(logger.Yellow, s, "n", "y", "yes")
 	}
 	reader := taskfile.NewReader(
-		taskfile.WithAutomaticOverride(e.automaticOverride),
+		taskfile.WithAutomaticOverride(automaticOverride),
 		taskfile.WithInsecure(e.Insecure),
 		taskfile.WithDownload(e.Download),
 		taskfile.WithOffline(e.Offline),

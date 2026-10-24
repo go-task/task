@@ -78,7 +78,6 @@ type (
 		fuzzyModelOnce sync.Once
 
 		promptedVars         *ast.Vars // vars collected via interactive prompts
-		automaticOverride    bool
 		concurrencySemaphore chan struct{}
 		taskCallCount        map[string]*int32
 		mkdirMutexMap        map[string]*sync.Mutex
