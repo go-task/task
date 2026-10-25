@@ -1,0 +1,18 @@
+version: '3'
+
+includes:
+  other:
+    taskfile: ./Included.yml
+    internal: true
+
+vars:
+  DYNAMIC_VAR:
+    sh: echo "hello"
+  DERIVED_VAR: "{{.DYNAMIC_VAR}} world"
+
+tasks:
+  default:
+    cmds:
+      - echo "DYNAMIC_VAR={{.DYNAMIC_VAR}}"
+      - echo "DERIVED_VAR={{.DERIVED_VAR}}"
+    silent: true
