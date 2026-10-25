@@ -213,6 +213,26 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 
 			// Recurse into the included Taskfile
 			if err := r.include(ctx, includeNode); err != nil {
+				// An optional include that cannot be resolved from
+				// the offline cache is skipped instead of failing
+				// the run. Other errors (and non-optional includes)
+				// still fail.
+				if include.Optional {
+					if _, ok := errors.AsType[*errors.TaskfileCacheNotFoundError](err); ok {
+						// The failed read already added a vertex for
+						// the included Taskfile; remove it so the
+						// merge does not pick up a vertex with a nil
+						// Taskfile. If another include already
+						// attached an edge to it, fail instead of
+						// leaving a dangling vertex behind.
+						r.graph.Lock()
+						removeErr := r.graph.RemoveVertex(includeNode.Location())
+						r.graph.Unlock()
+						if removeErr == nil {
+							return nil
+						}
+					}
+				}
 				return err
 			}
 
