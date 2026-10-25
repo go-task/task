@@ -6,13 +6,22 @@
     "schedule:weekly",
     ":semanticCommitTypeAll(chore)"
   ],
-  "addLabels":["area: dependencies"],
+  "addLabels": ["area: dependencies"],
   "osvVulnerabilityAlerts": true,
   "postUpdateOptions": ["gomodTidy"],
   "constraints": {
     "go": "1.26.4"
   },
   "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.github/workflows/.*\\.ya?ml$/"],
+      "matchStrings": [
+        "gh extension install github/gh-actions-lock --pin (?<currentValue>v[\\d.]+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "github/gh-actions-lock"
+    },
     {
       "customType": "regex",
       "managerFilePatterns": ["/^\\.github/workflows/.*\\.ya?ml$/"],

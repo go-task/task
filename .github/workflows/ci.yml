@@ -16,6 +16,25 @@ permissions:
   contents: read
 
 jobs:
+  verify-actions-lock:
+    name: 🔒 Verify actions lockfile
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: ⬇️ Install actions-lock
+        run: gh extension install github/gh-actions-lock --pin v0.4.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: 🔒 Verify actions lockfile
+        run: gh actions-lock --verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+
   build:
     name: 🔨 Build (${{ matrix.go-version }})
     strategy:
@@ -25,10 +44,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
 
       - name: ⬇️ Setup Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        uses: actions/setup-go@v7.0.0
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -45,15 +64,15 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
 
       - name: ⬇️ Setup Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        uses: actions/setup-go@v7.0.0
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: ⬇️ Setup Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        uses: go-task/setup-task@v2.2.0
 
       - name: 🧪 Test
         run: task test --output group --output-group-begin '::group::{{.TASK}}' --output-group-end '::endgroup::'
@@ -67,15 +86,15 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
 
       - name: ⬇️ Setup Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        uses: actions/setup-go@v7.0.0
         with:
           go-version: 1.27.x
 
       - name: ⬇️ Setup Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        uses: go-task/setup-task@v2.2.0
 
       # zsh and pwsh are preinstalled on the runners; only fish is missing
       # (plus zsh on the Linux image).
@@ -90,7 +109,7 @@ jobs:
       # Nushell ships in no runner image and is not packaged by apt, so it comes
       # from its own release archives.
       - name: ⬇️ Install Nushell
-        uses: hustcer/setup-nu@95cd3bfe252450ef7d35dd9a7ddecf3484341134 # v3.28
+        uses: hustcer/setup-nu@v3.28
         with:
           version: "*"
 
@@ -110,15 +129,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
 
       - name: ⬇️ Setup Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        uses: actions/setup-go@v7.0.0
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: 🔍 Lint
-        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        uses: golangci/golangci-lint-action@v9.3.0
         with:
           version: v2.14.0
 
@@ -127,10 +146,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
 
       - name: ⬇️ Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@v7.0.0
         with:
           python-version: 3.15
 
@@ -145,20 +164,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
 
       - name: ⬇️ Setup Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        uses: actions/setup-go@v7.0.0
         with:
           go-version: 1.27.x
 
       - name: ⬇️ Setup Node
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        uses: actions/setup-node@v7.1.0
         with:
           node-version: '24'
 
       - name: ⬇️ Setup pnpm
-        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+        uses: pnpm/action-setup@v6.0.10
         with:
           package_json_file: website/package.json
 
@@ -201,7 +220,7 @@ jobs:
     permissions:
       pull-requests: read
     steps:
-      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      - uses: actions/github-script@v9.0.0
         with:
           script: |
             // Everything cmd/release overwrites. Adding a file is fine -- that
@@ -234,4 +253,4 @@ jobs:
     name: 🛡️ Vulnerabilities
     runs-on: ubuntu-latest
     steps:
-      - uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
+      - uses: golang/govulncheck-action@v1.1.0
