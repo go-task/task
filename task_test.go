@@ -982,6 +982,25 @@ func TestCyclicDep(t *testing.T) {
 	assert.ErrorAs(t, err, &taskCalledTooManyTimesError)
 }
 
+func TestParallelDepsReportAllFailures(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/deps_fail"
+
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(io.Discard),
+		task.WithStderr(io.Discard),
+	)
+	require.NoError(t, e.Setup())
+	err := e.Run(t.Context(), &task.Call{Task: "default"})
+	require.Error(t, err)
+	msg := err.Error()
+	// Both failing deps must be surfaced, not just the first one.
+	assert.Contains(t, msg, `"fail-1"`)
+	assert.Contains(t, msg, `"fail-2"`)
+}
+
 func TestTaskVersion(t *testing.T) {
 	t.Parallel()
 
