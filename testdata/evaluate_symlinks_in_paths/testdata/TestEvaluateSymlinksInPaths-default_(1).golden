@@ -1,0 +1,2 @@
+task: [default] echo "some job"
+some job

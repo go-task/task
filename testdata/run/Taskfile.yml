@@ -3,7 +3,6 @@ run: when_changed
 
 tasks:
   generate-hash:
-    - rm -f hash.txt
     - task: input-content
       vars: { CONTENT: '1' }
     - task: input-content
@@ -16,20 +15,19 @@ tasks:
       - task: create-output
         vars: { CONTENT: '1' }
     cmds:
-      - echo {{.CONTENT}} >> hash.txt
+      - echo {{.CONTENT}}
 
   create-output:
     run: once
     cmds:
-      - echo starting {{.CONTENT}} >> hash.txt
+      - echo starting {{.CONTENT}}
 
   deploy:
     cmds:
-      - rm -rf wildcard.txt
       - task: deploy:infra
       - task: deploy:js
       - task: deploy:go
 
   deploy:*:
     run: once
-    cmd: echo "Deploy {{index .MATCH 0}}" >> wildcard.txt
+    cmd: echo "Deploy {{index .MATCH 0}}"

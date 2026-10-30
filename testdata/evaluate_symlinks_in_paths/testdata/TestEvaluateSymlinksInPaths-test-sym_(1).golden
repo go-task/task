@@ -1,0 +1,1 @@
+task: [test-sym] echo "shared file source changed" > src/shared/b

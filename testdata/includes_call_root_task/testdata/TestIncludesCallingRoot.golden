@@ -1,0 +1,2 @@
+task: [root-task] echo "root task"
+root task

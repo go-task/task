@@ -1,0 +1,1 @@
+task: [task-test-chatty-calls-chatty-silenced] exit 0
