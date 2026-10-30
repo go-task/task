@@ -20,13 +20,10 @@ func FastRecursiveGlob(pattern string) ([]string, bool, error) {
 	separator := string(os.PathSeparator)
 	marker := separator + "**" + separator
 
-	idx := strings.Index(pattern, marker)
-	if idx == -1 || strings.Contains(pattern[idx+len(marker):], marker) {
+	root, namePattern, found := strings.Cut(pattern, marker)
+	if !found {
 		return nil, false, nil
 	}
-
-	root := pattern[:idx]
-	namePattern := pattern[idx+len(marker):]
 	if root == "" || namePattern == "" || strings.Contains(namePattern, separator) {
 		return nil, false, nil
 	}

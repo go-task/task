@@ -1,4 +1,4 @@
-version: "2"
+version: '2'
 
 formatters:
   enable:
@@ -15,6 +15,7 @@ formatters:
 
 linters:
   enable:
+    - prealloc
     - depguard
     - gosec
     - mirror
@@ -29,6 +30,11 @@ linters:
     gosec:
       excludes:
         - G306
+        # Remote Taskfiles fetch URLs the user configured themselves, so there
+        # is no privilege boundary for an SSRF to cross in a local CLI. The
+        # trust prompt, pinned checksums and --trusted-hosts are the actual
+        # controls for untrusted remote Taskfiles.
+        - G704
     depguard:
       rules:
         main:
