@@ -1289,3 +1289,36 @@ func TestIf(t *testing.T) {
 		NewExecutorTest(t, opts...)
 	}
 }
+
+func TestAutomaticOverride(t *testing.T) {
+	t.Parallel()
+	const dir = "testdata/override"
+	NewExecutorTest(t,
+		WithName("discovered"),
+		WithExecutorOptions(task.WithDir(dir), task.WithSilent(true)),
+		WithTask("dev"),
+	)
+	NewExecutorTest(t,
+		WithName("added task location"),
+		WithExecutorOptions(task.WithDir(dir), task.WithSilent(true)),
+		WithTask("added"),
+		WithFixtureTemplating(),
+	)
+	// Only the discovered root's directory is searched, so the invalid
+	// override in child/ is ignored.
+	NewExecutorTest(t,
+		WithName("subdirectory"),
+		WithExecutorOptions(task.WithDir(dir+"/child"), task.WithSilent(true)),
+		WithTask("dev"),
+	)
+	NewExecutorTest(t,
+		WithName("explicit file"),
+		WithExecutorOptions(task.WithDir(dir), task.WithEntrypoint(dir+"/Taskfile.yml"), task.WithSilent(true)),
+		WithTask("dev"),
+	)
+	NewExecutorTest(t,
+		WithName("explicit directory"),
+		WithExecutorOptions(task.WithDir(dir), task.WithEntrypoint(dir), task.WithSilent(true)),
+		WithTask("dev"),
+	)
+}

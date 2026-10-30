@@ -2,6 +2,20 @@ package taskfile
 
 import "time"
 
+// WithAutomaticOverride loads a Taskfile override beside a local root Taskfile.
+// Remote, stdin and included Taskfiles never load one.
+func WithAutomaticOverride(enabled bool) *automaticOverrideOption {
+	return &automaticOverrideOption{enabled: enabled}
+}
+
+type automaticOverrideOption struct {
+	enabled bool
+}
+
+func (o *automaticOverrideOption) ApplyToReader(r *Reader) {
+	r.automaticOverride = o.enabled
+}
+
 // WithInsecure allows the [Reader] to make insecure connections when reading
 // remote taskfiles. By default, insecure connections are rejected.
 func WithInsecure(insecure bool) *insecureOption {

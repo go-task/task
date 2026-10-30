@@ -145,6 +145,70 @@ Task looks for these names in order of priority:
 - `Taskfile.dist.yaml`
 - `taskfile.dist.yaml`
 
-Commit a `.dist` variant if users need to supply their own `Taskfile.yml`
-override. The local file takes priority; add it to `.gitignore` if it should
-remain personal.
+Commit a `.dist` variant if users need to supply their own complete
+`Taskfile.yml`. The local file takes priority; add it to `.gitignore` if it
+should remain personal. To customize only some variables or tasks, use a local
+override instead.
+
+## Customize a Taskfile locally {#local-overrides}
+
+To change a few settings for yourself without touching the shared Taskfile,
+create a `Taskfile.override.yml` next to it. Task loads it on top of the main
+file:
+
+::: code-group
+
+```yaml [Taskfile.yml]
+version: '3'
+
+vars:
+  PORT: 3000
+
+tasks:
+  dev:
+    cmds:
+      - echo 'PORT={{.PORT}}'
+```
+
+```yaml [Taskfile.override.yml]
+version: '3'
+
+vars:
+  PORT: 4000
+```
+
+:::
+
+`task dev` now prints `PORT=4000`. Add `Taskfile.override.yml` to `.gitignore`
+so it stays on your machine.
+
+An override can set `vars`, `env` and `tasks`, and its `version` must match the
+main Taskfile's:
+
+- Variables and environment variables are merged: yours win, the others are
+  kept.
+- A task with the same name replaces the original entirely. To tweak a single
+  value of a shared task, have the main Taskfile read it from a variable, then
+  override that variable.
+
+Anything else at the root, such as `includes` or `dotenv`, is rejected.
+
+::: tip
+
+An overridden variable keeps its place in the main Taskfile, so its value can
+only use variables declared above it.
+
+:::
+
+The lowercase and `.yaml` spellings (`taskfile.override.yml`,
+`Taskfile.override.yaml`, `taskfile.override.yaml`) work too. Task only looks
+next to the root Taskfile it finds: included, remote and stdin Taskfiles never
+get an override. Since the override is read before includes, a variable can
+change which file gets included, but it can't redefine an included task like
+`docs:build`.
+
+To run without your override, name the Taskfile explicitly:
+
+```shell
+task -t Taskfile.yml dev # prints PORT=3000
+```
