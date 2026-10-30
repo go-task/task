@@ -1289,3 +1289,17 @@ func TestIf(t *testing.T) {
 		NewExecutorTest(t, opts...)
 	}
 }
+
+// A skip prints no duration, which keeps this fixture stable.
+func TestStatusOutput(t *testing.T) {
+	t.Parallel()
+
+	NewExecutorTest(t,
+		WithName("up to date"),
+		WithExecutorOptions(
+			task.WithDir("testdata/status_uptodate"),
+			task.WithOutputStyle(ast.Output{Name: "status"}),
+		),
+		WithTask("foo"),
+	)
+}
