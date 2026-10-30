@@ -1,0 +1,13 @@
+version: "3"
+includes:
+  a:
+    taskfile: ../a
+    dir: ../a
+  b:
+    taskfile: ../b
+    dir: ../b
+tasks:
+  lib:
+    deps:
+      - a:lib
+      - b:lib
