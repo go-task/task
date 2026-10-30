@@ -345,6 +345,42 @@ func TestSecretVars(t *testing.T) {
 	)
 }
 
+func TestInteractiveEnumRef(t *testing.T) {
+	t.Parallel()
+	for _, name := range []string{"deploy", "pipeline", "chained", "default-value", "explicit", "empty", "waiting-for-answer", "cached", "already-provided"} {
+		input := "j\r"
+		if name == "empty" {
+			input = "api\r"
+		}
+		opts := []ExecutorTestOption{
+			WithName(name),
+			WithTask(name),
+			WithInput(input),
+			WithExecutorOptions(
+				task.WithDir("testdata/interactive_enum_ref"),
+				task.WithAssumeTerm(true),
+				task.WithInteractive(true),
+				task.WithSilent(true),
+			),
+			WithPostProcessFn(func(t *testing.T, output []byte) []byte {
+				t.Helper()
+				// The final value verifies selection; discard terminal redraws,
+				// whose escape sequences depend on the platform and environment.
+				start := bytes.Index(output, []byte("Selected "))
+				require.NotEqual(t, -1, start)
+				return output[start:]
+			}),
+		}
+		if name == "cached" {
+			opts = append(opts, WithVar("COUNT_FILE", filepath.Join(t.TempDir(), "count")))
+		}
+		if name == "already-provided" {
+			opts = append(opts, WithTask("deploy"), WithVar("SERVICE", "db"))
+		}
+		NewExecutorTest(t, opts...)
+	}
+}
+
 func TestRequires(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,

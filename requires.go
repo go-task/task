@@ -44,9 +44,28 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 			return err
 		}
 
-		for _, v := range getMissingRequiredVars(compiledTask) {
+		missing := getMissingRequiredVars(compiledTask)
+		vars := compiledTask.Vars
+		for _, v := range missing {
+			if varsMap.Has(v.Name) || v.Enum == nil || v.Enum.Ref == "" {
+				continue
+			}
+			t, err := e.GetTask(call)
+			if err != nil {
+				return err
+			}
+			// Resolve once per call, using the compiler's existing shell cache.
+			// Some shell variables need the answers we haven't prompted for yet;
+			// retain the fast prompt fallback when early evaluation fails.
+			if evaluated, err := e.Compiler.GetVariables(t, call); err == nil {
+				vars = evaluated
+			}
+			break
+		}
+
+		for _, v := range missing {
 			if !varsMap.Has(v.Name) {
-				varsMap.Set(v.Name, refs.ResolveEnum(v, compiledTask.Vars))
+				varsMap.Set(v.Name, refs.ResolveEnum(v, vars))
 			}
 		}
 
