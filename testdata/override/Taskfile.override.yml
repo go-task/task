@@ -6,6 +6,8 @@ vars:
 env:
   TASK_OVERRIDE_ENV: local
 
+dotenv: [.env.local]
+
 tasks:
   added:
     cmds:

@@ -6,7 +6,9 @@ vars:
 env:
   TASK_OVERRIDE_ENV: main
 
+dotenv: [.env]
+
 tasks:
   dev:
     cmds:
-      - echo {{.PORT}} $TASK_OVERRIDE_ENV
+      - echo {{.PORT}} $TASK_OVERRIDE_ENV $TASK_OVERRIDE_DOTENV

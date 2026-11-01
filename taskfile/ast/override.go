@@ -2,12 +2,13 @@ package ast
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/go-task/task/v3/errors"
 )
 
-// MergeOverride applies a local override: vars and env merge by key, tasks are
-// replaced whole.
+// MergeOverride applies a local override: vars and env merge by key, dotenv
+// files take priority over the main ones, tasks are replaced whole.
 func (tf *Taskfile) MergeOverride(override *Taskfile) error {
 	// An older version is fine, so bumping the shared Taskfile doesn't break
 	// existing overrides.
@@ -29,6 +30,7 @@ func (tf *Taskfile) MergeOverride(override *Taskfile) error {
 	}
 	tf.Vars.Merge(override.Vars, nil)
 	tf.Env.Merge(override.Env, nil)
+	tf.Dotenv = append(slices.Clone(override.Dotenv), tf.Dotenv...)
 	for name, task := range override.Tasks.All(nil) {
 		tf.Tasks.Set(name, task)
 	}
