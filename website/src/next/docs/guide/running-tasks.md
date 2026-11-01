@@ -182,8 +182,9 @@ vars:
 `task dev` now prints `PORT=4000`. Add `Taskfile.override.yml` to `.gitignore`
 so it stays on your machine.
 
-An override can set `vars`, `env` and `tasks`, and its `version` must match the
-main Taskfile's:
+An override can set `vars`, `env` and `tasks`. Its `version` can't be newer
+than the main Taskfile's, so `version: '3'` keeps working when the main Taskfile
+bumps its version:
 
 - Variables and environment variables are merged: yours win, the others are
   kept.
