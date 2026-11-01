@@ -1,0 +1,86 @@
+version: '3'
+
+vars:
+  AVAILABLE_SERVICES:
+    sh: printf 'api\nweb\ndb\n'
+  ALLOWED_ENVS: [dev, staging, prod]
+
+tasks:
+  deploy:
+    requires:
+      vars:
+        - name: SERVICE
+          enum:
+            ref: .AVAILABLE_SERVICES | splitLines | compact
+    cmds:
+      - echo "Selected {{.SERVICE}}"
+
+  pipeline:
+    deps: [deploy]
+
+  chained:
+    vars:
+      JSON:
+        sh: printf '["api","web","db"]'
+      SERVICES:
+        ref: .JSON | fromJson
+    requires:
+      vars:
+        - name: SERVICE
+          enum: {ref: .SERVICES}
+    cmds:
+      - echo "Selected {{.SERVICE}}"
+
+  default-value:
+    requires:
+      vars:
+        - name: SERVICE
+          enum:
+            ref: '.AVAILABLE_SERVICES | default "incorrect" | splitLines | compact'
+    cmds:
+      - echo "Selected {{.SERVICE}}"
+
+  cached:
+    vars:
+      SERVICES:
+        sh: printf x >> '{{.COUNT_FILE}}'; printf 'api\nweb\ndb\n'
+    requires:
+      vars:
+        - name: SERVICE
+          enum: {ref: .SERVICES | splitLines | compact}
+    cmds:
+      - echo "Selected {{.SERVICE}}"
+      - test "$(cat '{{.COUNT_FILE}}')" = x
+
+  empty:
+    vars:
+      SERVICES:
+        sh: printf ''
+    requires:
+      vars:
+        - name: SERVICE
+          enum: {ref: .SERVICES | splitLines | compact}
+    cmds:
+      - echo "Selected {{.SERVICE}}"
+
+  waiting-for-answer:
+    vars:
+      RESULT:
+        sh: test -n '{{.ENV}}' && printf '{{.ENV}}'
+    requires:
+      vars:
+        - name: ENV
+          enum: {ref: .ALLOWED_ENVS}
+    cmds:
+      - echo "Selected {{.RESULT}}"
+
+  explicit:
+    vars:
+      RESULT:
+        sh: test -n '{{.SERVICE}}' && printf '{{.SERVICE}}'
+    requires:
+      vars:
+        - name: SERVICE
+          enum: [api, web, db]
+    cmds:
+      - echo "Selected {{.RESULT}}"
