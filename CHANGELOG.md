@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### 🚀 Features
+
+- Interactive selection prompts for `enum` variables now handle long lists: they
+  show a scrollable window of choices, support case-insensitive search with `/`,
+  and add Page Up/Page Down and Home/End navigation (#3071 by @vmaerten).
+
 ### 🐛 Fixes
 
 - Fixed `--interactive` showing a text prompt instead of a selection menu for
