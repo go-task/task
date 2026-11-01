@@ -56,7 +56,7 @@ func (tf *taskfileOverride) UnmarshalYAML(node *yaml.Node) error {
 	for i := 0; i < len(node.Content); i += 2 {
 		key := node.Content[i]
 		switch key.Value {
-		case "version", "vars", "env", "dotenv", "tasks":
+		case "version", "includes", "vars", "env", "dotenv", "tasks":
 		default:
 			return errors.NewTaskfileDecodeError(nil, key).
 				WithMessage("field %q is not allowed in a Taskfile override", key.Value)

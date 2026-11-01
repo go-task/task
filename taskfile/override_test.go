@@ -135,7 +135,7 @@ func TestAutomaticOverrideErrors(t *testing.T) {
 		{"older major version", "version: '2'", "(2.0.0) must be a v3 version"},
 		{"sequence", "- version: '3'", "taskfile override"},
 	}
-	for _, key := range []string{"includes", "unknown", "<<"} {
+	for _, key := range []string{"output", "unknown", "<<"} {
 		tests = append(tests, struct{ name, content, message string }{key, "version: '3'\n" + key + ": null", "not allowed"})
 	}
 	for _, tt := range tests {
@@ -169,29 +169,34 @@ func TestAutomaticOverrideReadError(t *testing.T) {
 
 func TestAutomaticOverrideIncludes(t *testing.T) {
 	t.Parallel()
-	for _, conflict := range []bool{false, true} {
-		t.Run(fmt.Sprint(conflict), func(t *testing.T) {
+	const main = "version: '3'\nvars: {INCLUDE: missing}\nincludes:\n  docs: '{{.INCLUDE}}/Taskfile.yml'\n"
+	tests := []struct {
+		name, main, override, task, taskfile, err string
+	}{
+		{name: "var picks include", main: main, override: "vars: {INCLUDE: docs}\n", task: "docs:build", taskfile: "docs/Taskfile.yml"},
+		{name: "task conflicts with include", main: main, override: "vars: {INCLUDE: docs}\ntasks:\n  docs:build: echo local\n", err: "docs:build"},
+		{name: "added include", main: "version: '3'\n", override: "includes:\n  extra: extra/Taskfile.yml\n", task: "extra:build", taskfile: "extra/Taskfile.yml"},
+		{name: "redefined include", main: main, override: "includes:\n  docs: extra/Taskfile.yml\n", err: `can't redefine include "docs"`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			dir := t.TempDir()
-			writeOverrideFixture(t, dir, "Taskfile.yml", "version: '3'\nvars: {INCLUDE: missing}\nincludes:\n  docs: '{{.INCLUDE}}/Taskfile.yml'\n")
-			override := "version: '3'\nvars: {INCLUDE: docs}\n"
-			if conflict {
-				override += "tasks:\n  docs:build: echo local\n"
+			writeOverrideFixture(t, dir, "Taskfile.yml", tt.main)
+			writeOverrideFixture(t, dir, "Taskfile.override.yml", "version: '3'\n"+tt.override)
+			for _, sub := range []string{"docs", "extra"} {
+				writeOverrideFixture(t, dir, sub+"/Taskfile.yml", "version: '3'\ntasks:\n  build: echo "+sub+"\n")
+				writeOverrideFixture(t, dir, sub+"/Taskfile.override.yml", "invalid YAML: [")
 			}
-			writeOverrideFixture(t, dir, "Taskfile.override.yml", override)
-			included := writeOverrideFixture(t, dir, "docs/Taskfile.yml", "version: '3'\ntasks:\n  build: echo included\n")
-			writeOverrideFixture(t, dir, "docs/Taskfile.override.yml", "invalid YAML: [")
 			tf, err := readOverrideFixture(t, dir, WithAutomaticOverride(true))
-			if conflict {
-				var conflictErr *errors.TaskNameFlattenConflictError
-				require.ErrorAs(t, err, &conflictErr)
-				assert.Equal(t, "docs:build", conflictErr.TaskName)
-			} else {
-				require.NoError(t, err)
-				build, ok := tf.Tasks.Get("docs:build")
-				require.True(t, ok)
-				assert.Equal(t, included, build.Location.Taskfile)
+			if tt.err != "" {
+				require.ErrorContains(t, err, tt.err)
+				return
 			}
+			require.NoError(t, err)
+			task, ok := tf.Tasks.Get(tt.task)
+			require.True(t, ok)
+			assert.Equal(t, filepath.Join(dir, tt.taskfile), task.Location.Taskfile)
 		})
 	}
 }
