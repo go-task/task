@@ -214,8 +214,14 @@ The lowercase and `.yaml` spellings (`taskfile.override.yml`,
 `Taskfile.override.yaml`, `taskfile.override.yaml`) work too. Task only looks
 next to the root Taskfile it finds: included, remote and stdin Taskfiles never
 get an override. Since the override is read before includes, a variable can
-change which file gets included, but it can't redefine an included task like
-`docs:build`.
+change which file gets included.
+
+A task named after an include, like `docs:build`, replaces or adds that task in
+the included Taskfile. Write it as if it lived there: it runs in the include's
+directory, sees its variables, and `deps: [lint]` refers to `docs:lint`. Only
+direct includes are supported, so `docs:api:build` is rejected when `api` is an
+include of `docs`, as is a task the include `excludes`. With `flatten: true`,
+the include has no namespace and its tasks can't be overridden.
 
 To run without your override, name the Taskfile explicitly:
 

@@ -1,0 +1,8 @@
+version: '3'
+
+includes:
+  backend:
+    taskfile: ./backend
+    dir: ./backend
+    aliases: [be]
+  copy: ./backend

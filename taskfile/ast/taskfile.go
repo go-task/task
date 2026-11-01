@@ -35,6 +35,10 @@ type Taskfile struct {
 	Run          string
 	Interval     time.Duration
 	UseGitignore *bool
+
+	// includeTaskOverrides holds the override's tasks for each include
+	// namespace, applied when that include is merged.
+	includeTaskOverrides map[string]*Tasks
 }
 
 // Merge merges the second Taskfile into the first
@@ -44,6 +48,10 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	}
 	if len(t2.Dotenv) > 0 {
 		return ErrIncludedTaskfilesCantHaveDotenvs
+	}
+	tasks, err := t1.includedTasks(t2, include)
+	if err != nil {
+		return err
 	}
 	if t2.Output.IsSet() {
 		t1.Output = t2.Output
@@ -61,7 +69,7 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 		t1.Tasks = NewTasks()
 	}
 	if t2.Silent {
-		for _, t := range t2.Tasks.All(nil) {
+		for _, t := range tasks.All(nil) {
 			if t.Silent == nil {
 				v := true
 				t.Silent = &v
@@ -69,7 +77,7 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 		}
 	}
 	if t2.UseGitignore != nil {
-		for _, t := range t2.Tasks.All(nil) {
+		for _, t := range tasks.All(nil) {
 			if t.UseGitignore == nil {
 				v := *t2.UseGitignore
 				t.UseGitignore = &v
@@ -78,7 +86,7 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	}
 	t1.Vars.Merge(t2.Vars, include)
 	t1.Env.Merge(t2.Env, include)
-	return t1.Tasks.Merge(t2.Tasks, include, t1.Vars)
+	return t1.Tasks.Merge(tasks, include, t1.Vars)
 }
 
 func (tf *Taskfile) UnmarshalYAML(node *yaml.Node) error {

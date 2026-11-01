@@ -1,0 +1,9 @@
+version: '3'
+
+vars:
+  NAME: backend
+
+tasks:
+  build: echo shared build
+
+  other: echo other

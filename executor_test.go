@@ -1361,7 +1361,14 @@ func TestAutomaticOverride(t *testing.T) {
 			WithTask(include+":build"),
 		)
 	}
-	for _, name := range []string{"invalid_yaml", "missing_version", "newer_version", "forbidden_key", "redefined_include"} {
+	for _, name := range []string{"be:build", "backend:new", "copy:build"} {
+		NewExecutorTest(t,
+			WithName("included task "+name),
+			WithExecutorOptions(task.WithDir(dir+"/included_tasks"), task.WithSilent(true)),
+			WithTask(name),
+		)
+	}
+	for _, name := range []string{"invalid_yaml", "missing_version", "newer_version", "forbidden_key", "redefined_include", "nested_include", "excluded_task"} {
 		NewExecutorTest(t,
 			WithName("error "+name),
 			WithExecutorOptions(task.WithDir(dir+"/errors/"+name)),

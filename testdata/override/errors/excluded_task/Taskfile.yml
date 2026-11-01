@@ -1,0 +1,6 @@
+version: '3'
+
+includes:
+  backend:
+    taskfile: ./backend
+    excludes: [secret]

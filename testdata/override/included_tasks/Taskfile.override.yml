@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  backend:build:
+    deps: [other]
+    cmds:
+      - echo {{.NAME}} {{base .TASK_DIR}}
+
+  backend:new: echo new

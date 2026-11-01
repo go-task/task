@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/go-task/task/v3/errors"
 )
@@ -60,7 +61,48 @@ func (tf *Taskfile) MergeOverride(override *Taskfile) error {
 	tf.Env.Merge(override.Env, nil)
 	tf.Dotenv = append(slices.Clone(override.Dotenv), tf.Dotenv...)
 	for name, task := range override.Tasks.All(nil) {
+		if namespace, local, ok := strings.Cut(name, NamespaceSeparator); ok {
+			if include, ok := tf.Includes.Get(namespace); ok && !include.Flatten {
+				if tf.includeTaskOverrides == nil {
+					tf.includeTaskOverrides = map[string]*Tasks{}
+				}
+				if tf.includeTaskOverrides[namespace] == nil {
+					tf.includeTaskOverrides[namespace] = NewTasks()
+				}
+				// Merging the include adds the namespace back.
+				task.Task = local
+				tf.includeTaskOverrides[namespace].Set(local, task)
+				continue
+			}
+		}
 		tf.Tasks.Set(name, task)
 	}
 	return nil
+}
+
+// includedTasks returns the tasks of the included Taskfile t2 with the
+// override's tasks for its namespace applied, so they get the include's
+// namespace, directory and variables like its own tasks.
+func (t1 *Taskfile) includedTasks(t2 *Taskfile, include *Include) (*Tasks, error) {
+	overrides := t1.includeTaskOverrides[include.Namespace]
+	if overrides == nil {
+		return t2.Tasks, nil
+	}
+	tasks := NewTasks()
+	for name, task := range t2.Tasks.All(nil) {
+		tasks.Set(name, task)
+	}
+	for name, task := range overrides.All(nil) {
+		fullName := include.Namespace + NamespaceSeparator + name
+		if namespace, _, ok := strings.Cut(name, NamespaceSeparator); ok {
+			if _, nested := t2.Includes.Get(namespace); nested {
+				return nil, fmt.Errorf("task: Taskfile override %q can't override %q: only tasks of a direct include can be overridden", task.Location.Taskfile, fullName)
+			}
+		}
+		if include.isTaskExcluded(name) {
+			return nil, fmt.Errorf("task: Taskfile override %q can't override %q: the include excludes it", task.Location.Taskfile, fullName)
+		}
+		tasks.Set(name, task)
+	}
+	return tasks, nil
 }
