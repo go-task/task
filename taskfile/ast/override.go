@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"path/filepath"
 	"slices"
 
 	"github.com/go-task/task/v3/errors"
@@ -42,7 +43,7 @@ func (tf *Taskfile) MergeOverride(override *Taskfile) error {
 	}
 	for namespace, include := range override.Includes.All() {
 		if _, ok := tf.Includes.Get(namespace); ok {
-			return fmt.Errorf("task: Taskfile override %q can't redefine include %q", override.Location, namespace)
+			return fmt.Errorf("task: Taskfile override %q can't redefine include %q", filepath.ToSlash(override.Location), namespace)
 		}
 		tf.Includes.Set(namespace, include)
 	}
