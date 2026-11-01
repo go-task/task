@@ -1,0 +1,3 @@
+task: [multiple-cmds-timeout] echo "first"
+first
+task: [multiple-cmds-timeout] sleep 10

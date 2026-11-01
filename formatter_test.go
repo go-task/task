@@ -67,33 +67,6 @@ func NewFormatterTest(t *testing.T, opts ...FormatterTestOption) {
 	tt.run(t)
 }
 
-// Functional options
-
-// WithListOptions sets the list options for the formatter.
-func WithListOptions(opts task.ListOptions) FormatterTestOption {
-	return &listOptionsTestOption{opts}
-}
-
-type listOptionsTestOption struct {
-	listOptions task.ListOptions
-}
-
-func (opt *listOptionsTestOption) applyToFormatterTest(t *FormatterTest) {
-	t.listOptions = opt.listOptions
-}
-
-// WithListError tells the test to expect an error when running the formatter.
-// A fixture will be created with the output of any errors.
-func WithListError() FormatterTestOption {
-	return &listErrorTestOption{}
-}
-
-type listErrorTestOption struct{}
-
-func (opt *listErrorTestOption) applyToFormatterTest(t *FormatterTest) {
-	t.wantListError = true
-}
-
 // Helpers
 
 // writeFixtureErrList is a wrapper for writing the output of an error when

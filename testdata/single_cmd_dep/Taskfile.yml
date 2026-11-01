@@ -3,6 +3,6 @@ version: "3"
 tasks:
   foo:
     deps: [bar]
-    cmd: echo foo > foo.txt
+    cmd: echo foo
 
-  bar: echo bar > bar.txt
+  bar: echo bar

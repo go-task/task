@@ -1,0 +1,2 @@
+task: Invalid schema version in Taskfile "{{.TEST_DIR}}/testdata/version/v1/Taskfile.yml":
+Schema version (1.0.0) no longer supported. Please use v3 or above

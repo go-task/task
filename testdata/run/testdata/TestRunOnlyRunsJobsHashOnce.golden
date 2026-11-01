@@ -1,0 +1,6 @@
+task: [create-output] echo starting 1
+starting 1
+task: [input-content] echo 1
+1
+task: [input-content] echo 2
+2

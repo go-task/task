@@ -1,0 +1,2 @@
+bar
+{{.TEST_DIR}}/testdata/included_taskfile_var_merging/bar

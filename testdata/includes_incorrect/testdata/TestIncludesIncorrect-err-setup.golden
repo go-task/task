@@ -1,0 +1,2 @@
+task: Failed to parse testdata/includes_incorrect/incomplete.yml:
+yaml: line 4: found unexpected end of stream

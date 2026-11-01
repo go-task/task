@@ -1,0 +1,6 @@
+task: [lib:greet] echo 'Hello world'
+Hello world
+task: [foo:lib:greet] echo 'Hello foo'
+Hello foo
+task: [bar:lib:greet] echo 'Hello bar'
+Hello bar

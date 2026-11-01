@@ -1,0 +1,1 @@
+task: [cmd-timeout-should-fail] sleep 10

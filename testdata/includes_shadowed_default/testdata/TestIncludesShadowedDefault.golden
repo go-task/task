@@ -1,0 +1,2 @@
+task: [included] echo "shadowed"
+shadowed

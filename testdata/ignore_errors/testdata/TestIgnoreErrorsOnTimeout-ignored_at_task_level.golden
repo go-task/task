@@ -1,0 +1,3 @@
+task: [task-timeout-should-pass] sleep 10
+task: [task-timeout-should-pass] echo "reached the end"
+reached the end

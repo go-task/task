@@ -1,0 +1,1 @@
+task: [default] echo {{.TEST_DIR}}/testdata/dir/dynamic_var_on_created_dir/created

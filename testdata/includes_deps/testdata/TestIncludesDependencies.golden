@@ -1,0 +1,6 @@
+task: [included:called_dep] echo "called_dep"
+called_dep
+task: [included:default] echo "default"
+default
+task: [included:called_task] echo "called_task"
+called_task

@@ -1,0 +1,6 @@
+task: "build-ts" started
+task: [build-ts] echo '1704067200'
+1704067200
+task: [build-ts] echo '2024-01-01 00:00:00 +0000 UTC'
+2024-01-01 00:00:00 +0000 UTC
+task: "build-ts" finished

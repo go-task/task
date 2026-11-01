@@ -1,0 +1,2 @@
+task: [no-timeout] echo "no timeout"
+no timeout

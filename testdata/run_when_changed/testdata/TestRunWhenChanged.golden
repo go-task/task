@@ -1,0 +1,3 @@
+login server=fubar user=fubar
+login server=foo user=foo
+login server=bar user=bar

@@ -1,0 +1,3 @@
+task: [sub/src.txt] mkdir -p sub
+task: [sub/src.txt] echo "hello world" > sub/src.txt
+task: [rel.txt] cat src.txt > '../rel.txt'

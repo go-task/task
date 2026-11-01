@@ -1,0 +1,2 @@
+task: [common:pwd] pwd
+{{.TEST_DIR}}/testdata/includes_rel_path/common
