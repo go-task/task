@@ -13,6 +13,7 @@ import (
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
 	"github.com/go-task/task/v3/internal/sort"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -36,6 +37,7 @@ type (
 		Download            bool
 		Offline             bool
 		TrustedHosts        []string
+		RemoteHeaders       taskfile.HeadersByHost
 		Timeout             time.Duration
 		CacheExpiryDuration time.Duration
 		RemoteCacheDir      string
@@ -138,7 +140,7 @@ func (e *Executor) fingerprinter() *fingerprint.Fingerprinter {
 
 // WithDir sets the working directory of the [Executor]. By default, the
 // directory is set to the user's current working directory.
-func WithDir(dir string) ExecutorOption {
+func WithDir(dir string) *dirOption {
 	return &dirOption{dir}
 }
 
@@ -153,7 +155,7 @@ func (o *dirOption) ApplyToExecutor(e *Executor) {
 // WithEntrypoint sets the entrypoint (main Taskfile) of the [Executor]. By
 // default, Task will search for one of the default Taskfiles in the given
 // directory.
-func WithEntrypoint(entrypoint string) ExecutorOption {
+func WithEntrypoint(entrypoint string) *entrypointOption {
 	return &entrypointOption{entrypoint}
 }
 
@@ -168,7 +170,7 @@ func (o *entrypointOption) ApplyToExecutor(e *Executor) {
 // WithTempDir sets the temporary directory that will be used by [Executor] for
 // storing temporary files like checksums and cached remote files. By default,
 // the temporary directory is set to the user's temporary directory.
-func WithTempDir(tempDir TempDir) ExecutorOption {
+func WithTempDir(tempDir TempDir) *tempDirOption {
 	return &tempDirOption{tempDir}
 }
 
@@ -184,7 +186,7 @@ func (o *tempDirOption) ApplyToExecutor(e *Executor) {
 // during [Executor.Setup]. Relative paths are resolved from the root Taskfile
 // directory. Use [WithTempDir] when the remote and fingerprint directories have
 // already been resolved.
-func WithTempDirPath(path string) ExecutorOption {
+func WithTempDirPath(path string) *tempDirPathOption {
 	return &tempDirPathOption{path: path}
 }
 
@@ -198,7 +200,7 @@ func (o *tempDirPathOption) ApplyToExecutor(e *Executor) {
 
 // WithForce ensures that the [Executor] always runs a task, even when
 // fingerprinting or prompts would normally stop it.
-func WithForce(force bool) ExecutorOption {
+func WithForce(force bool) *forceOption {
 	return &forceOption{force}
 }
 
@@ -212,7 +214,7 @@ func (o *forceOption) ApplyToExecutor(e *Executor) {
 
 // WithForceAll ensures that the [Executor] always runs all tasks (including
 // subtasks), even when fingerprinting or prompts would normally stop them.
-func WithForceAll(forceAll bool) ExecutorOption {
+func WithForceAll(forceAll bool) *forceAllOption {
 	return &forceAllOption{forceAll}
 }
 
@@ -226,7 +228,7 @@ func (o *forceAllOption) ApplyToExecutor(e *Executor) {
 
 // WithInsecure allows the [Executor] to make insecure connections when reading
 // remote taskfiles. By default, insecure connections are rejected.
-func WithInsecure(insecure bool) ExecutorOption {
+func WithInsecure(insecure bool) *insecureOption {
 	return &insecureOption{insecure}
 }
 
@@ -240,7 +242,7 @@ func (o *insecureOption) ApplyToExecutor(e *Executor) {
 
 // WithDownload forces the [Executor] to download a fresh copy of the taskfile
 // from the remote source.
-func WithDownload(download bool) ExecutorOption {
+func WithDownload(download bool) *downloadOption {
 	return &downloadOption{download}
 }
 
@@ -254,7 +256,7 @@ func (o *downloadOption) ApplyToExecutor(e *Executor) {
 
 // WithOffline stops the [Executor] from being able to make network connections.
 // It will still be able to read local files and cached copies of remote files.
-func WithOffline(offline bool) ExecutorOption {
+func WithOffline(offline bool) *offlineOption {
 	return &offlineOption{offline}
 }
 
@@ -268,7 +270,7 @@ func (o *offlineOption) ApplyToExecutor(e *Executor) {
 
 // WithTrustedHosts configures the [Executor] with a list of trusted hosts for remote
 // Taskfiles. Hosts in this list will not prompt for user confirmation.
-func WithTrustedHosts(trustedHosts []string) ExecutorOption {
+func WithTrustedHosts(trustedHosts []string) *trustedHostsOption {
 	return &trustedHostsOption{trustedHosts}
 }
 
@@ -280,9 +282,23 @@ func (o *trustedHostsOption) ApplyToExecutor(e *Executor) {
 	e.TrustedHosts = o.trustedHosts
 }
 
+// WithRemoteHeaders configures the [Executor] with the HTTP headers to send when
+// fetching a remote Taskfile, keyed by host.
+func WithRemoteHeaders(remoteHeaders taskfile.HeadersByHost) ExecutorOption {
+	return &remoteHeadersOption{remoteHeaders}
+}
+
+type remoteHeadersOption struct {
+	remoteHeaders taskfile.HeadersByHost
+}
+
+func (o *remoteHeadersOption) ApplyToExecutor(e *Executor) {
+	e.RemoteHeaders = o.remoteHeaders
+}
+
 // WithTimeout sets the [Executor]'s timeout for fetching remote taskfiles. By
 // default, the timeout is set to 10 seconds.
-func WithTimeout(timeout time.Duration) ExecutorOption {
+func WithTimeout(timeout time.Duration) *timeoutOption {
 	return &timeoutOption{timeout}
 }
 
@@ -296,7 +312,7 @@ func (o *timeoutOption) ApplyToExecutor(e *Executor) {
 
 // WithCacheExpiryDuration sets the duration after which the cache is considered
 // expired. By default, the cache is 0 (disabled).
-func WithCacheExpiryDuration(duration time.Duration) ExecutorOption {
+func WithCacheExpiryDuration(duration time.Duration) *cacheExpiryDurationOption {
 	return &cacheExpiryDurationOption{duration: duration}
 }
 
@@ -309,7 +325,7 @@ func (o *cacheExpiryDurationOption) ApplyToExecutor(r *Executor) {
 }
 
 // WithRemoteCacheDir sets the directory where remote taskfiles are cached.
-func WithRemoteCacheDir(dir string) ExecutorOption {
+func WithRemoteCacheDir(dir string) *remoteCacheDirOption {
 	return &remoteCacheDirOption{dir: dir}
 }
 
@@ -322,7 +338,7 @@ func (o *remoteCacheDirOption) ApplyToExecutor(e *Executor) {
 }
 
 // WithCACert sets the path to a custom CA certificate for TLS connections.
-func WithCACert(caCert string) ExecutorOption {
+func WithCACert(caCert string) *caCertOption {
 	return &caCertOption{caCert: caCert}
 }
 
@@ -335,7 +351,7 @@ func (o *caCertOption) ApplyToExecutor(e *Executor) {
 }
 
 // WithCert sets the path to a client certificate for TLS connections.
-func WithCert(cert string) ExecutorOption {
+func WithCert(cert string) *certOption {
 	return &certOption{cert: cert}
 }
 
@@ -348,7 +364,7 @@ func (o *certOption) ApplyToExecutor(e *Executor) {
 }
 
 // WithCertKey sets the path to a client certificate key for TLS connections.
-func WithCertKey(certKey string) ExecutorOption {
+func WithCertKey(certKey string) *certKeyOption {
 	return &certKeyOption{certKey: certKey}
 }
 
@@ -363,7 +379,7 @@ func (o *certKeyOption) ApplyToExecutor(e *Executor) {
 // WithWatch tells the [Executor] to keep running in the background and watch
 // for changes to the fingerprint of the tasks that are run. When changes are
 // detected, a new task run is triggered.
-func WithWatch(watch bool) ExecutorOption {
+func WithWatch(watch bool) *watchOption {
 	return &watchOption{watch}
 }
 
@@ -377,7 +393,7 @@ func (o *watchOption) ApplyToExecutor(e *Executor) {
 
 // WithVerbose tells the [Executor] to output more information about the tasks
 // that are run.
-func WithVerbose(verbose bool) ExecutorOption {
+func WithVerbose(verbose bool) *verboseOption {
 	return &verboseOption{verbose}
 }
 
@@ -391,7 +407,7 @@ func (o *verboseOption) ApplyToExecutor(e *Executor) {
 
 // WithSilent tells the [Executor] to suppress all output except for the output
 // of the tasks that are run.
-func WithSilent(silent bool) ExecutorOption {
+func WithSilent(silent bool) *silentOption {
 	return &silentOption{silent}
 }
 
@@ -404,7 +420,7 @@ func (o *silentOption) ApplyToExecutor(e *Executor) {
 }
 
 // WithDisableFuzzy tells the [Executor] to disable fuzzy matching for task names.
-func WithDisableFuzzy(disableFuzzy bool) ExecutorOption {
+func WithDisableFuzzy(disableFuzzy bool) *disableFuzzyOption {
 	return &disableFuzzyOption{disableFuzzy}
 }
 
@@ -417,7 +433,7 @@ func (o *disableFuzzyOption) ApplyToExecutor(e *Executor) {
 }
 
 // WithAssumeYes tells the [Executor] to assume "yes" for all prompts.
-func WithAssumeYes(assumeYes bool) ExecutorOption {
+func WithAssumeYes(assumeYes bool) *assumeYesOption {
 	return &assumeYesOption{assumeYes}
 }
 
@@ -430,7 +446,7 @@ func (o *assumeYesOption) ApplyToExecutor(e *Executor) {
 }
 
 // WithAssumeTerm is used for testing purposes to simulate a terminal.
-func WithAssumeTerm(assumeTerm bool) ExecutorOption {
+func WithAssumeTerm(assumeTerm bool) *assumeTermOption {
 	return &assumeTermOption{assumeTerm}
 }
 
@@ -443,7 +459,7 @@ func (o *assumeTermOption) ApplyToExecutor(e *Executor) {
 }
 
 // WithInteractive tells the [Executor] to prompt for missing required variables.
-func WithInteractive(interactive bool) ExecutorOption {
+func WithInteractive(interactive bool) *interactiveOption {
 	return &interactiveOption{interactive}
 }
 
@@ -457,7 +473,7 @@ func (o *interactiveOption) ApplyToExecutor(e *Executor) {
 
 // WithDry tells the [Executor] to output the commands that would be run without
 // actually running them.
-func WithDry(dry bool) ExecutorOption {
+func WithDry(dry bool) *dryOption {
 	return &dryOption{dry}
 }
 
@@ -471,7 +487,7 @@ func (o *dryOption) ApplyToExecutor(e *Executor) {
 
 // WithSummary tells the [Executor] to output a summary of the given tasks
 // instead of running them.
-func WithSummary(summary bool) ExecutorOption {
+func WithSummary(summary bool) *summaryOption {
 	return &summaryOption{summary}
 }
 
@@ -485,7 +501,7 @@ func (o *summaryOption) ApplyToExecutor(e *Executor) {
 
 // WithParallel tells the [Executor] to run tasks given in the same call in
 // parallel.
-func WithParallel(parallel bool) ExecutorOption {
+func WithParallel(parallel bool) *parallelOption {
 	return &parallelOption{parallel}
 }
 
@@ -499,7 +515,7 @@ func (o *parallelOption) ApplyToExecutor(e *Executor) {
 
 // WithColor tells the [Executor] whether or not to output using colorized
 // strings.
-func WithColor(color bool) ExecutorOption {
+func WithColor(color bool) *colorOption {
 	return &colorOption{color}
 }
 
@@ -513,7 +529,7 @@ func (o *colorOption) ApplyToExecutor(e *Executor) {
 
 // WithConcurrency sets the maximum number of tasks that the [Executor] can run
 // in parallel.
-func WithConcurrency(concurrency int) ExecutorOption {
+func WithConcurrency(concurrency int) *concurrencyOption {
 	return &concurrencyOption{concurrency}
 }
 
@@ -527,7 +543,7 @@ func (o *concurrencyOption) ApplyToExecutor(e *Executor) {
 
 // WithInterval sets the interval at which the [Executor] will wait for
 // duplicated events before running a task.
-func WithInterval(interval time.Duration) ExecutorOption {
+func WithInterval(interval time.Duration) *intervalOption {
 	return &intervalOption{interval}
 }
 
@@ -541,7 +557,7 @@ func (o *intervalOption) ApplyToExecutor(e *Executor) {
 
 // WithOutputStyle sets the output style of the [Executor]. By default, the
 // output style is set to the style defined in the Taskfile.
-func WithOutputStyle(outputStyle ast.Output) ExecutorOption {
+func WithOutputStyle(outputStyle ast.Output) *outputStyleOption {
 	return &outputStyleOption{outputStyle}
 }
 
@@ -556,7 +572,7 @@ func (o *outputStyleOption) ApplyToExecutor(e *Executor) {
 // WithTaskSorter sets the sorter that the [Executor] will use to sort tasks. By
 // default, the sorter is set to sort tasks alphabetically, but with tasks with
 // no namespace (in the root Taskfile) first.
-func WithTaskSorter(sorter sort.Sorter) ExecutorOption {
+func WithTaskSorter(sorter sort.Sorter) *taskSorterOption {
 	return &taskSorterOption{sorter}
 }
 
@@ -569,7 +585,7 @@ func (o *taskSorterOption) ApplyToExecutor(e *Executor) {
 }
 
 // WithStdin sets the [Executor]'s standard input [io.Reader].
-func WithStdin(stdin io.Reader) ExecutorOption {
+func WithStdin(stdin io.Reader) *stdinOption {
 	return &stdinOption{stdin}
 }
 
@@ -582,7 +598,7 @@ func (o *stdinOption) ApplyToExecutor(e *Executor) {
 }
 
 // WithStdout sets the [Executor]'s standard output [io.Writer].
-func WithStdout(stdout io.Writer) ExecutorOption {
+func WithStdout(stdout io.Writer) *stdoutOption {
 	return &stdoutOption{stdout}
 }
 
@@ -595,7 +611,7 @@ func (o *stdoutOption) ApplyToExecutor(e *Executor) {
 }
 
 // WithStderr sets the [Executor]'s standard error [io.Writer].
-func WithStderr(stderr io.Writer) ExecutorOption {
+func WithStderr(stderr io.Writer) *stderrOption {
 	return &stderrOption{stderr}
 }
 
@@ -609,7 +625,7 @@ func (o *stderrOption) ApplyToExecutor(e *Executor) {
 
 // WithIO sets the [Executor]'s standard input, output, and error to the same
 // [io.ReadWriter].
-func WithIO(rw io.ReadWriter) ExecutorOption {
+func WithIO(rw io.ReadWriter) *ioOption {
 	return &ioOption{rw}
 }
 
@@ -625,7 +641,7 @@ func (o *ioOption) ApplyToExecutor(e *Executor) {
 
 // WithVersionCheck tells the [Executor] whether or not to check the schema
 // version of the Taskfile before running.
-func WithVersionCheck(enableVersionCheck bool) ExecutorOption {
+func WithVersionCheck(enableVersionCheck bool) *versionCheckOption {
 	return &versionCheckOption{enableVersionCheck}
 }
 
@@ -639,7 +655,7 @@ func (o *versionCheckOption) ApplyToExecutor(e *Executor) {
 
 // WithFailfast tells the [Executor] to stop running tasks as soon as any task
 // returns an error.
-func WithFailfast(failfast bool) ExecutorOption {
+func WithFailfast(failfast bool) *failfastOption {
 	return &failfastOption{failfast}
 }
 

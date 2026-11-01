@@ -1,5 +1,10 @@
 ---
 title: Changelog
+description:
+  Release history for Task, including new features, improvements, fixes, and
+  breaking changes
+section: Project
+docType: project
 outline: deep
 editLink: false
 ---
@@ -8,7 +13,54 @@ editLink: false
 
 ::: v-pre
 
-## v3.53.0 - 2026-08-18
+## v3.54.0 - 2026-10-01
+
+### 🚀 Features
+
+- Added versioned Homebrew casks (`go-task@<major>.<minor>`) to install a
+  specific minor version of Task (#3023 by @vmaerten).
+- Added a `remote.headers` config option to send HTTP headers when downloading a
+  remote Taskfile, configured per host. Header values support templating
+  functions, e.g. `{{env "GITLAB_TOKEN"}}`. This keeps the credential out of the
+  include URL, where it would leak into error messages and the confirmation
+  prompt (#2329 by @vmaerten).
+
+### 🐛 Fixes
+
+- Fixed remote Git Taskfile cache poisoning on shared hosts (GHSA-679p-658w-m3wr,
+  reported by @danielcadev, fixed by @vmaerten).
+- Fixed tasks cancelled by the user returning exit code `201` instead of `205`
+  (#3040, #3041 by @r3wretrhy).
+- Fixed a bug on Windows where watching source paths did not work as expected
+  (#2863, #3028 by @pd93).
+- Fixed a remote Taskfile whose server refuses the credentials being reported as
+  a missing Taskfile. A `401` now stops the search and reports the status code,
+  instead of retrying every default Taskfile name and concluding that no
+  Taskfile exists (#2329 by @vmaerten).
+
+- `task --completion <shell>` now serves a new completion engine that unifies
+  Bash, Fish, Zsh, Nushell and PowerShell behind a single `task __complete`
+  command, so every shell offers the same suggestions: task names, aliases,
+  flags, flag values and per-task CLI variables. The Zsh `show-aliases` and
+  `verbose` zstyles keep working, now backed by the `--no-aliases` and
+  `--no-descriptions` completion flags (#2897 by @vmaerten).
+
+### 📦 Package API
+
+- Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
+  window, and is now tested against 1.26 and 1.27. This only affects projects
+  importing Task as a Go module (#2920 by @vmaerten).
+
+### Other
+
+- Refactored some functional options to always return a concrete type instead of
+  an interface and moved options into their own file (#3037 by @pd93).
+- Refactored the execext package to use mvdan/sh's new BashOpts API (#3035 by
+  @pd93).
+
+## v3.53.1 - 2026-08-18
+
+### 🚀 Features
 
 - **Remote Taskfiles are now generally available!** This has been an
   experimental feature for 3 years, but is now enabled by default. Massive
@@ -16,21 +68,37 @@ editLink: false
   here). We've also given the
   [Remote Taskfiles documentation](https://taskfile.dev/docs/remote-taskfiles) a
   bit of a polish (#1317, #2906 by @pd93).
+- Added a per-command `timeout` that terminates a command once it exceeds the
+  given duration (Go duration syntax). It covers shell commands, task calls,
+  deferred commands, `deps` and the `if` condition, obeys `ignore_error`, and
+  reports exit code `124`. Callers that join a `run: once` or `when_changed`
+  task already running now honor their own `timeout`, and inherit that task's
+  failure instead of being told it succeeded (#1569, #2898 by @vmaerten).
 - Considerably improve performance of fingerprinting on large repositories
   (monorepos). Fingerprinting is up to 86% faster and make up to 70% fewer
   memory allocations on the more advanced scenarios. Benchmarks were added as
   well. We're basically skipping work when not needed. (#2853, #2883 by
   @Napolitain, #2884 by @Napolitain).
-- Updated taskfile versions doc to mention when version checks were introduced
-  (#2184 by @jubr).
-- Fixed `joinUrl` collapsing the `//` in a URL scheme (e.g. producing
-  `http:/localhost` instead of `http://localhost`) (#2915 by @vsaraikin).
-- Added support for `enum.ref` in `--interactive` prompts. Required vars using
-  `enum.ref` now show the selection list like static enums, instead of falling
-  back to free-form input (#2817 by @vmaerten).
 - Further improved fingerprinting performance on large repositories: hashing
   source files now reuses a single buffer, reducing memory allocations by ~98%
   and wall-clock time by ~7% (#2925 by @vmaerten).
+- `includes.excludes` can now exclude a whole namespace: append `:*` to the
+  namespace name, e.g. `excludes: ['debug:*']`. Bare entries still match a
+  single task name exactly (#2300, #2959 by @xmxxc).
+- Added support for `enum.ref` in `--interactive` prompts. Required vars using
+  `enum.ref` now show the selection list like static enums, instead of falling
+  back to free-form input (#2817 by @vmaerten).
+- Added Nushell completions, available via `task --completion nu`. They complete
+  task names and aliases, every flag with its description, and the values of
+  `--completion`, `--output` and `--sort` (#2966 by @vmaerten).
+- Added a verbose log line for failed tasks. In `--verbose` mode, a task whose
+  command exits non-zero now reports `task: "<name>" failed: <error>` instead of
+  stopping without a trace (#2240 by @Drino).
+
+### 🐛 Fixes
+
+- Fixed a pinned `checksum:` not being verified when a remote Taskfile came from
+  the cache (#2980 by @vmaerten).
 - Fixed the fingerprint variable (`{{.CHECKSUM}}`/`{{.TIMESTAMP}}`) ignoring a
   `method:` set at the Taskfile level: the variable now follows the same method
   resolution as the up-to-date check. Only the variable matching the effective
@@ -38,36 +106,30 @@ editLink: false
   gets `{{.TIMESTAMP}}` and no longer a `{{.CHECKSUM}}` (which now renders as an
   empty string), and neither variable is injected when the effective method is
   `none` (#2924 by @vmaerten).
-- `includes.excludes` can now exclude a whole namespace: append `:*` to the
-  namespace name, e.g. `excludes: ['debug:*']`. Bare entries still match a
-  single task name exactly (#2300, #2959 by @xmxxc).
 - Fixed `ref:` in `for: matrix:` and `enum:` only accepting literal lists. Refs
   computed with template functions like `keys` or `splitList` no longer fail
   with "must resolve to a list" (#2544, #2956 by @no-hup).
+- Fixed pressing `Esc` at an interactive variable prompt not cancelling the run
+  (#2942 by @anilnatha).
+- Fixed `joinUrl` collapsing the `//` in a URL scheme (e.g. producing
+  `http:/localhost` instead of `http://localhost`) (#2915 by @vsaraikin).
 - Fixed the JSON schema rejecting `ignore_error` on a command inside a `for`
   loop. Editors no longer flag a Taskfile that Task runs perfectly fine (#2044
   by @gokeefe-atb).
 - Fixed the JSON schema rejecting more keys the Taskfile parser accepts:
   `ignore_error` on a `task:` call, and `if`, `set` and `shopt` on a command
   inside a `for` loop (#2967 by @vmaerten).
-- Added a verbose log line for failed tasks. In `--verbose` mode, a task whose
-  command exits non-zero now reports `task: "<name>" failed: <error>` instead of
-  stopping without a trace (#2240 by @Drino).
-- Fixed pressing `Esc` at an interactive variable prompt not cancelling the run
-  (#2942 by @anilnatha).
-- Added Nushell completions, available via `task --completion nu`. They complete
-  task names and aliases, every flag with its description, and the values of
-  `--completion`, `--output` and `--sort` (#2966 by @vmaerten).
-- Added a per-command `timeout` that terminates a command once it exceeds the
-  given duration (Go duration syntax). It covers shell commands, task calls,
-  deferred commands, `deps` and the `if` condition, obeys `ignore_error`, and
-  reports exit code `124`. Callers that join a `run: once` or `when_changed`
-  task already running now honor their own `timeout`, and inherit that task's
-  failure instead of being told it succeeded (#1569, #2898 by @vmaerten).
-- Fixed a pinned `checksum:` not being verified when a remote Taskfile came from
-  the cache (#2980 by @vmaerten).
+
+### 📚 Documentation & Website
+
+- Updated taskfile versions doc to mention when version checks were introduced
+  (#2184 by @jubr).
 - Load the sidebar data and titles/excerpts from the blog post markdown document
   and its frontmatter on the website (#2981 by @pd93).
+
+## v3.53.0 - 2026-08-18
+
+- Failed due to an issue with our release process.
 
 ## v3.52.0 - 2026-07-02
 

@@ -33,15 +33,22 @@ type TUI struct {
 }
 
 type Remote struct {
-	Insecure     *bool          `yaml:"insecure"`
-	Offline      *bool          `yaml:"offline"`
-	Timeout      *time.Duration `yaml:"timeout"`
-	CacheExpiry  *time.Duration `yaml:"cache-expiry"`
-	CacheDir     *string        `yaml:"cache-dir"`
-	TrustedHosts []string       `yaml:"trusted-hosts"`
-	CACert       *string        `yaml:"cacert"`
-	Cert         *string        `yaml:"cert"`
-	CertKey      *string        `yaml:"cert-key"`
+	Insecure     *bool           `yaml:"insecure"`
+	Offline      *bool           `yaml:"offline"`
+	Timeout      *time.Duration  `yaml:"timeout"`
+	CacheExpiry  *time.Duration  `yaml:"cache-expiry"`
+	CacheDir     *string         `yaml:"cache-dir"`
+	TrustedHosts []string        `yaml:"trusted-hosts"`
+	Headers      []RemoteHeaders `yaml:"headers"`
+	CACert       *string         `yaml:"cacert"`
+	Cert         *string         `yaml:"cert"`
+	CertKey      *string         `yaml:"cert-key"`
+}
+
+// RemoteHeaders configures HTTP headers for a single host.
+type RemoteHeaders struct {
+	Host    string            `yaml:"host"`
+	Headers map[string]string `yaml:"headers"`
 }
 
 // Merge combines the current TaskRC with another TaskRC, prioritizing non-nil fields from the other TaskRC.
@@ -69,6 +76,7 @@ func (t *TaskRC) Merge(other *TaskRC) {
 		slices.Sort(merged)
 		t.Remote.TrustedHosts = slices.Compact(merged)
 	}
+	t.Remote.Headers = mergeHeaders(t.Remote.Headers, other.Remote.Headers)
 	t.Remote.CACert = cmp.Or(other.Remote.CACert, t.Remote.CACert)
 	t.Remote.Cert = cmp.Or(other.Remote.Cert, t.Remote.Cert)
 	t.Remote.CertKey = cmp.Or(other.Remote.CertKey, t.Remote.CertKey)
@@ -83,4 +91,20 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.TempDir = cmp.Or(other.TempDir, t.TempDir)
 	t.TUI.Status = cmp.Or(other.TUI.Status, t.TUI.Status)
 	t.TUI.TaskNavigator = cmp.Or(other.TUI.TaskNavigator, t.TUI.TaskNavigator)
+}
+
+// Replace each host's headers as a whole so closer config files can drop headers.
+func mergeHeaders(base, other []RemoteHeaders) []RemoteHeaders {
+	if len(other) == 0 {
+		return base
+	}
+	byHost := make(map[string]RemoteHeaders, len(base)+len(other))
+	for _, entry := range slices.Concat(base, other) {
+		byHost[entry.Host] = entry
+	}
+	merged := slices.Collect(maps.Values(byHost))
+	slices.SortFunc(merged, func(a, b RemoteHeaders) int {
+		return cmp.Compare(a.Host, b.Host)
+	})
+	return merged
 }

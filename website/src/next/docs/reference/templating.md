@@ -3,6 +3,8 @@ title: Templating Reference
 description:
   Comprehensive guide to Task's templating system with Go text/template, special
   variables, and available functions
+section: Reference
+docType: reference
 outline: deep
 ---
 
@@ -334,7 +336,7 @@ tasks:
 
 - **Type**: `int`
 - **Description**: Failed command exit code (only in `defer`, only when
-  non-zero). A command killed by its [`timeout`](/docs/reference/schema#command)
+  non-zero). A command killed by its [`timeout`](./schema.md#command)
   is reported as `124`, following the convention of `timeout(1)`.
 
 ```yaml
@@ -630,6 +632,7 @@ tasks:
       - echo "OS {{OS}}"                    # linux, darwin, windows, etc.
       - echo "Architecture {{ARCH}}"        # amd64, arm64, etc.
       - echo "CPU cores {{numCPU}}"         # Number of CPU cores
+      - echo "Executable suffix {{exeExt}}" # .exe on Windows, empty elsewhere
       - echo "Building for {{OS}}/{{ARCH}}"
 ```
 

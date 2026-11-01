@@ -2,11 +2,69 @@
 
 ## Unreleased
 
+### 🚀 Features
+
+- Task's [watch functionality](https://taskfile.dev/docs/guide/watch)
+  (`--watch` or `watch: true`) was partly rewritten to be significantly more
+  reliable, specially when it comes to detecting duplicated events.
+  We're now using [@helshabini](https://github.com/helshabini)'s
+  [`fsbroker`](https://github.com/helshabini/fsbroker) package which is a lot
+  smarter than the custom code we had before.
+- Interactive selection prompts for `enum` variables now handle long lists: they
+  show a scrollable window of choices, support case-insensitive search with `/`,
+  and add Page Up/Page Down and Home/End navigation (#3071 by @vmaerten).
+
+### 🐛 Fixes
+
+- Fixed `--interactive` showing a text prompt instead of a selection menu for
+  `enum.ref` values computed by `sh:` variables (#2958, #3070 by @vmaerten).
+- Fixed Homebrew printing a `postflight` deprecation warning when installing or
+  upgrading the `go-task` cask (#3018, #3084 by @kemosabe-afk).
+
+## v3.54.0 - 2026-10-01
+
+### 🚀 Features
+
+- Added versioned Homebrew casks (`go-task@<major>.<minor>`) to install a
+  specific minor version of Task (#3023 by @vmaerten).
+- Added a `remote.headers` config option to send HTTP headers when downloading a
+  remote Taskfile, configured per host. Header values support templating
+  functions, e.g. `{{env "GITLAB_TOKEN"}}`. This keeps the credential out of the
+  include URL, where it would leak into error messages and the confirmation
+  prompt (#2329 by @vmaerten).
+
+### 🐛 Fixes
+
+- Fixed remote Git Taskfile cache poisoning on shared hosts (GHSA-679p-658w-m3wr,
+  reported by @danielcadev, fixed by @vmaerten).
+- Fixed tasks cancelled by the user returning exit code `201` instead of `205`
+  (#3040, #3041 by @r3wretrhy).
+- Fixed a bug on Windows where watching source paths did not work as expected
+  (#2863, #3028 by @pd93).
+- Fixed a remote Taskfile whose server refuses the credentials being reported as
+  a missing Taskfile. A `401` now stops the search and reports the status code,
+  instead of retrying every default Taskfile name and concluding that no
+  Taskfile exists (#2329 by @vmaerten).
+
+- `task --completion <shell>` now serves a new completion engine that unifies
+  Bash, Fish, Zsh, Nushell and PowerShell behind a single `task __complete`
+  command, so every shell offers the same suggestions: task names, aliases,
+  flags, flag values and per-task CLI variables. The Zsh `show-aliases` and
+  `verbose` zstyles keep working, now backed by the `--no-aliases` and
+  `--no-descriptions` completion flags (#2897 by @vmaerten).
+
 ### 📦 Package API
 
 - Bumped the minimum Go version to 1.26. Task follows Go's two-latest support
   window, and is now tested against 1.26 and 1.27. This only affects projects
   importing Task as a Go module (#2920 by @vmaerten).
+
+### Other
+
+- Refactored some functional options to always return a concrete type instead of
+  an interface and moved options into their own file (#3037 by @pd93).
+- Refactored the execext package to use mvdan/sh's new BashOpts API (#3035 by
+  @pd93).
 
 ## v3.53.1 - 2026-08-18
 

@@ -51,6 +51,7 @@ type (
 		caCert              string
 		cert                string
 		certKey             string
+		headersByHost       HeadersByHost
 		debugFunc           DebugFunc
 		promptFunc          PromptFunc
 		promptMutex         sync.Mutex
@@ -84,164 +85,6 @@ func (r *Reader) Options(opts ...ReaderOption) {
 	}
 }
 
-// WithInsecure allows the [Reader] to make insecure connections when reading
-// remote taskfiles. By default, insecure connections are rejected.
-func WithInsecure(insecure bool) ReaderOption {
-	return &insecureOption{insecure: insecure}
-}
-
-type insecureOption struct {
-	insecure bool
-}
-
-func (o *insecureOption) ApplyToReader(r *Reader) {
-	r.insecure = o.insecure
-}
-
-// WithDownload forces the [Reader] to download a fresh copy of the taskfile
-// from the remote source.
-func WithDownload(download bool) ReaderOption {
-	return &downloadOption{download: download}
-}
-
-type downloadOption struct {
-	download bool
-}
-
-func (o *downloadOption) ApplyToReader(r *Reader) {
-	r.download = o.download
-}
-
-// WithOffline stops the [Reader] from being able to make network connections.
-// It will still be able to read local files and cached copies of remote files.
-func WithOffline(offline bool) ReaderOption {
-	return &offlineOption{offline: offline}
-}
-
-type offlineOption struct {
-	offline bool
-}
-
-func (o *offlineOption) ApplyToReader(r *Reader) {
-	r.offline = o.offline
-}
-
-// WithTrustedHosts configures the [Reader] with a list of trusted hosts for remote
-// Taskfiles. Hosts in this list will not prompt for user confirmation.
-func WithTrustedHosts(trustedHosts []string) ReaderOption {
-	return &trustedHostsOption{trustedHosts: trustedHosts}
-}
-
-type trustedHostsOption struct {
-	trustedHosts []string
-}
-
-func (o *trustedHostsOption) ApplyToReader(r *Reader) {
-	r.trustedHosts = o.trustedHosts
-}
-
-// WithTempDir sets the temporary directory that will be used by the [Reader].
-// By default, the reader uses [os.TempDir].
-func WithTempDir(tempDir string) ReaderOption {
-	return &tempDirOption{tempDir: tempDir}
-}
-
-type tempDirOption struct {
-	tempDir string
-}
-
-func (o *tempDirOption) ApplyToReader(r *Reader) {
-	r.tempDir = o.tempDir
-}
-
-// WithCacheExpiryDuration sets the duration after which the cache is considered
-// expired. By default, the cache is considered expired after 24 hours.
-func WithCacheExpiryDuration(duration time.Duration) ReaderOption {
-	return &cacheExpiryDurationOption{duration: duration}
-}
-
-type cacheExpiryDurationOption struct {
-	duration time.Duration
-}
-
-func (o *cacheExpiryDurationOption) ApplyToReader(r *Reader) {
-	r.cacheExpiryDuration = o.duration
-}
-
-// WithDebugFunc sets the debug function to be used by the [Reader]. If set,
-// this function will be called with debug messages. This can be useful if the
-// caller wants to log debug messages from the [Reader]. By default, no debug
-// function is set and the logs are not written.
-func WithDebugFunc(debugFunc DebugFunc) ReaderOption {
-	return &debugFuncOption{debugFunc: debugFunc}
-}
-
-type debugFuncOption struct {
-	debugFunc DebugFunc
-}
-
-func (o *debugFuncOption) ApplyToReader(r *Reader) {
-	r.debugFunc = o.debugFunc
-}
-
-// WithPromptFunc sets the prompt function to be used by the [Reader]. If set,
-// this function will be called with prompt messages. The function should
-// optionally log the message to the user and return nil if the prompt is
-// accepted and the execution should continue. Otherwise, it should return an
-// error which describes why the prompt was rejected. This can then be caught
-// and used later when calling the [Reader.Read] method. By default, no prompt
-// function is set and all prompts are automatically accepted.
-func WithPromptFunc(promptFunc PromptFunc) ReaderOption {
-	return &promptFuncOption{promptFunc: promptFunc}
-}
-
-type promptFuncOption struct {
-	promptFunc PromptFunc
-}
-
-func (o *promptFuncOption) ApplyToReader(r *Reader) {
-	r.promptFunc = o.promptFunc
-}
-
-// WithReaderCACert sets the path to a custom CA certificate for TLS connections.
-func WithReaderCACert(caCert string) ReaderOption {
-	return &readerCACertOption{caCert: caCert}
-}
-
-type readerCACertOption struct {
-	caCert string
-}
-
-func (o *readerCACertOption) ApplyToReader(r *Reader) {
-	r.caCert = o.caCert
-}
-
-// WithReaderCert sets the path to a client certificate for TLS connections.
-func WithReaderCert(cert string) ReaderOption {
-	return &readerCertOption{cert: cert}
-}
-
-type readerCertOption struct {
-	cert string
-}
-
-func (o *readerCertOption) ApplyToReader(r *Reader) {
-	r.cert = o.cert
-}
-
-// WithReaderCertKey sets the path to a client certificate key for TLS connections.
-func WithReaderCertKey(certKey string) ReaderOption {
-	return &readerCertKeyOption{certKey: certKey}
-}
-
-type readerCertKeyOption struct {
-	certKey string
-}
-
-func (o *readerCertKeyOption) ApplyToReader(r *Reader) {
-	r.certKey = o.certKey
-}
-
 // Read will read the Taskfile defined by the [Reader]'s [Node] and recurse
 // through any [ast.Includes] it finds, reading each included Taskfile and
 // building an [ast.TaskfileGraph] as it goes. If any errors occur, they will be
@@ -249,7 +92,9 @@ func (o *readerCertKeyOption) ApplyToReader(r *Reader) {
 func (r *Reader) Read(ctx context.Context, node Node) (*ast.TaskfileGraph, error) {
 	// Clean up git cache after reading all taskfiles
 	defer func() {
-		_ = CleanGitCache()
+		if err := CleanGitCache(); err != nil {
+			r.debugf("failed to clean git cache: %s\n", err.Error())
+		}
 	}()
 
 	if err := r.include(ctx, node); err != nil {
@@ -286,7 +131,9 @@ func (r *Reader) isTrusted(uri string) bool {
 	host := parsedURL.Host
 
 	// Check against each trusted pattern (exact match including port if provided)
-	return slices.Contains(r.trustedHosts, host)
+	return slices.ContainsFunc(r.trustedHosts, func(pattern string) bool {
+		return hostMatches(pattern, host)
+	})
 }
 
 func (r *Reader) include(ctx context.Context, node Node) error {
@@ -355,6 +202,7 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 				WithCACert(r.caCert),
 				WithCert(r.cert),
 				WithCertKey(r.certKey),
+				WithHeaders(r.headersByHost),
 			)
 			if err != nil {
 				if include.Optional {

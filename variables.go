@@ -15,6 +15,8 @@ import (
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/fingerprint"
+	"github.com/go-task/task/v3/internal/refs"
+	"github.com/go-task/task/v3/internal/slicesext"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -118,7 +120,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	requires := origTask.Requires
 	if evaluateShVars {
 		requires = origTask.Requires.DeepCopy()
-		if err := resolveEnumRefs(requires, cache); err != nil {
+		if err := refs.ResolveEnums(requires, cache); err != nil {
 			return nil, err
 		}
 	}
@@ -347,30 +349,6 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	return &new, nil
 }
 
-func asAnySlice[T any](slice []T) []any {
-	ret := make([]any, len(slice))
-	for i, v := range slice {
-		ret[i] = v
-	}
-	return ret
-}
-
-// resolvedAsAnySlice converts a value resolved from a reference into a []any.
-// A reference does not always resolve to a []any: lists declared in a Taskfile
-// do, but template functions such as `keys` and `splitList` return a []string.
-// The accepted types mirror the list types itemsFromFor already supports.
-func resolvedAsAnySlice(v any) ([]any, bool) {
-	switch value := v.(type) {
-	case []any:
-		return value, true
-	case []string:
-		return asAnySlice(value), true
-	case []int:
-		return asAnySlice(value), true
-	}
-	return nil, false
-}
-
 func itemsFromFor(
 	f *ast.For,
 	dir string,
@@ -392,7 +370,7 @@ func itemsFromFor(
 				Err: err,
 			}
 		}
-		return asAnySlice(product(resolvedMatrix)), nil, nil
+		return slicesext.AsAny(product(resolvedMatrix)), nil, nil
 	}
 	// Get the list from the explicit for list
 	if len(f.List) > 0 {
@@ -410,7 +388,7 @@ func itemsFromFor(
 				return nil, nil, err
 			}
 		}
-		values = asAnySlice(glist)
+		values = slicesext.AsAny(glist)
 	}
 	// Get the list from the task generates
 	if f.From == "generates" {
@@ -424,7 +402,7 @@ func itemsFromFor(
 				return nil, nil, err
 			}
 		}
-		values = asAnySlice(glist)
+		values = slicesext.AsAny(glist)
 	}
 	// Get the list from a variable and split it up
 	if f.Var != "" {
@@ -437,14 +415,14 @@ func itemsFromFor(
 				switch value := v.Value.(type) {
 				case string:
 					if f.Split != "" {
-						values = asAnySlice(strings.Split(value, f.Split))
+						values = slicesext.AsAny(strings.Split(value, f.Split))
 					} else {
-						values = asAnySlice(strings.Fields(value))
+						values = slicesext.AsAny(strings.Fields(value))
 					}
 				case []string:
-					values = asAnySlice(value)
+					values = slicesext.AsAny(value)
 				case []int:
-					values = asAnySlice(value)
+					values = slicesext.AsAny(value)
 				case []any:
 					values = value
 				case map[string]any:
@@ -492,7 +470,7 @@ func resolveMatrixRefs(matrix *ast.Matrix, cache *templater.Cache) (*ast.Matrix,
 			if cache.Err() != nil {
 				return nil, cache.Err()
 			}
-			value, ok := resolvedAsAnySlice(v)
+			value, ok := refs.AsList(v)
 			if !ok {
 				return nil, fmt.Errorf("matrix reference %q must resolve to a list", row.Ref)
 			}
@@ -500,35 +478,6 @@ func resolveMatrixRefs(matrix *ast.Matrix, cache *templater.Cache) (*ast.Matrix,
 		}
 	}
 	return resolved, nil
-}
-
-func resolveEnumRefs(requires *ast.Requires, cache *templater.Cache) error {
-	if requires == nil || len(requires.Vars) == 0 {
-		return nil
-	}
-	for _, v := range requires.Vars {
-		if v.Enum == nil || v.Enum.Ref == "" {
-			continue
-		}
-		resolved := templater.ResolveRef(v.Enum.Ref, cache)
-		if cache.Err() != nil {
-			return cache.Err()
-		}
-		arr, ok := resolvedAsAnySlice(resolved)
-		if !ok {
-			return fmt.Errorf("enum reference %q must resolve to a list", v.Enum.Ref)
-		}
-		strValues := make([]string, 0, len(arr))
-		for _, item := range arr {
-			s, ok := item.(string)
-			if !ok {
-				return fmt.Errorf("enum reference %q must contain only strings", v.Enum.Ref)
-			}
-			strValues = append(strValues, s)
-		}
-		v.Enum.Value = strValues
-	}
-	return nil
 }
 
 // product generates the cartesian product of the input map of slices.

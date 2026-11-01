@@ -14,8 +14,10 @@ import (
 	"github.com/go-task/task/v3"
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/experiments"
+	"github.com/go-task/task/v3/internal/complete"
 	"github.com/go-task/task/v3/internal/env"
 	"github.com/go-task/task/v3/internal/sort"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 	"github.com/go-task/task/v3/taskrc"
 	taskrcast "github.com/go-task/task/v3/taskrc/ast"
@@ -82,6 +84,7 @@ var (
 	Download            bool
 	Offline             bool
 	TrustedHosts        []string
+	RemoteHeaders       taskfile.HeadersByHost
 	ClearCache          bool
 	Timeout             time.Duration
 	CacheExpiryDuration time.Duration
@@ -94,6 +97,11 @@ var (
 )
 
 func init() {
+	cliArgs := os.Args[1:]
+	if complete.IsActive() {
+		_, cliArgs = complete.ParseOptions(complete.Words())
+	}
+
 	// Config files can enable experiments which alter the availability and/or
 	// behavior of some flags, so we need to parse the experiments before the
 	// flags. However, we need the --taskfile and --dir flags before we can
@@ -107,7 +115,7 @@ func init() {
 	fs.StringVarP(&dir, "dir", "d", "", "")
 	fs.StringVarP(&entrypoint, "taskfile", "t", "", "")
 	fs.Usage = func() {}
-	_ = fs.Parse(os.Args[1:])
+	_ = fs.Parse(cliArgs)
 
 	// Parse the experiments
 	dir = cmp.Or(dir, filepath.Dir(entrypoint))
@@ -171,6 +179,8 @@ func init() {
 	pflag.StringVar(&CACert, "cacert", getConfig(config, "REMOTE_CACERT", func() *string { return config.Remote.CACert }, ""), "Path to a custom CA certificate for HTTPS connections.")
 	pflag.StringVar(&Cert, "cert", getConfig(config, "REMOTE_CERT", func() *string { return config.Remote.Cert }, ""), "Path to a client certificate for HTTPS connections.")
 	pflag.StringVar(&CertKey, "cert-key", getConfig(config, "REMOTE_CERT_KEY", func() *string { return config.Remote.CertKey }, ""), "Path to a client certificate key for HTTPS connections.")
+	// No flag: a token on the command line is visible to any process listing it.
+	RemoteHeaders = remoteHeaders(config)
 
 	// Gentle force experiment will override the force flag and add a new force-all flag
 	if experiments.GentleForce.Enabled() {
@@ -178,6 +188,16 @@ func init() {
 		pflag.BoolVar(&ForceAll, "force-all", false, "Forces execution of the called task and all its dependant tasks.")
 	} else {
 		pflag.BoolVarP(&ForceAll, "force", "f", false, "Forces execution even when the task is up-to-date.")
+	}
+
+	// The words being completed hold partially typed and unknown flags, yet the
+	// flags deciding which Taskfile is loaded must still reach the engine.
+	// ContinueOnError keeps what was parsed and prints nothing.
+	if complete.IsActive() {
+		pflag.CommandLine.Init(pflag.CommandLine.Name(), pflag.ContinueOnError)
+		pflag.CommandLine.ParseErrorsAllowlist.UnknownFlags = true
+		_ = pflag.CommandLine.Parse(cliArgs)
+		return
 	}
 
 	pflag.Parse()
@@ -317,6 +337,9 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		sorter = sort.NoSort
 	case "alphanumeric":
 		sorter = sort.AlphaNumeric
+	default:
+		// Not nil: this overwrites the sorter NewExecutor already set.
+		sorter = sort.AlphaNumericWithRootTasksFirst
 	}
 
 	// Change the directory to the user's home directory if the global flag is set
@@ -337,6 +360,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithDownload(Download),
 		task.WithOffline(Offline),
 		task.WithTrustedHosts(TrustedHosts),
+		task.WithRemoteHeaders(RemoteHeaders),
 		task.WithTimeout(Timeout),
 		task.WithCacheExpiryDuration(CacheExpiryDuration),
 		task.WithRemoteCacheDir(RemoteCacheDir),
@@ -361,6 +385,18 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithFailfast(Failfast),
 		task.WithTempDirPath(TempDir),
 	)
+}
+
+// The last entry for each host wins, matching config file merging.
+func remoteHeaders(config *taskrcast.TaskRC) taskfile.HeadersByHost {
+	if config == nil || len(config.Remote.Headers) == 0 {
+		return nil
+	}
+	byHost := make(taskfile.HeadersByHost, len(config.Remote.Headers))
+	for _, entry := range config.Remote.Headers {
+		byHost[entry.Host] = entry.Headers
+	}
+	return byHost
 }
 
 // getConfig extracts a config value with priority: env var > taskrc config > fallback

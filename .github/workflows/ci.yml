@@ -53,10 +53,53 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: ⬇️ Setup Task
-        uses: go-task/setup-task@v2
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
 
       - name: 🧪 Test
         run: task test --output group --output-group-begin '::group::{{.TASK}}' --output-group-end '::endgroup::'
+
+  completion:
+    name: 🐚 Completion (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: ⬇️ Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.27.x
+
+      - name: ⬇️ Setup Task
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+
+      # zsh and pwsh are preinstalled on the runners; only fish is missing
+      # (plus zsh on the Linux image).
+      - name: ⬇️ Install shells (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y zsh fish
+
+      - name: ⬇️ Install shells (macOS)
+        if: runner.os == 'macOS'
+        run: brew install fish
+
+      # Nushell ships in no runner image and is not packaged by apt, so it comes
+      # from its own release archives.
+      - name: ⬇️ Install Nushell
+        uses: hustcer/setup-nu@eacad52a4634c4f8d17a94916f93be6856861b9c # v3.29
+        with:
+          version: "*"
+
+      - name: 🧪 Test completion
+        # Strict mode fails the run if any shell is missing, so we never get a
+        # false pass when a runner image stops shipping one (e.g. pwsh).
+        env:
+          TASK_COMPLETION_STRICT: "1"
+        run: task test:completion
 
   lint:
     name: 🔍 Lint (${{ matrix.go-version }})
@@ -77,7 +120,7 @@ jobs:
       - name: 🔍 Lint
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          version: v2.13.0
+          version: v2.15.0
 
   lint-jsonschema:
     name: 📋 Lint JSON Schema
@@ -87,15 +130,67 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: ⬇️ Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: 3.14
+          python-version: 3.15
 
       - name: ⬇️ Install check-jsonschema
         run: python -m pip install 'check-jsonschema==0.27.3'
 
       - name: 📋 Validate JSON Schema
         run: check-jsonschema --check-metaschema website/src/public/next-schema.json website/src/public/schema.json
+
+  website:
+    name: 📚 Build documentation channels
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: ⬇️ Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.27.x
+
+      - name: ⬇️ Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: ⬇️ Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+        with:
+          package_json_file: website/package.json
+
+      - name: ⬇️ Install website dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: website
+
+      - name: 📚 Check next documentation
+        run: pnpm build && pnpm check:links
+        working-directory: website
+        env:
+          DOCS_CHANNEL: next
+          DOCS_SITE: preview
+
+      - name: 📚 Check released documentation
+        run: pnpm build && pnpm check:links
+        working-directory: website
+        env:
+          DOCS_CHANNEL: latest
+          DOCS_SITE: production
+
+      # Exercise the actual promotion in this disposable checkout. The current
+      # latest content alone cannot reveal links to files missing from promotion.
+      - name: 📚 Simulate a release
+        run: go run ./cmd/release patch
+
+      - name: 📚 Check promoted documentation
+        run: pnpm build && pnpm check:links
+        working-directory: website
+        env:
+          DOCS_CHANNEL: latest
+          DOCS_SITE: production
 
   check-latest-content:
     name: 📚 Check latest content

@@ -1,0 +1,39 @@
+diff --git a/dist/index.js b/dist/index.js
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -937,8 +937,34 @@
+ }
+ async function prepareMarkdownFiles({ bundle, mdFiles, settings, config }) {
+ 	const imageMap = extractImageMap(bundle);
++	// Resolve links before generating either individual pages or the full bundle.
++	// In particular, docs/guide/index.md is emitted as docs/guide.md, so retaining
++	// its source-relative links would send readers one directory too high.
++	const pageURLs = new Map();
++	const pagePatterns = resolveIgnorePatterns(settings.ignoreFiles, settings.ignoreFilesPerOutput.pages);
++	const base = config.base || "/";
++	for (const [file] of mdFiles) {
++		const sourcePath = transformToPosixPath(path.relative(settings.workDir, resolveOutputFilePath(file, settings.workDir, config.vitepress.userConfig.rewrites)));
++		const outputPath = resolvePageURL(sourcePath);
++		const htmlPath = sourcePath.replace(/(?:^|\/)index\.md$/, "/").replace(/\.md$/, config.vitepress.userConfig.cleanUrls ? "" : ".html");
++		const target = settings.generateLLMFriendlyDocsForEachPage && !isIgnored$1(outputPath, pagePatterns.positive, pagePatterns.negative) ? outputPath : htmlPath;
++		for (const alias of [sourcePath, sourcePath.replace(/\.md$/, ".html"), sourcePath.replace(/\.md$/, ""), htmlPath, htmlPath.replace(/\/$/, "")]) {
++			pageURLs.set(path.posix.join(base, alias), path.posix.join(base, target));
++		}
++	}
+ 	return Promise.all([...mdFiles].map(async ([file, content]) => {
+-		const processed = await createMarkdownProcessor(settings.workDir, imageMap, settings.stripHTML).process({
++		const resolvedOutFilePath = transformToPosixPath(path.relative(settings.workDir, resolveOutputFilePath(file, settings.workDir, config.vitepress.userConfig.rewrites)));
++		const processor = createMarkdownProcessor(settings.workDir, imageMap, settings.stripHTML);
++		processor.use(() => (tree) => {
++			visit(tree, (node) => {
++				if (!["link", "image", "definition"].includes(node.type) || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(node.url)) return;
++				const url = new URL(node.url, `https://llms.invalid${path.posix.join(base, resolvedOutFilePath)}`);
++				const target = pageURLs.get(decodeURIComponent(url.pathname));
++				// Site-relative URLs also work when this page is embedded in llms-full.txt.
++				node.url = `${target ?? url.pathname}${url.search}${url.hash}`;
++			});
++		});
++		const processed = await processor.process({
+ 			cwd: settings.workDir,
+ 			path: file,
+ 			value: processVPParams(content)

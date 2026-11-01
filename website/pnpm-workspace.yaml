@@ -6,3 +6,6 @@ allowBuilds:
   netlify-cli: true
   sharp: true
   unix-dgram: true
+
+patchedDependencies:
+  vitepress-plugin-llms@1.14.0: patches/vitepress-plugin-llms@1.14.0.patch

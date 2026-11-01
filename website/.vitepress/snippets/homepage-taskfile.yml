@@ -1,0 +1,19 @@
+version: '3'
+
+vars:
+  APP: '{{.APP | default "my-app"}}'
+
+tasks:
+  build:
+    desc: Test and build {{.APP}}
+    aliases: [b]
+    deps: [test]
+    cmds:
+      - go build -o bin/{{.APP}} .
+
+  test:
+    preconditions:
+      - sh: command -v go
+        msg: 'Install Go to test and build this project.'
+    cmds:
+      - go test ./...

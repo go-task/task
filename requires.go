@@ -9,7 +9,7 @@ import (
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/input"
 	"github.com/go-task/task/v3/internal/logger"
-	"github.com/go-task/task/v3/internal/templater"
+	"github.com/go-task/task/v3/internal/refs"
 	"github.com/go-task/task/v3/internal/term"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -100,9 +100,28 @@ func (e *Executor) promptDepsVars(calls []*Call) error {
 			return err
 		}
 
-		for _, v := range getMissingRequiredVars(compiledTask) {
+		missing := getMissingRequiredVars(compiledTask)
+		vars := compiledTask.Vars
+		for _, v := range missing {
+			if varsMap.Has(v.Name) || v.Enum == nil || v.Enum.Ref == "" {
+				continue
+			}
+			t, err := e.GetTask(call)
+			if err != nil {
+				return err
+			}
+			// Resolve once per call, using the compiler's existing shell cache.
+			// Some shell variables need the answers we haven't prompted for yet;
+			// retain the fast prompt fallback when early evaluation fails.
+			if evaluated, err := e.Compiler.GetVariables(t, call); err == nil {
+				vars = evaluated
+			}
+			break
+		}
+
+		for _, v := range missing {
 			if !varsMap.Has(v.Name) {
-				varsMap.Set(v.Name, resolveEnumRefForPrompt(v, compiledTask.Vars))
+				varsMap.Set(v.Name, refs.ResolveEnum(v, vars))
 				// Remember who needed it first, so a client can say which task
 				// it is asking on behalf of.
 				askedFor[v.Name] = call.Task
@@ -272,17 +291,4 @@ func getEnumValues(e *ast.Enum) []string {
 		return nil
 	}
 	return e.Value
-}
-
-// resolveEnumRefForPrompt returns a copy of v with its enum ref resolved into
-// concrete values, so the interactive prompter can show a Select. Refs that
-// depend on dynamic vars may not resolve here and fall back to free-form input.
-func resolveEnumRefForPrompt(v *ast.VarsWithValidation, vars *ast.Vars) *ast.VarsWithValidation {
-	if v.Enum == nil || v.Enum.Ref == "" || len(v.Enum.Value) > 0 {
-		return v
-	}
-	vCopy := v.DeepCopy()
-	cache := &templater.Cache{Vars: vars}
-	_ = resolveEnumRefs(&ast.Requires{Vars: []*ast.VarsWithValidation{vCopy}}, cache)
-	return vCopy
 }

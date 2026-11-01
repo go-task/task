@@ -1,6 +1,8 @@
 import { defineConfig, HeadConfig } from 'vitepress';
 import githubLinksPlugin from './plugins/github-links';
-import { readdirSync, readFileSync, writeFileSync } from 'fs';
+import { renderSearchContent } from './plugins/local-search';
+import { searchKeywordsPlugin } from './plugins/search-keywords';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import matter from 'gray-matter';
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs';
@@ -16,6 +18,7 @@ import { fileURLToPath, URL } from 'node:url';
 import llmstxt from 'vitepress-plugin-llms';
 import { sidebar as nextSidebar } from './sidebar/next.ts';
 import { sidebar as latestSidebar } from './sidebar/latest.ts';
+import { createBlogDateResolver } from './blog-date';
 
 const version = readFileSync(
   resolve(__dirname, '../../internal/version/version.txt'),
@@ -39,6 +42,10 @@ const docsSidebar = isLatest ? latestSidebar : nextSidebar;
 // Builds the "/blog/" sidebar from each blog post's frontmatter.
 function buildBlogSidebar() {
   const blogDir = resolve(__dirname, `../src/${channel}/blog`);
+  const blogDate = createBlogDateResolver(
+    channel,
+    resolve(__dirname, '../src/latest/blog')
+  );
   const posts = readdirSync(blogDir)
     .filter((file) => file.endsWith('.md') && file !== 'index.md')
     .map((file) => {
@@ -48,14 +55,14 @@ function buildBlogSidebar() {
       return {
         slug: file.replace(/\.md$/, ''),
         title: frontmatter.sidebarTitle ?? frontmatter.title,
-        date: new Date(frontmatter.date)
+        date: blogDate(file, frontmatter.date)
       };
     })
     .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const byYear = new Map<number, { text: string; link: string }[]>();
   for (const post of posts) {
-    const year = post.date.getFullYear();
+    const year = post.date.getUTCFullYear();
     if (!byYear.has(year)) byYear.set(year, []);
     byYear.get(year)!.push({ text: post.title, link: `/blog/${post.slug}` });
   }
@@ -83,6 +90,10 @@ const urlVersion =
         current: 'https://taskfile.dev/',
         next: 'https://next.taskfile.dev/'
       };
+
+const hasDocsOverview = existsSync(
+  resolve(__dirname, `../src/${channel}/docs/index.md`)
+);
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -143,6 +154,29 @@ export default defineConfig({
       'https://taskfile.dev/'
     ).href;
     head.push(['link', { rel: 'canonical', href: canonicalUrl }]);
+
+    // The DocSearch crawler otherwise has to infer a record's section from the
+    // active sidebar link in the DOM. Stating it on the page is steadier: it
+    // survives a theme upgrade, and it is what hierarchy.lvl0 - the breadcrumb
+    // on every search result - should be set from.
+    if (pageData.frontmatter.section) {
+      head.push([
+        'meta',
+        { name: 'docsearch:section', content: pageData.frontmatter.section }
+      ]);
+    }
+    if (pageData.frontmatter.docType) {
+      head.push([
+        'meta',
+        { name: 'docsearch:doc_type', content: pageData.frontmatter.docType }
+      ]);
+    }
+    if (
+      pageData.frontmatter.search === false ||
+      pageData.frontmatter.noindex === true
+    ) {
+      head.push(['meta', { name: 'docsearch:exclude', content: 'true' }]);
+    }
 
     // Dynamic Open Graph and Twitter meta tags
     const isHome = new URL(canonicalUrl).pathname === '/';
@@ -297,6 +331,11 @@ export default defineConfig({
   srcDir: 'src',
   cleanUrls: true,
   srcExclude: [`${other}/**`, `${channel}/docs/**/template.md`],
+  // A function rather than the equivalent `{ '<channel>/:path*': ':path*' }`.
+  // vitepress-plugin-llms reuses this config to name its Markdown output, and
+  // on the object form it compiles the `:path*` array parameter back without
+  // separators, producing dist/docsreferencecli.md instead of
+  // dist/docs/reference/cli.md and breaking every relative link in them.
   rewrites: (id) =>
     id.startsWith(`${channel}/`) ? id.slice(channel.length + 1) : id,
   markdown: {
@@ -307,6 +346,7 @@ export default defineConfig({
       });
       md.use(tabsMarkdownPlugin);
       md.use(groupIconMdPlugin);
+      md.use(searchKeywordsPlugin);
     }
   },
   vite: {
@@ -351,23 +391,32 @@ export default defineConfig({
 
   themeConfig: {
     logo: '/img/logo.svg',
+    sidebarMenuLabel: 'Documentation',
     carbonAds: {
       code: 'CESI65QJ',
       placement: 'taskfiledev'
     },
-    search: isProduction
+    search: isPublicDeploy
       ? {
           provider: 'algolia',
           options: {
             appId: '7IZIJ13AI7',
             apiKey: '34b64ae4fc8d9da43d9a13d9710aaddc',
-            indexName: 'taskfile'
+            indexName: isLatest ? 'taskfile' : 'taskfile-next'
           }
         }
       : {
           provider: 'local',
           options: {
             detailedView: true,
+            // Match the public DocSearch scope: current docs, without release
+            // notes or blog posts competing with feature documentation.
+            _render(src, env, md) {
+              const path = env.relativePath.replace(/^(next|latest)\//, '');
+              if (!path.startsWith('docs/') || path === 'docs/changelog.md')
+                return '';
+              return renderSearchContent(src, env, md);
+            },
             miniSearch: {
               searchOptions: {
                 fuzzy: 0.2,
@@ -381,7 +430,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       {
         text: 'Docs',
-        link: '/docs/guide',
+        link: hasDocsOverview ? '/docs/' : '/docs/guide',
         activeMatch: '^/docs'
       },
       { text: 'Blog', link: '/blog', activeMatch: '^/blog' },
@@ -447,7 +496,7 @@ export default defineConfig({
     }
   },
   sitemap: {
-    hostname: 'https://taskfile.dev'
+    hostname: isLatest ? 'https://taskfile.dev' : 'https://next.taskfile.dev'
   },
   buildEnd({ outDir }) {
     const robots = isProduction
@@ -458,7 +507,22 @@ export default defineConfig({
           'Sitemap: https://taskfile.dev/sitemap.xml',
           ''
         ]
-      : ['User-agent: *', 'Disallow: /', ''];
+      : isPublicDeploy
+        ? [
+            'User-agent: Algolia Crawler',
+            'Allow: /docs/',
+            'Allow: /sitemap.xml',
+            'Allow: /$',
+            'Disallow: /',
+            '',
+            'User-agent: *',
+            // Search engines must crawl the public next site to read noindex.
+            'Allow: /',
+            '',
+            'Sitemap: https://next.taskfile.dev/sitemap.xml',
+            ''
+          ]
+        : ['User-agent: *', 'Disallow: /', ''];
     writeFileSync(resolve(outDir, 'robots.txt'), robots.join('\n'));
   }
 });

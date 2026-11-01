@@ -1,4 +1,6 @@
 import { createContentLoader } from 'vitepress';
+import { fileURLToPath } from 'node:url';
+import { createBlogDateResolver } from './blog-date';
 
 export interface Post {
   title: string;
@@ -32,6 +34,10 @@ function extractExcerpt(html: string): string | undefined {
 // Same channel as .vitepress/config.ts: the posts of the other one are not part
 // of this build.
 const channel = process.env.DOCS_CHANNEL === 'latest' ? 'latest' : 'next';
+const blogDate = createBlogDateResolver(
+  channel,
+  fileURLToPath(new URL('../src/latest/blog/', import.meta.url))
+);
 
 export default createContentLoader(`${channel}/blog/*.md`, {
   render: true,
@@ -45,7 +51,8 @@ export default createContentLoader(`${channel}/blog/*.md`, {
       }))
       .filter(({ url }) => url !== '/blog/')
       .map(({ frontmatter, html, url }) => {
-        const date = new Date(frontmatter.date);
+        const file = url.slice('/blog/'.length).replace(/\.html$/, '') + '.md';
+        const date = blogDate(file, frontmatter.date);
         return {
           title: frontmatter.title,
           url,

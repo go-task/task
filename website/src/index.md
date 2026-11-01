@@ -4,6 +4,7 @@ description:
   Task is a fast, cross-platform task runner and build tool that uses a simple
   YAML Taskfile.
 layout: home
+titleTemplate: false
 hero:
   name: Task
   text: The Modern Task Runner
@@ -15,38 +16,33 @@ hero:
     alt: Task logo
   actions:
     - theme: brand
-      text: Install
-      link: /docs/installation
-    - theme: alt
       text: Get Started
       link: /docs/getting-started
     - theme: alt
-      text: Guide
-      link: /docs/guide
+      text: Browse the Reference
+      link: /docs/reference/schema
 
 features:
-  - title: 30-Second Setup
+  - title: Readable by design
     details:
-      Single binary download, zero dependencies. Works with Homebrew, Snapcraft,
-      Scoop and more.
-    icon: 🚀
+      Describe commands, dependencies, and inputs in YAML that the whole team
+      can understand.
+    icon: 📖
 
-  - title: Truly cross-platform
+  - title: One workflow everywhere
     icon: 🖥️
-    details:
-      Run the same Taskfile on Linux, macOS and Windows. No extra setup. Task
-      handles platform quirks so you don’t have to.
+    details: Run the same Taskfile on Linux, macOS, Windows, locally, and in CI.
 
-  - title: Smart Caching
+  - title: Only run what changed
     icon: 🎯
     details:
-      Skip unnecessary rebuilds by tracking file changes (timestamp or
-      content-based).
+      Track sources and generated files to skip work that is already up to date.
 
-  - title: Ideal for code generation & scaffolding
-    icon: ⚡
+  - title: One Taskfile, every repo
+    icon: 🔗
     details:
-      Use Task to wire up codegen tools, formatters, linters, or anything
-      repetitive. Chain commands, set dependencies, and keep your workflow
-      clean.
+      Include Taskfiles straight from a URL or a Git repo, so shared workflows
+      live in one place instead of being copy-pasted.
+    link: /docs/remote-taskfiles
+    linkText: Explore Remote Taskfiles
 ---

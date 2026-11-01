@@ -3,6 +3,8 @@ title: Threat Model
 description:
   Threats, assets, trust boundaries, and mitigations for the Task project and
   its release infrastructure
+section: Project
+docType: project
 outline: deep
 ---
 
@@ -16,8 +18,8 @@ of our commitment to transparency.
 
 ### Critical Assets
 
-- **Source Code:** The Task CLI, build scripts, and configuration files
-  (e.g., `Taskfile.yml`, `.goreleaser.yml`).
+- **Source Code:** The Task CLI, build scripts, and configuration files (e.g.,
+  `Taskfile.yml`, `.goreleaser.yml`).
 - **Build Artifacts:** Compiled binaries, packages, and containers distributed
   to users.
 - **Secrets:** API tokens, signing keys, and repository credentials used in
@@ -78,8 +80,8 @@ of our commitment to transparency.
 
 #### Secrets Leakage
 
-- Exposure of tokens, credentials, or signing keys in logs, error messages,
-  or artifacts
+- Exposure of tokens, credentials, or signing keys in logs, error messages, or
+  artifacts
 - Hardcoded secrets in code or configuration
 - Improper secret management in CI/CD environments
 
@@ -171,7 +173,7 @@ of our commitment to transparency.
 ## References
 
 - [Task Documentation](https://taskfile.dev/)
-- [Incident Response Plan](./incident-response-plan)
+- [Incident Response Plan](./incident-response-plan.md)
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [Supply Chain Security](https://slsa.dev/)
 - [GitHub Security Best Practices](https://docs.github.com/en/code-security)

@@ -3,6 +3,8 @@ title: Contributing
 description:
   Comprehensive guide for contributing to the Task project, including setup,
   development, testing, and submitting PRs
+section: Contributing
+docType: contributing
 outline: deep
 ---
 
@@ -126,6 +128,19 @@ by using `task website` (requires `nodejs` & `pnpm`). All content is written in
 Markdown and is located in the `website/src` directory. All Markdown documents
 should have an 80 character line wrap limit (enforced by Prettier).
 
+Search is provided by Algolia DocSearch. The crawler runs on Algolia's side and
+is configured through their dashboard, but `website/docsearch.config.js` holds
+the same configuration in the repository so it can be read and reviewed. If you
+change one, change the other. A page's `section:` frontmatter is what the
+crawler shows as the breadcrumb on a search result, while `docType:` powers its
+search facet, so a new page needs both.
+
+After building the site, run `pnpm check:links` from `website/` to check links
+in the generated Markdown pages and LLM indexes. The LLM plugin is patched in
+`website/patches/` to resolve links before it moves directory indexes such as
+`docs/guide/index.md` to `docs/guide.md`. When upgrading the plugin, retain the
+patch until upstream handles those links, and check both documentation channels.
+
 When making a change, consider whether a change to the [Usage
 Guide][usage-guide] is necessary. This document contains descriptions and
 examples of how to use Task features. If you're adding a new feature, try to
@@ -140,13 +155,16 @@ for fields in the docs and the schema should match.
 
 #### Documentation channels
 
-The docs and the blog exist in two copies, so that taskfile.dev never announces
-a feature that is not in the released binary yet:
+The docs, the blog and the coding-agent guide exist in two copies, so that
+taskfile.dev never announces a feature that is not in the released binary yet:
 
 | Directory                        | Channel  | Published on      |
 | -------------------------------- | -------- | ----------------- |
 | `website/src/next/{docs,blog}`   | `next`   | next.taskfile.dev |
 | `website/src/latest/{docs,blog}` | `latest` | taskfile.dev      |
+
+The coding-agent guide follows the same channels as `src/next/agents.md` and
+`src/latest/agents.md`, and is promoted at release time too.
 
 Everything else - the homepage, the team, adopters, images - is shared by both
 channels and goes live as soon as the site is deployed.
@@ -253,9 +271,9 @@ If you have questions, feel free to ask them in the `#help` forum channel on our
 [discord-server]: https://discord.gg/6TY36E39UK
 [discussion]: https://github.com/go-task/task/discussions
 [conventional-commits]: https://www.conventionalcommits.org
-[experiments]: ./experiments/
-[experiments-workflow]: ./experiments/#workflow
-[styleguide]: ./styleguide
-[cli-reference]: ./reference/cli
-[schema-reference]: ./reference/schema
-[usage-guide]: ./guide
+[experiments]: ./experiments/index.md
+[experiments-workflow]: ./experiments/index.md#workflow
+[styleguide]: ./styleguide.md
+[cli-reference]: ./reference/cli.md
+[schema-reference]: ./reference/schema.md
+[usage-guide]: ./guide/index.md

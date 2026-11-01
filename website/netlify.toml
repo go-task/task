@@ -6,7 +6,9 @@
   NODE_VERSION = "24"
 
 [context.production.environment]
-  DOCS_CHANNEL = "latest"
+  # Git builds publish next.taskfile.dev. Releases build latest separately and
+  # publish taskfile.dev with `task website:deploy:prod` and --no-build.
+  DOCS_CHANNEL = "next"
   DOCS_SITE = "production"
 
 [context.deploy-preview.environment]

@@ -44,6 +44,10 @@ func (err *TaskRunError) Error() string {
 }
 
 func (err *TaskRunError) Code() int {
+	var te TaskError
+	if As(err.Err, &te) {
+		return te.Code()
+	}
 	return CodeTaskRunError
 }
 

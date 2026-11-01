@@ -1,0 +1,13 @@
+$ task --list
+task: Available tasks for this project:
+* build:       Test and build my-app      (aliases: b)
+
+$ task build
+task: [test] go test ./...
+ok      example/app     0.2s
+task: [build] go build -o bin/my-app .
+
+$ task b APP=demo
+task: [test] go test ./...
+ok      example/app     (cached)
+task: [build] go build -o bin/demo .

@@ -6,6 +6,7 @@ import AuthorCard from '../components/AuthorCard.vue';
 import BlogPost from '../components/BlogPost.vue';
 import Version from '../components/Version.vue';
 import Adopters from '../components/Adopters.vue';
+import GuideRedirect from '../components/GuideRedirect.vue';
 import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client';
 import { h } from 'vue';
 import 'virtual:group-icons.css';
@@ -23,7 +24,11 @@ export default {
     app.component('BlogPost', BlogPost);
     app.component('Version', Version);
     app.component('Adopters', Adopters);
-    app.component('CopyOrDownloadAsMarkdownButtons', CopyOrDownloadAsMarkdownButtons);
+    app.component('GuideRedirect', GuideRedirect);
+    app.component(
+      'CopyOrDownloadAsMarkdownButtons',
+      CopyOrDownloadAsMarkdownButtons
+    );
     enhanceAppWithTabs(app);
   }
 } satisfies Theme;
