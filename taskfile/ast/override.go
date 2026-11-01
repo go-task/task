@@ -9,11 +9,13 @@ import (
 // MergeOverride applies a local override: vars and env merge by key, tasks are
 // replaced whole.
 func (tf *Taskfile) MergeOverride(override *Taskfile) error {
-	if !tf.Version.Equal(override.Version) {
+	// An older version is fine, so bumping the shared Taskfile doesn't break
+	// existing overrides.
+	if override.Version.Major() != tf.Version.Major() || override.Version.GreaterThan(tf.Version) {
 		return &errors.TaskfileVersionCheckError{
 			URI:           override.Location,
 			SchemaVersion: override.Version,
-			Message:       fmt.Sprintf("must match the main Taskfile (%s)", tf.Version),
+			Message:       fmt.Sprintf("must be a v%d version no newer than the main Taskfile (%s)", tf.Version.Major(), tf.Version),
 		}
 	}
 	if tf.Vars == nil {

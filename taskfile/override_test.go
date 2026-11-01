@@ -38,7 +38,7 @@ func readOverrideFixture(t *testing.T, dir string, opts ...ReaderOption) (*ast.T
 func TestAutomaticOverrideMerge(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	main := writeOverrideFixture(t, dir, "Taskfile.yml", `version: '3'
+	main := writeOverrideFixture(t, dir, "Taskfile.yml", `version: '3.1'
 vars:
   PORT: 3000
   KEEP: original
@@ -59,7 +59,7 @@ tasks:
   keep: echo keep
   empty: echo old
 `)
-	override := writeOverrideFixture(t, dir, "Taskfile.override.yml", `version: '3.0.0'
+	override := writeOverrideFixture(t, dir, "Taskfile.override.yml", `version: '3'
 vars:
   PORT: 4000
   CONFIG: {map: {shared: local}}
@@ -131,7 +131,8 @@ func TestAutomaticOverrideErrors(t *testing.T) {
 	tests := []struct{ name, content, message string }{
 		{"invalid YAML", "version: [", "yaml:"},
 		{"missing version", "vars: {PORT: 4000}", "Missing schema version"},
-		{"mismatched version", "version: '3.1'", "(3.1.0) must match the main Taskfile (3.0.0)"},
+		{"newer version", "version: '3.1'", "(3.1.0) must be a v3 version no newer than the main Taskfile (3.0.0)"},
+		{"older major version", "version: '2'", "(2.0.0) must be a v3 version"},
 		{"sequence", "- version: '3'", "taskfile override"},
 	}
 	for _, key := range []string{"includes", "unknown", "<<"} {
