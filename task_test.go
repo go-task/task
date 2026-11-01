@@ -995,10 +995,14 @@ func TestParallelDepsReportAllFailures(t *testing.T) {
 	require.NoError(t, e.Setup())
 	err := e.Run(t.Context(), &task.Call{Task: "default"})
 	require.Error(t, err)
-	msg := err.Error()
-	// Both failing deps must be surfaced, not just the first one.
-	assert.Contains(t, msg, `"fail-1"`)
-	assert.Contains(t, msg, `"fail-2"`)
+	// Both failing deps must be surfaced, not just the first one, and in the
+	// order they are declared.
+	assert.Equal(t,
+		"task: Failed to run task \"default\": "+
+			"task: Failed to run task \"fail-1\": exit status 1\n"+
+			"task: Failed to run task \"fail-2\": exit status 1",
+		err.Error(),
+	)
 }
 
 func TestTaskVersion(t *testing.T) {

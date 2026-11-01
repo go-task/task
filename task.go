@@ -2,13 +2,11 @@ package task
 
 import (
 	"context"
-	stderrors "errors"
 	"fmt"
 	"os"
 	"runtime"
 	"slices"
 	"strings"
-	"sync"
 	"sync/atomic"
 
 	"golang.org/x/sync/errgroup"
@@ -322,9 +320,9 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 
 	// Without failfast every dep runs to completion, but errgroup.Wait only
 	// surfaces the first error, so all dep failures are collected and joined.
-	var mu sync.Mutex
-	var errs []error
-	for _, d := range t.Deps {
+	// Each dep writes its own slot, keeping the message in declaration order.
+	errs := make([]error, len(t.Deps))
+	for i, d := range t.Deps {
 		g.Go(func() error {
 			depCtx := ctx
 			var timeout *errors.TaskTimeoutError
@@ -340,9 +338,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 				err = timeout
 			}
 			if !failfast && err != nil {
-				mu.Lock()
-				errs = append(errs, err)
-				mu.Unlock()
+				errs[i] = err
 			}
 			return err
 		})
@@ -352,7 +348,7 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 		if failfast {
 			return err
 		}
-		return stderrors.Join(errs...)
+		return errors.Join(errs...)
 	}
 	return nil
 }
