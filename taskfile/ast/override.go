@@ -7,9 +7,9 @@ import (
 	"github.com/go-task/task/v3/errors"
 )
 
-// MergeOverride applies a local override: output is replaced, includes are
-// added, vars and env merge by key, dotenv files take priority over the main
-// ones, tasks are replaced whole.
+// MergeOverride applies a local override: settings it declares replace the
+// main ones, includes are added, vars and env merge by key, dotenv files take
+// priority over the main ones, tasks are replaced whole.
 func (tf *Taskfile) MergeOverride(override *Taskfile) error {
 	// An older version is fine, so bumping the shared Taskfile doesn't break
 	// existing overrides.
@@ -22,6 +22,25 @@ func (tf *Taskfile) MergeOverride(override *Taskfile) error {
 	}
 	if override.Output.IsSet() {
 		tf.Output = override.Output
+	}
+	if override.Method != "" {
+		tf.Method = override.Method
+	}
+	if override.Run != "" {
+		tf.Run = override.Run
+	}
+	if override.Interval != 0 {
+		tf.Interval = override.Interval
+	}
+	if override.UseGitignore != nil {
+		tf.UseGitignore = override.UseGitignore
+	}
+	// A present but empty list clears the main one.
+	if override.Set != nil {
+		tf.Set = override.Set
+	}
+	if override.Shopt != nil {
+		tf.Shopt = override.Shopt
 	}
 	for namespace, include := range override.Includes.All() {
 		if _, ok := tf.Includes.Get(namespace); ok {

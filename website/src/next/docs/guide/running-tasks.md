@@ -182,17 +182,18 @@ vars:
 `task dev` now prints `PORT=4000`. Add `Taskfile.override.yml` to `.gitignore`
 so it stays on your machine.
 
-An override can set `output`, `includes`, `vars`, `env`, `dotenv` and `tasks`.
-Its `version` can't be newer than the main Taskfile's, so `version: '3'` keeps
-working when the main Taskfile bumps its version:
+An override can set any root key of a Taskfile except `silent`, which belongs in
+the [config file](../reference/config.md#silent) instead. Its `version` can't be
+newer than the main Taskfile's, so `version: '3'` keeps working when the main
+Taskfile bumps its version:
 
-- `output` replaces the main Taskfile's [output style](./output.md); the
-  `--output` flag still takes priority.
-
+- Settings such as `output`, `method`, `run`, `interval`, `set`, `shopt` and
+  `use_gitignore` replace the main Taskfile's when present. An empty list, like
+  `set: []`, clears the main one. Command-line flags such as `--output` still
+  take priority.
 - Includes are added, for example your own tasks under
   `includes: {me: ~/tasks/Taskfile.yml}`. Redefining an include of the main
   Taskfile is an error; to point it elsewhere, have its path read a variable.
-
 - Variables and environment variables are merged: yours win, the others are
   kept.
 - Your `dotenv` files are read before the main Taskfile's, so their values win.
@@ -201,8 +202,6 @@ working when the main Taskfile bumps its version:
 - A task with the same name replaces the original entirely. To tweak a single
   value of a shared task, have the main Taskfile read it from a variable, then
   override that variable.
-
-Anything else at the root, such as `silent` or `run`, is rejected.
 
 ::: tip
 
