@@ -1,0 +1,15 @@
+version: '3'
+
+vars:
+  PORT: 4000
+  CONFIG:
+    map: {shared: local}
+  NEW: local
+
+env:
+  FIRST: local
+
+tasks:
+  dev:
+    cmds:
+      - echo {{.PORT}} {{.KEEP}} {{.CONFIG}} {{.NEW}} $FIRST $KEEP_ENV

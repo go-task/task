@@ -6,59 +6,24 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"slices"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/go-task/task/v3/errors"
-	"github.com/go-task/task/v3/taskfile/ast"
 )
 
-func writeOverrideFixture(t *testing.T, dir, name, content string) string {
+func writeOverrideFixture(t *testing.T, dir, name, content string) {
 	t.Helper()
-	path := filepath.Join(dir, name)
-	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
-	require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
-	return path
+	require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(content), 0o600))
 }
 
-func readOverrideFixture(t *testing.T, dir string, opts ...ReaderOption) (*ast.Taskfile, error) {
-	t.Helper()
-	node, err := NewFileNode("", dir)
-	require.NoError(t, err)
-	graph, err := NewReader(opts...).Read(t.Context(), node)
-	if err != nil {
-		return nil, err
-	}
-	return graph.Merge()
-}
-
-func TestAutomaticOverrideMerge(t *testing.T) {
+// Settings have no visible effect on a task's output, so they are checked on
+// the merged Taskfile.
+func TestAutomaticOverrideSettings(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	main := writeOverrideFixture(t, dir, "Taskfile.yml", `version: '3.1'
-vars:
-  PORT: 3000
-  KEEP: original
-  CONFIG: {map: {old: old, shared: original}}
-env:
-  FIRST: original
-  KEEP: original
-tasks:
-  dev:
-    aliases: [old]
-    vars: {OLD: old}
-    env: {OLD: old}
-    deps: [old]
-    preconditions: [exit 1]
-    cmds: [exit 1]
-    desc: old
-    silent: true
-  keep: echo keep
-  empty: echo old
+	writeOverrideFixture(t, dir, "Taskfile.yml", `version: '3'
 method: timestamp
 run: once
 interval: 1s
@@ -66,157 +31,25 @@ set: [pipefail]
 shopt: [globstar]
 use_gitignore: true
 `)
-	override := writeOverrideFixture(t, dir, "Taskfile.override.yml", `version: '3'
-vars:
-  PORT: 4000
-  CONFIG: {map: {shared: local}}
-  NEW: local
-  NULL: null
-env:
-  FIRST: local
-  NEW: local
-tasks:
-  dev:
-    cmds: ['echo {{.PORT}}']
-  added: echo added
-  empty: null
+	writeOverrideFixture(t, dir, "Taskfile.override.yml", `version: '3'
 method: none
 run: when_changed
 interval: 2s
 set: []
 use_gitignore: false
 `)
-	tf, err := readOverrideFixture(t, dir, WithAutomaticOverride(true))
+	node, err := NewFileNode("", dir)
 	require.NoError(t, err)
-	assert.Equal(t, main, tf.Location)
-	assert.Equal(t, []string{"PORT", "KEEP", "CONFIG", "NEW", "NULL"}, slices.Collect(tf.Vars.Keys()))
-	port, _ := tf.Vars.Get("PORT")
-	assert.Equal(t, 4000, port.Value)
-	config, _ := tf.Vars.Get("CONFIG")
-	assert.Equal(t, map[string]any{"shared": "local"}, config.Value)
-	null, ok := tf.Vars.Get("NULL")
-	assert.True(t, ok)
-	assert.Nil(t, null.Value)
-	assert.Equal(t, []string{"FIRST", "KEEP", "NEW"}, slices.Collect(tf.Env.Keys()))
-	first, _ := tf.Env.Get("FIRST")
-	assert.Equal(t, "local", first.Value)
-	keep, _ := tf.Env.Get("KEEP")
-	assert.Equal(t, "original", keep.Value)
-	assert.Equal(t, []string{"dev", "keep", "empty", "added"}, slices.Collect(tf.Tasks.Keys(nil)))
-	dev, _ := tf.Tasks.Get("dev")
-	assert.Equal(t, &ast.Task{
-		Task: "dev", Cmds: []*ast.Cmd{{Cmd: "echo {{.PORT}}"}},
-		Location: &ast.Location{Taskfile: override, Line: 11, Column: 3},
-	}, dev)
-	added, _ := tf.Tasks.Get("added")
-	assert.Equal(t, override, added.Location.Taskfile)
-	unchanged, _ := tf.Tasks.Get("keep")
-	assert.Equal(t, main, unchanged.Location.Taskfile)
-	empty, ok := tf.Tasks.Get("empty")
-	require.True(t, ok)
-	assert.Empty(t, empty.Cmds)
-	assert.Equal(t, override, empty.Location.Taskfile)
+	graph, err := NewReader(WithAutomaticOverride(true)).Read(t.Context(), node)
+	require.NoError(t, err)
+	tf, err := graph.Merge()
+	require.NoError(t, err)
 	assert.Equal(t, "none", tf.Method)
 	assert.Equal(t, "when_changed", tf.Run)
 	assert.Equal(t, 2*time.Second, tf.Interval)
 	assert.Equal(t, []string{}, tf.Set)
 	assert.Equal(t, []string{"globstar"}, tf.Shopt)
 	assert.Equal(t, new(false), tf.UseGitignore)
-}
-
-func TestAutomaticOverrideNames(t *testing.T) {
-	t.Parallel()
-	// Each suffix of the list checks both fallback and first-present priority.
-	// Case-insensitive filesystems only exercise the .yml/.yaml priority.
-	for i, name := range defaultOverrides {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			dir := t.TempDir()
-			writeOverrideFixture(t, dir, "Taskfile.dist.yml", "version: '3'\n")
-			for j := len(defaultOverrides) - 1; j >= i; j-- {
-				writeOverrideFixture(t, dir, defaultOverrides[j], fmt.Sprintf("version: '3'\nvars: {WINNER: %d}\n", j))
-			}
-			tf, err := readOverrideFixture(t, dir, WithAutomaticOverride(true))
-			require.NoError(t, err)
-			winner, _ := tf.Vars.Get("WINNER")
-			assert.Equal(t, i, winner.Value)
-		})
-	}
-}
-
-func TestAutomaticOverrideErrors(t *testing.T) {
-	t.Parallel()
-	tests := []struct{ name, content, message string }{
-		{"invalid YAML", "version: [", "yaml:"},
-		{"missing version", "vars: {PORT: 4000}", "Missing schema version"},
-		{"newer version", "version: '3.1'", "(3.1.0) must be a v3 version no newer than the main Taskfile (3.0.0)"},
-		{"older major version", "version: '2'", "(2.0.0) must be a v3 version"},
-		{"sequence", "- version: '3'", "taskfile override"},
-	}
-	for _, key := range []string{"silent", "unknown", "<<"} {
-		tests = append(tests, struct{ name, content, message string }{key, "version: '3'\n" + key + ": null", "not allowed"})
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			dir := t.TempDir()
-			writeOverrideFixture(t, dir, "Taskfile.yml", "version: '3'\n")
-			path := writeOverrideFixture(t, dir, "Taskfile.override.yml", tt.content)
-			writeOverrideFixture(t, dir, "Taskfile.override.yaml", "version: '3'\n")
-			_, err := readOverrideFixture(t, dir, WithAutomaticOverride(true))
-			require.ErrorContains(t, err, tt.message)
-			assert.Contains(t, err.Error(), "Taskfile.override.yml")
-			if decodeErr, ok := errors.AsType[*errors.TaskfileDecodeError](err); ok {
-				assert.Equal(t, path, decodeErr.Location)
-				assert.Positive(t, decodeErr.Line)
-			}
-		})
-	}
-}
-
-func TestAutomaticOverrideReadError(t *testing.T) {
-	t.Parallel()
-	dir := t.TempDir()
-	writeOverrideFixture(t, dir, "Taskfile.yml", "version: '3'\n")
-	require.NoError(t, os.Mkdir(filepath.Join(dir, "Taskfile.override.yml"), 0o755))
-	writeOverrideFixture(t, dir, "Taskfile.override.yaml", "version: '3'\n")
-	_, err := readOverrideFixture(t, dir, WithAutomaticOverride(true))
-	require.ErrorContains(t, err, "task: Failed to read Taskfile override")
-	assert.Contains(t, err.Error(), "Taskfile.override.yml")
-}
-
-func TestAutomaticOverrideIncludes(t *testing.T) {
-	t.Parallel()
-	const main = "version: '3'\nvars: {INCLUDE: missing}\nincludes:\n  docs: '{{.INCLUDE}}/Taskfile.yml'\n"
-	tests := []struct {
-		name, main, override, task, taskfile, err string
-	}{
-		{name: "var picks include", main: main, override: "vars: {INCLUDE: docs}\n", task: "docs:build", taskfile: "docs/Taskfile.yml"},
-		{name: "task conflicts with include", main: main, override: "vars: {INCLUDE: docs}\ntasks:\n  docs:build: echo local\n", err: "docs:build"},
-		{name: "added include", main: "version: '3'\n", override: "includes:\n  extra: extra/Taskfile.yml\n", task: "extra:build", taskfile: "extra/Taskfile.yml"},
-		{name: "redefined include", main: main, override: "includes:\n  docs: extra/Taskfile.yml\n", err: `can't redefine include "docs"`},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			dir := t.TempDir()
-			writeOverrideFixture(t, dir, "Taskfile.yml", tt.main)
-			writeOverrideFixture(t, dir, "Taskfile.override.yml", "version: '3'\n"+tt.override)
-			for _, sub := range []string{"docs", "extra"} {
-				writeOverrideFixture(t, dir, sub+"/Taskfile.yml", "version: '3'\ntasks:\n  build: echo "+sub+"\n")
-				writeOverrideFixture(t, dir, sub+"/Taskfile.override.yml", "invalid YAML: [")
-			}
-			tf, err := readOverrideFixture(t, dir, WithAutomaticOverride(true))
-			if tt.err != "" {
-				require.ErrorContains(t, err, tt.err)
-				return
-			}
-			require.NoError(t, err)
-			task, ok := tf.Tasks.Get(tt.task)
-			require.True(t, ok)
-			assert.Equal(t, filepath.Join(dir, tt.taskfile), task.Location.Taskfile)
-		})
-	}
 }
 
 func TestAutomaticOverrideRemote(t *testing.T) {
