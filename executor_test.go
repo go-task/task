@@ -1340,8 +1340,7 @@ func TestAutomaticOverride(t *testing.T) {
 		WithTask("added"),
 		WithFixtureTemplating(),
 	)
-	// Only the discovered root's directory is searched, so the invalid
-	// override in child/ is ignored.
+	// The invalid override in child/ must be ignored.
 	NewExecutorTest(t,
 		WithName("subdirectory"),
 		WithExecutorOptions(task.WithDir(dir+"/child"), task.WithSilent(true)),

@@ -7,9 +7,7 @@ import (
 	"github.com/go-task/task/v3/errors"
 )
 
-// MergeOverride applies a local override: settings it declares replace the
-// main ones, includes are added, vars and env merge by key, dotenv files take
-// priority over the main ones, tasks are replaced whole.
+// MergeOverride applies a local Taskfile override to tf.
 func (tf *Taskfile) MergeOverride(override *Taskfile) error {
 	// An older version is fine, so bumping the shared Taskfile doesn't break
 	// existing overrides.
