@@ -1,5 +1,7 @@
 version: '3'
 
+output: prefixed
+
 vars:
   PORT: 4000
 

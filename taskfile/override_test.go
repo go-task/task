@@ -135,7 +135,7 @@ func TestAutomaticOverrideErrors(t *testing.T) {
 		{"older major version", "version: '2'", "(2.0.0) must be a v3 version"},
 		{"sequence", "- version: '3'", "taskfile override"},
 	}
-	for _, key := range []string{"output", "unknown", "<<"} {
+	for _, key := range []string{"silent", "unknown", "<<"} {
 		tests = append(tests, struct{ name, content, message string }{key, "version: '3'\n" + key + ": null", "not allowed"})
 	}
 	for _, tt := range tests {

@@ -182,9 +182,12 @@ vars:
 `task dev` now prints `PORT=4000`. Add `Taskfile.override.yml` to `.gitignore`
 so it stays on your machine.
 
-An override can set `includes`, `vars`, `env`, `dotenv` and `tasks`. Its
-`version` can't be newer than the main Taskfile's, so `version: '3'` keeps
+An override can set `output`, `includes`, `vars`, `env`, `dotenv` and `tasks`.
+Its `version` can't be newer than the main Taskfile's, so `version: '3'` keeps
 working when the main Taskfile bumps its version:
+
+- `output` replaces the main Taskfile's [output style](./output.md); the
+  `--output` flag still takes priority.
 
 - Includes are added, for example your own tasks under
   `includes: {me: ~/tasks/Taskfile.yml}`. Redefining an include of the main
@@ -199,7 +202,7 @@ working when the main Taskfile bumps its version:
   value of a shared task, have the main Taskfile read it from a variable, then
   override that variable.
 
-Anything else at the root, such as `output` or `silent`, is rejected.
+Anything else at the root, such as `silent` or `run`, is rejected.
 
 ::: tip
 
