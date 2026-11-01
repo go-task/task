@@ -173,43 +173,36 @@ backend = "aqua:vektra/mockery"
 
 [tools.mockery."platforms.linux-arm64"]
 checksum = "sha256:de4951716cc25236d0ee8dd5f18d1c3a08ab10315028e4313a7aee7526760d13"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.0/mockery_3.9.0_Linux_arm64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/686388009"
 
 [tools.mockery."platforms.linux-arm64-musl"]
 checksum = "sha256:de4951716cc25236d0ee8dd5f18d1c3a08ab10315028e4313a7aee7526760d13"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.0/mockery_3.9.0_Linux_arm64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/686388009"
 
 [tools.mockery."platforms.linux-x64"]
 checksum = "sha256:30ca380381763e7c9e8afddeea09c260061aa1580b885a66677bb12ebd9f038d"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.0/mockery_3.9.0_Linux_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/686388006"
 
 [tools.mockery."platforms.linux-x64-musl"]
 checksum = "sha256:30ca380381763e7c9e8afddeea09c260061aa1580b885a66677bb12ebd9f038d"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.0/mockery_3.9.0_Linux_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/686388006"
 
 [tools.mockery."platforms.macos-arm64"]
 checksum = "sha256:45164ac1ac597288302fa0c2bee433c88a50080e7d77fda2eb9c5a657a5f8705"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.0/mockery_3.9.0_Darwin_arm64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/686388008"
 
 [tools.mockery."platforms.macos-x64"]
 checksum = "sha256:d69b2e87667d47ffdb390a57b9ee2c006b65033b9282686b39cc4010f196747e"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.0/mockery_3.9.0_Darwin_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/686388048"
 
 [tools.mockery."platforms.windows-x64"]
 checksum = "sha256:348643d5d40571cbf24229a87828a4694173599b7e2af38d5c8a8d359b851807"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.0/mockery_3.9.0_Windows_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/686388011"
 
