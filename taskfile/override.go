@@ -18,6 +18,11 @@ var defaultOverrides = []string{
 	"taskfile.override.yaml",
 }
 
+func (r *Reader) loadsOverride(node Node) bool {
+	_, ok := node.(*FileNode)
+	return ok && node.Parent() == nil && r.automaticOverride
+}
+
 func readAutomaticOverride(dir string, tf *ast.Taskfile) error {
 	for _, name := range defaultOverrides {
 		path := filepath.Join(dir, name)
@@ -31,11 +36,11 @@ func readAutomaticOverride(dir string, tf *ast.Taskfile) error {
 		if err != nil {
 			return fmt.Errorf("task: Failed to read Taskfile override: %w", err)
 		}
-		override, err := decodeTaskfile(b, path, true)
-		if err != nil {
+		var override ast.Taskfile
+		if err := decodeTaskfile(b, path, &override, (*taskfileOverride)(&override)); err != nil {
 			return err
 		}
-		return tf.MergeOverride(override)
+		return tf.MergeOverride(&override)
 	}
 	return nil
 }

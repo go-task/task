@@ -160,7 +160,7 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 	if err != nil {
 		return err
 	}
-	if _, ok := node.(*FileNode); ok && node.Parent() == nil && r.automaticOverride {
+	if r.loadsOverride(node) {
 		if err := readAutomaticOverride(filepath.Dir(node.Location()), vertex.Taskfile); err != nil {
 			return err
 		}
@@ -265,18 +265,17 @@ func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error)
 		return nil, err
 	}
 
-	return decodeTaskfile(b, node.Location(), false)
+	var tf ast.Taskfile
+	if err := decodeTaskfile(b, node.Location(), &tf, &tf); err != nil {
+		return nil, err
+	}
+	return &tf, nil
 }
 
-func decodeTaskfile(b []byte, location string, override bool) (*ast.Taskfile, error) {
-	var tf ast.Taskfile
-	var err error
-	if override {
-		err = yaml.Unmarshal(b, (*taskfileOverride)(&tf))
-	} else {
-		err = yaml.Unmarshal(b, &tf)
-	}
-	if err != nil {
+// decodeTaskfile unmarshals b into tf through target, a view of tf that may
+// restrict which fields are accepted.
+func decodeTaskfile(b []byte, location string, tf *ast.Taskfile, target yaml.Unmarshaler) error {
+	if err := yaml.Unmarshal(b, target); err != nil {
 		// Decode the taskfile and add the file info the any errors
 		if taskfileDecodeErr, ok := errors.AsType[*errors.TaskfileDecodeError](err); ok {
 			snippet := NewSnippet(b,
@@ -284,14 +283,14 @@ func decodeTaskfile(b []byte, location string, override bool) (*ast.Taskfile, er
 				WithColumn(taskfileDecodeErr.Column),
 				WithPadding(2),
 			)
-			return nil, taskfileDecodeErr.WithFileInfo(location, snippet.String())
+			return taskfileDecodeErr.WithFileInfo(location, snippet.String())
 		}
-		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(location), Err: err}
+		return &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(location), Err: err}
 	}
 
 	// Check that the Taskfile is set and has a schema version
 	if tf.Version == nil {
-		return nil, &errors.TaskfileVersionCheckError{URI: location}
+		return &errors.TaskfileVersionCheckError{URI: location}
 	}
 
 	// Set the taskfile/task's locations
@@ -307,7 +306,7 @@ func decodeTaskfile(b []byte, location string, override bool) (*ast.Taskfile, er
 		}
 	}
 
-	return &tf, nil
+	return nil
 }
 
 func (r *Reader) readNodeContent(ctx context.Context, node Node) ([]byte, error) {
