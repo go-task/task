@@ -1,0 +1,19 @@
+version: '3'
+
+vars:
+  PORT: 3000
+  KEEP: original
+  CONFIG:
+    map: {old: old, shared: original}
+
+env:
+  FIRST: original
+  KEEP_ENV: original
+
+tasks:
+  dev:
+    deps: [fail]
+    cmds:
+      - exit 1
+
+  fail: exit 1
