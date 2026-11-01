@@ -23,6 +23,11 @@
 - Fixed task names containing regex characters (e.g. `c++` or `deploy.prod`)
   crashing Task or matching the wrong task when calling a task that has no
   exact match (#2916 by @vsaraikin).
+- Fixed an `https` remote Taskfile being downloaded over an unencrypted
+  connection when the server redirects to `http`. Such a redirect now requires
+  `--insecure`, like an `http` entrypoint (by @vmaerten).
+- Fixed `remote.headers` being sent over plain `http` when an `https` remote
+  Taskfile is redirected to `http` on the same host (by @vmaerten).
 
 ## v3.54.0 - 2026-10-01
 
@@ -55,12 +60,6 @@
   flags, flag values and per-task CLI variables. The Zsh `show-aliases` and
   `verbose` zstyles keep working, now backed by the `--no-aliases` and
   `--no-descriptions` completion flags (#2897 by @vmaerten).
-
-### 🐛 Fixes
-
-- Fixed an `https` remote Taskfile being downloaded over an unencrypted
-  connection when the server redirects to `http`. Such a redirect now requires
-  `--insecure`, like an `http` entrypoint (by @vmaerten).
 
 ### 📦 Package API
 
