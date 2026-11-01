@@ -1,1 +1,1 @@
-{{.TEST_DIR}}/testdata/override/Taskfile.override.yml {{.TEST_DIR}}/testdata/override/Taskfile.yml
+[added] {{.TEST_DIR}}/testdata/override/Taskfile.override.yml {{.TEST_DIR}}/testdata/override/Taskfile.yml

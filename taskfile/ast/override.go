@@ -7,9 +7,9 @@ import (
 	"github.com/go-task/task/v3/errors"
 )
 
-// MergeOverride applies a local override: includes are added, vars and env
-// merge by key, dotenv files take priority over the main ones, tasks are
-// replaced whole.
+// MergeOverride applies a local override: output is replaced, includes are
+// added, vars and env merge by key, dotenv files take priority over the main
+// ones, tasks are replaced whole.
 func (tf *Taskfile) MergeOverride(override *Taskfile) error {
 	// An older version is fine, so bumping the shared Taskfile doesn't break
 	// existing overrides.
@@ -19,6 +19,9 @@ func (tf *Taskfile) MergeOverride(override *Taskfile) error {
 			SchemaVersion: override.Version,
 			Message:       fmt.Sprintf("must be a v%d version no newer than the main Taskfile (%s)", tf.Version.Major(), tf.Version),
 		}
+	}
+	if override.Output.IsSet() {
+		tf.Output = override.Output
 	}
 	for namespace, include := range override.Includes.All() {
 		if _, ok := tf.Includes.Get(namespace); ok {
