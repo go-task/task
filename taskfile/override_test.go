@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -58,6 +59,12 @@ tasks:
     silent: true
   keep: echo keep
   empty: echo old
+method: timestamp
+run: once
+interval: 1s
+set: [pipefail]
+shopt: [globstar]
+use_gitignore: true
 `)
 	override := writeOverrideFixture(t, dir, "Taskfile.override.yml", `version: '3'
 vars:
@@ -73,6 +80,11 @@ tasks:
     cmds: ['echo {{.PORT}}']
   added: echo added
   empty: null
+method: none
+run: when_changed
+interval: 2s
+set: []
+use_gitignore: false
 `)
 	tf, err := readOverrideFixture(t, dir, WithAutomaticOverride(true))
 	require.NoError(t, err)
@@ -104,6 +116,12 @@ tasks:
 	require.True(t, ok)
 	assert.Empty(t, empty.Cmds)
 	assert.Equal(t, override, empty.Location.Taskfile)
+	assert.Equal(t, "none", tf.Method)
+	assert.Equal(t, "when_changed", tf.Run)
+	assert.Equal(t, 2*time.Second, tf.Interval)
+	assert.Equal(t, []string{}, tf.Set)
+	assert.Equal(t, []string{"globstar"}, tf.Shopt)
+	assert.Equal(t, new(false), tf.UseGitignore)
 }
 
 func TestAutomaticOverrideNames(t *testing.T) {
