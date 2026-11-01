@@ -20,6 +20,9 @@
   `enum.ref` values computed by `sh:` variables (#2958, #3070 by @vmaerten).
 - Fixed Homebrew printing a `postflight` deprecation warning when installing or
   upgrading the `go-task` cask (#3018, #3084 by @kemosabe-afk).
+- Fixed task names containing regex characters (e.g. `c++` or `deploy.prod`)
+  crashing Task or matching the wrong task when calling a task that has no
+  exact match (#2916 by @vsaraikin).
 
 ## v3.54.0 - 2026-10-01
 
