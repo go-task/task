@@ -182,17 +182,20 @@ vars:
 `task dev` now prints `PORT=4000`. Add `Taskfile.override.yml` to `.gitignore`
 so it stays on your machine.
 
-An override can set `vars`, `env` and `tasks`. Its `version` can't be newer
-than the main Taskfile's, so `version: '3'` keeps working when the main Taskfile
-bumps its version:
+An override can set `vars`, `env`, `dotenv` and `tasks`. Its `version` can't be
+newer than the main Taskfile's, so `version: '3'` keeps working when the main
+Taskfile bumps its version:
 
 - Variables and environment variables are merged: yours win, the others are
   kept.
+- Your `dotenv` files are read before the main Taskfile's, so their values win.
+  Like any dotenv file, they don't override a key set under `env`; use `env` in
+  your override for that.
 - A task with the same name replaces the original entirely. To tweak a single
   value of a shared task, have the main Taskfile read it from a variable, then
   override that variable.
 
-Anything else at the root, such as `includes` or `dotenv`, is rejected.
+Anything else at the root, such as `includes` or `output`, is rejected.
 
 ::: tip
 
