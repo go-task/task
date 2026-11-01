@@ -213,3 +213,7 @@ To run without your override, name the Taskfile explicitly:
 ```shell
 task -t Taskfile.yml dev # prints PORT=3000
 ```
+
+For the same reason, a task that calls Task again with `-t {{.ROOT_TASKFILE}}`
+or `-t {{.TASKFILE}}` loses your override. Use `task -d {{.ROOT_DIR}}` instead
+to keep it.
