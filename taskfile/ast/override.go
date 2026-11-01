@@ -7,8 +7,9 @@ import (
 	"github.com/go-task/task/v3/errors"
 )
 
-// MergeOverride applies a local override: vars and env merge by key, dotenv
-// files take priority over the main ones, tasks are replaced whole.
+// MergeOverride applies a local override: includes are added, vars and env
+// merge by key, dotenv files take priority over the main ones, tasks are
+// replaced whole.
 func (tf *Taskfile) MergeOverride(override *Taskfile) error {
 	// An older version is fine, so bumping the shared Taskfile doesn't break
 	// existing overrides.
@@ -18,6 +19,12 @@ func (tf *Taskfile) MergeOverride(override *Taskfile) error {
 			SchemaVersion: override.Version,
 			Message:       fmt.Sprintf("must be a v%d version no newer than the main Taskfile (%s)", tf.Version.Major(), tf.Version),
 		}
+	}
+	for namespace, include := range override.Includes.All() {
+		if _, ok := tf.Includes.Get(namespace); ok {
+			return fmt.Errorf("task: Taskfile override %q can't redefine include %q", override.Location, namespace)
+		}
+		tf.Includes.Set(namespace, include)
 	}
 	if tf.Vars == nil {
 		tf.Vars = NewVars()
