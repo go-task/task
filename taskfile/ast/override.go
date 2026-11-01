@@ -96,11 +96,11 @@ func (t1 *Taskfile) includedTasks(t2 *Taskfile, include *Include) (*Tasks, error
 		fullName := include.Namespace + NamespaceSeparator + name
 		if namespace, _, ok := strings.Cut(name, NamespaceSeparator); ok {
 			if _, nested := t2.Includes.Get(namespace); nested {
-				return nil, fmt.Errorf("task: Taskfile override %q can't override %q: only tasks of a direct include can be overridden", task.Location.Taskfile, fullName)
+				return nil, fmt.Errorf("task: Taskfile override %q can't override %q: only tasks of a direct include can be overridden", filepath.ToSlash(task.Location.Taskfile), fullName)
 			}
 		}
 		if include.isTaskExcluded(name) {
-			return nil, fmt.Errorf("task: Taskfile override %q can't override %q: the include excludes it", task.Location.Taskfile, fullName)
+			return nil, fmt.Errorf("task: Taskfile override %q can't override %q: the include excludes it", filepath.ToSlash(task.Location.Taskfile), fullName)
 		}
 		tasks.Set(name, task)
 	}
