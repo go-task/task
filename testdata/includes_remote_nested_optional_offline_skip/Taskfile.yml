@@ -1,0 +1,10 @@
+version: "3"
+
+includes:
+  local:
+    taskfile: ./local.yml
+
+tasks:
+  local:
+    cmds:
+      - echo "Hello from local"
