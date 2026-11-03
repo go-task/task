@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 )
 
 // SmartJoin joins two paths, but only if the second is not already an
@@ -25,12 +26,14 @@ func IsAbs(path string) bool {
 	return filepath.IsAbs(path)
 }
 
-// Heuristically match special directory names within template actions, without
-// matching prefixes of longer identifiers. This does not parse template syntax.
-var specialDirRE = regexp.MustCompile(`\{\{[^{}]*\.(?:ROOT_DIR|TASKFILE_DIR|USER_WORKING_DIR)(?:[^\p{L}\p{Nd}_{}][^{}]*)?\}\}`)
+var (
+	templateActionRE = regexp.MustCompile(`\{\{[^{}]*\}\}`)
+	// Use a Unicode-aware boundary so longer variable names remain relative.
+	specialDirRE = regexp.MustCompile(`\.(ROOT_DIR|TASKFILE_DIR|USER_WORKING_DIR)([^\pL\p{Nd}_]|$)`)
+)
 
 func isSpecialDir(dir string) bool {
-	return specialDirRE.MatchString(dir)
+	return slices.ContainsFunc(templateActionRE.FindAllString(dir, -1), specialDirRE.MatchString)
 }
 
 // TryAbsToRel tries to convert an absolute path to relative based on the
