@@ -211,11 +211,7 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 				return err
 			}
 
-			// In offline mode, an optional remote include with no cached
-			// copy is skipped. The cache is checked up front so a cache
-			// miss in a nested include cannot be mistaken for this
-			// include's own miss, and the graph is never touched for a
-			// skipped include.
+			// Checked before recursing so a nested include's cache miss isn't mistaken for this one's.
 			if include.Optional && r.offline {
 				if remote, ok := includeNode.(RemoteNode); ok {
 					if _, err := NewCacheNode(remote, r.tempDir).Read(); errors.Is(err, os.ErrNotExist) {

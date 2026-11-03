@@ -1326,79 +1326,51 @@ func TestIncludesRemote(t *testing.T) {
 func TestIncludesRemoteOptionalOfflineCacheMiss(t *testing.T) {
 	t.Parallel()
 
-	t.Run("optional include is skipped", func(t *testing.T) {
-		t.Parallel()
+	tests := []struct {
+		name    string
+		dir     string
+		wantErr string
+	}{
+		{
+			name: "optional include is skipped",
+			dir:  "testdata/includes_remote_optional_offline",
+		},
+		{
+			name:    "non-optional include still fails",
+			dir:     "testdata/includes_remote_nonoptional_offline",
+			wantErr: "was not found in the cache",
+		},
+		{
+			name:    "non-optional nested include still fails",
+			dir:     "testdata/includes_remote_optional_parent_offline",
+			wantErr: "was not found in the cache",
+		},
+	}
 
-		var buff bytes.Buffer
-		e := task.NewExecutor(
-			task.WithDir("testdata/includes_remote_optional_offline"),
-			task.WithStdout(&buff),
-			task.WithStderr(&buff),
-			task.WithOffline(true),
-			task.WithRemoteCacheDir(t.TempDir()),
-		)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		require.NoError(t, e.Setup())
-		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "local"}))
-		assert.Contains(t, buff.String(), "Hello from local")
-	})
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir(tt.dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithOffline(true),
+				task.WithRemoteCacheDir(t.TempDir()),
+			)
 
-	t.Run("non-optional include still fails", func(t *testing.T) {
-		t.Parallel()
-
-		var buff bytes.Buffer
-		e := task.NewExecutor(
-			task.WithDir("testdata/includes_remote_nonoptional_offline"),
-			task.WithStdout(&buff),
-			task.WithStderr(&buff),
-			task.WithOffline(true),
-			task.WithRemoteCacheDir(t.TempDir()),
-		)
-
-		err := e.Setup()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "was not found in the cache")
-	})
-
-	t.Run("non-optional nested include still fails", func(t *testing.T) {
-		t.Parallel()
-
-		var buff bytes.Buffer
-		e := task.NewExecutor(
-			task.WithDir("testdata/includes_remote_nested_optional_offline"),
-			task.WithStdout(&buff),
-			task.WithStderr(&buff),
-			task.WithOffline(true),
-			task.WithRemoteCacheDir(t.TempDir()),
-		)
-
-		// The nested remote include is not optional, so its offline cache
-		// miss must fail the run even though the parent include is
-		// optional: it must not be silently skipped.
-		err := e.Setup()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "was not found in the cache")
-	})
-
-	t.Run("nested optional include is skipped", func(t *testing.T) {
-		t.Parallel()
-
-		var buff bytes.Buffer
-		e := task.NewExecutor(
-			task.WithDir("testdata/includes_remote_nested_optional_offline_skip"),
-			task.WithStdout(&buff),
-			task.WithStderr(&buff),
-			task.WithOffline(true),
-			task.WithRemoteCacheDir(t.TempDir()),
-		)
-
-		// The symmetric case: an optional remote include nested inside a
-		// local include is still skipped on an offline cache miss, and
-		// the parent Taskfile keeps working.
-		require.NoError(t, e.Setup())
-		require.NoError(t, e.Run(t.Context(), &task.Call{Task: "local"}))
-		assert.Contains(t, buff.String(), "Hello from local")
-	})
+			err := e.Setup()
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: "local"}))
+			assert.Contains(t, buff.String(), "Hello from local")
+		})
+	}
 }
 
 func TestIncludeCycle(t *testing.T) {
