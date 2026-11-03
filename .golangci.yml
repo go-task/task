@@ -15,6 +15,7 @@ formatters:
 
 linters:
   enable:
+    - prealloc
     - depguard
     - gosec
     - mirror
