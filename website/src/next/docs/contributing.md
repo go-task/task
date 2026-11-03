@@ -55,7 +55,7 @@ a human. Always remind contributors to disclose AI usage in their submissions.
   the feature/change you want to make? Please make sure you consider/address
   these discussions in your work.
 - **Backwards compatibility** - Will your change break existing Taskfiles? It is
-  much more likely that your change will merged if it backwards compatible. Is
+  much more likely that your change will be merged if it is backward compatible. Is
   there an approach you can take that maintains this compatibility? If not,
   consider opening an issue first so that API changes can be discussed before
   you invest your time into a PR.
@@ -93,7 +93,7 @@ If you'd rather install things manually, you'll need:
   code should be formatted and linted by [`golangci-lint`][golangci-lint]. This
   wraps the [`gofumpt`][gofumpt] and [`gci`][gci] formatters and a number of
   linters. We recommend that you take a look at the [golangci-lint
-  docs][golangci-lint-docs] for a guide on how to setup your editor to
+  docs][golangci-lint-docs] for a guide on how to set up your editor to
   auto-format your code. Any Markdown or TypeScript files should be formatted
   and linted by [Prettier][prettier]. This style is enforced by our CI to ensure
   that we have a consistent style across the project. You can use the
@@ -114,7 +114,7 @@ development build of task against a test Taskfile in `testdata`, you can use
 `go run ./cmd/task --dir ./testdata/<my_test_dir> <task_name>`.
 
 To run Task for Visual Studio Code, you can open the project in VSCode and hit
-F5 (or whatever you debug keybind is set to). This will open a new VSCode window
+F5 (or whatever your debug keybind is set to). This will open a new VSCode window
 with the extension running. Debugging this way is recommended as it will allow
 you to set breakpoints and step through the code. Otherwise, you can run
 `task package` which will generate a `.vsix` file that can be used to manually
@@ -123,7 +123,7 @@ install the extension.
 ### Updating documentation
 
 Task uses [Vitepress][vitepress] to host a documentation server. The code for
-this is located in the core Task repository. This can be setup and run locally
+this is located in the core Task repository. This can be set up and run locally
 by using `task website` (requires `nodejs` & `pnpm`). All content is written in
 Markdown and is located in the `website/src` directory. All Markdown documents
 should have an 80 character line wrap limit (enforced by Prettier).
@@ -198,13 +198,13 @@ and this is where you'll most likely want to add new ones too. Most of these
 tests also have a subdirectory in the `testdata` directory where any
 Taskfiles/data required to run the tests are stored.
 
-When making a changes, consider whether new tests are required. These tests
+When making a change, consider whether new tests are required. These tests
 should ensure that the functionality you are adding will continue to work in the
 future. Existing tests may also need updating if you have changed Task's
 behavior.
 
 You may also consider adding unit tests for any new functions you have added.
-The unit tests should follow the Go convention of being location in a file named
+The unit tests should follow the Go convention of being located in a file named
 `*_test.go` in the same package as the code being tested.
 
 ## 3. Committing your code
@@ -239,7 +239,7 @@ Visual Studio Code][vscode-task-open-issues]. We have a [good first
 issue][good-first-issue] label for simpler issues that are ideal for first time
 contributions.
 
-All kinds of contributions are welcome, whether its a typo fix or a shiny new
+All kinds of contributions are welcome, whether it's a typo fix or a shiny new
 feature. You can also contribute by upvoting/commenting on issues, helping to
 answer questions or contributing to other [community projects](./community.md).
 
