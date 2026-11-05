@@ -9,8 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	giturls "github.com/chainguard-dev/git-urls"
+	"github.com/gofrs/flock"
 	"github.com/hashicorp/go-getter"
 
 	"github.com/go-task/task/v3/errors"
@@ -50,6 +52,8 @@ var globalGitRepoCache = &gitRepoCache{
 
 const gitCacheDirName = "task-git-repos"
 
+const gitCacheLockRetryDelay = 10 * time.Millisecond
+
 var (
 	fallbackGitCacheOnce sync.Once
 	fallbackGitCacheDir  string
@@ -88,16 +92,54 @@ func prepareGitCacheRoot(root string) error {
 }
 
 func CleanGitCache() error {
+	root, err := gitCacheRoot()
+	if err != nil {
+		return err
+	}
+	return cleanGitCache(root)
+}
+
+func cleanGitCache(root string) error {
+	unlock, err := lockGitCache(context.Background(), root, false)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = unlock() }()
+
 	// Clear the in-memory locks map to prevent memory leak
 	globalGitRepoCache.mu.Lock()
 	globalGitRepoCache.locks = make(map[string]*sync.Mutex)
 	globalGitRepoCache.mu.Unlock()
 
-	root, err := gitCacheRoot()
-	if err != nil {
-		return err
-	}
 	return os.RemoveAll(root)
+}
+
+// lockGitCache coordinates readers with cleanup across Task processes. A
+// reader holds a shared lock until it has read every remote Taskfile; cleanup
+// takes an exclusive lock so one process cannot remove another process's clone.
+func lockGitCache(ctx context.Context, root string, shared bool) (func() error, error) {
+	lockDir := filepath.Dir(root)
+	if err := prepareGitCacheRoot(lockDir); err != nil {
+		return nil, fmt.Errorf("failed to prepare git cache lock directory: %w", err)
+	}
+	lock := flock.New(root+".lock",
+		flock.SetPermissions(0o600),
+		flock.SetFlag(os.O_CREATE|os.O_RDWR),
+	)
+	var locked bool
+	var err error
+	if shared {
+		locked, err = lock.TryRLockContext(ctx, gitCacheLockRetryDelay)
+	} else {
+		locked, err = lock.TryLockContext(ctx, gitCacheLockRetryDelay)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to lock git cache: %w", err)
+	}
+	if !locked {
+		return nil, fmt.Errorf("failed to lock git cache")
+	}
+	return lock.Unlock, nil
 }
 
 func NewGitNode(

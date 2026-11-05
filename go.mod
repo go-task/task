@@ -16,6 +16,7 @@ require (
 	github.com/fatih/color v1.19.0
 	github.com/go-task/slim-sprig/v3 v3.0.0
 	github.com/go-task/template v0.2.0
+	github.com/gofrs/flock v0.12.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-getter v1.8.10
 	github.com/helshabini/fsbroker v1.0.5
