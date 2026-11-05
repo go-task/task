@@ -369,9 +369,10 @@ the command line would be visible to any process listing it.
 
 ::: warning
 
-Headers are only sent to the host they are configured for. If that host answers
-with a redirect to another one, the request follows the redirect **without**
-them, and will likely fail — point the URL at the final host instead. Headers
+Headers are only sent to the host and scheme they are configured for. If that
+host answers with a redirect to another host, or to `http`, the request follows
+the redirect **without** them, and will likely fail — point the URL at the final
+location instead. Headers
 are also HTTP-only: a Taskfile fetched over `git` should authenticate with SSH
 or a git credential helper.
 

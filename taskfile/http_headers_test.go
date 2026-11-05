@@ -127,6 +127,7 @@ func TestHeadersTransport(t *testing.T) {
 
 	transport := &headersTransport{
 		base:    roundTripperFunc(func(req *http.Request) (*http.Response, error) { return newResponse(req), nil }),
+		scheme:  "https",
 		host:    "gitlab.com",
 		headers: map[string]string{"PRIVATE-TOKEN": "token"},
 	}
@@ -147,12 +148,20 @@ func TestHeadersTransport(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, resp.Request.Header.Get("PRIVATE-TOKEN"))
 	})
+
+	t.Run("leaves the same host over http alone", func(t *testing.T) {
+		t.Parallel()
+		req := newRequest(t, "http://gitlab.com/api/v4/Taskfile.yml")
+		resp, err := transport.RoundTrip(req)
+		require.NoError(t, err)
+		assert.Empty(t, resp.Request.Header.Get("PRIVATE-TOKEN"))
+	})
 }
 
 func TestWithHeadersDoesNotMutateTheDefaultClient(t *testing.T) {
 	t.Parallel()
 
-	client := withHeaders(http.DefaultClient, "gitlab.com", map[string]string{"PRIVATE-TOKEN": "token"})
+	client := withHeaders(http.DefaultClient, &url.URL{Scheme: "https", Host: "gitlab.com"}, map[string]string{"PRIVATE-TOKEN": "token"})
 
 	assert.NotSame(t, http.DefaultClient, client)
 	assert.Nil(t, http.DefaultClient.Transport)
