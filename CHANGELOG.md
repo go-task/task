@@ -28,6 +28,8 @@
   `--insecure`, like an `http` entrypoint (#3091 by @vmaerten).
 - Fixed `remote.headers` being sent over plain `http` when an `https` remote
   Taskfile is redirected to `http` on the same host (#3091 by @vmaerten).
+- Fixed `--offline` failing when an `optional: true` remote include is not in
+  the cache: the include is now skipped instead (#3076, #3081 by @Tidehyc).
 
 ## v3.54.0 - 2026-10-01
 
