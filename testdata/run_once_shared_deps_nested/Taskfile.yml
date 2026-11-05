@@ -1,0 +1,10 @@
+version: '3'
+
+# run_once_shared_deps, included one level deeper, so its two paths to the
+# library diverge below the outermost namespace.
+includes:
+  group: ../run_once_shared_deps
+
+tasks:
+  build:
+    deps: [group:build]
