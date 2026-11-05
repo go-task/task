@@ -211,6 +211,15 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 				return err
 			}
 
+			// Checked before recursing so a nested include's cache miss isn't mistaken for this one's.
+			if include.Optional && r.offline {
+				if remote, ok := includeNode.(RemoteNode); ok {
+					if _, err := NewCacheNode(remote, r.tempDir).Read(); errors.Is(err, os.ErrNotExist) {
+						return nil
+					}
+				}
+			}
+
 			// Recurse into the included Taskfile
 			if err := r.include(ctx, includeNode); err != nil {
 				return err

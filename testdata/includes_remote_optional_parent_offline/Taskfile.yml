@@ -1,0 +1,11 @@
+version: "3"
+
+includes:
+  opt:
+    taskfile: ./opt.yml
+    optional: true
+
+tasks:
+  local:
+    cmds:
+      - echo "Hello from local"

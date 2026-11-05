@@ -1323,6 +1323,56 @@ func TestIncludesRemote(t *testing.T) {
 	}
 }
 
+func TestIncludesRemoteOptionalOfflineCacheMiss(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		dir     string
+		wantErr string
+	}{
+		{
+			name: "optional include is skipped",
+			dir:  "testdata/includes_remote_optional_offline",
+		},
+		{
+			name:    "non-optional include still fails",
+			dir:     "testdata/includes_remote_nonoptional_offline",
+			wantErr: "was not found in the cache",
+		},
+		{
+			name:    "non-optional nested include still fails",
+			dir:     "testdata/includes_remote_optional_parent_offline",
+			wantErr: "was not found in the cache",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir(tt.dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithOffline(true),
+				task.WithRemoteCacheDir(t.TempDir()),
+			)
+
+			err := e.Setup()
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: "local"}))
+			assert.Contains(t, buff.String(), "Hello from local")
+		})
+	}
+}
+
 func TestIncludeCycle(t *testing.T) {
 	t.Parallel()
 

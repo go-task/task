@@ -1,0 +1,10 @@
+version: "3"
+
+includes:
+  remote:
+    taskfile: https://github.com/go-task/task.git//Taskfile.yml
+
+tasks:
+  local:
+    cmds:
+      - echo "Hello from local"
