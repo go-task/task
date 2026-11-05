@@ -1,0 +1,2 @@
+task: Invalid schema version in Taskfile "{{.TEST_DIR}}/testdata/override/errors/newer_version/Taskfile.override.yml":
+Schema version (3.1.0) must be a v3 version no newer than the main Taskfile (3.0.0)

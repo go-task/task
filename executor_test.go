@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
@@ -1324,4 +1325,63 @@ func TestIf(t *testing.T) {
 		}
 		NewExecutorTest(t, opts...)
 	}
+}
+
+var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*m`)
+
+func TestAutomaticOverride(t *testing.T) {
+	t.Parallel()
+	const dir = "testdata/override"
+	NewExecutorTest(t,
+		WithName("discovered"),
+		WithExecutorOptions(task.WithDir(dir), task.WithSilent(true)),
+		WithTask("dev"),
+	)
+	NewExecutorTest(t,
+		WithName("added task location"),
+		WithExecutorOptions(task.WithDir(dir), task.WithSilent(true)),
+		WithTask("added"),
+		WithFixtureTemplating(),
+	)
+	// The invalid override in child/ must be ignored.
+	NewExecutorTest(t,
+		WithName("subdirectory"),
+		WithExecutorOptions(task.WithDir(dir+"/child"), task.WithSilent(true)),
+		WithTask("dev"),
+	)
+	NewExecutorTest(t,
+		WithName("merge"),
+		WithExecutorOptions(task.WithDir(dir+"/merge"), task.WithSilent(true)),
+		WithTask("dev"),
+	)
+	for _, include := range []string{"docs", "extra"} {
+		NewExecutorTest(t,
+			WithName("include "+include),
+			WithExecutorOptions(task.WithDir(dir+"/includes"), task.WithSilent(true)),
+			WithTask(include+":build"),
+		)
+	}
+	for _, name := range []string{"invalid_yaml", "missing_version", "newer_version", "forbidden_key", "redefined_include"} {
+		NewExecutorTest(t,
+			WithName("error "+name),
+			WithExecutorOptions(task.WithDir(dir+"/errors/"+name)),
+			WithSetupError(),
+			WithFixtureTemplating(),
+			// Decode errors print the raw path and a colored snippet.
+			WithPostProcessFn(func(_ *testing.T, b []byte) []byte {
+				b = ansiEscape.ReplaceAll(b, nil)
+				return bytes.ReplaceAll(b, []byte(`\`), []byte("/"))
+			}),
+		)
+	}
+	NewExecutorTest(t,
+		WithName("explicit file"),
+		WithExecutorOptions(task.WithDir(dir), task.WithEntrypoint(dir+"/Taskfile.yml"), task.WithSilent(true)),
+		WithTask("dev"),
+	)
+	NewExecutorTest(t,
+		WithName("explicit directory"),
+		WithExecutorOptions(task.WithDir(dir), task.WithEntrypoint(dir), task.WithSilent(true)),
+		WithTask("dev"),
+	)
 }
