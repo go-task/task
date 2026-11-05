@@ -1,0 +1,2 @@
+app|app|app
+explicit=dotenv root= base=base env-path=env-path
