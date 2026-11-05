@@ -24,6 +24,8 @@ references.
   and display labels.
 - [Running tasks](./running-tasks.md): choosing a Taskfile, running from other
   directories, previewing commands and using interactive applications.
+- [Interactive TUI](./tui.md): browsing and running tasks in a full-screen
+  terminal interface with a task navigator and per-task output.
 
 ## Variables and arguments {#variables-and-environment}
 

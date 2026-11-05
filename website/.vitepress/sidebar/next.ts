@@ -39,7 +39,8 @@ export const sidebar: DefaultTheme.SidebarItem[] = [
         collapsed: false,
         items: [
           { text: 'Defining tasks', link: '/docs/guide/defining-tasks' },
-          { text: 'Running tasks', link: '/docs/guide/running-tasks' }
+          { text: 'Running tasks', link: '/docs/guide/running-tasks' },
+          { text: 'Interactive TUI', link: '/docs/guide/tui' }
         ]
       },
       {
