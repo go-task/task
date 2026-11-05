@@ -120,6 +120,23 @@ you to set breakpoints and step through the code. Otherwise, you can run
 `task package` which will generate a `.vsix` file that can be used to manually
 install the extension.
 
+### Updating GitHub Actions dependencies
+
+GitHub Actions dependencies, including transitive actions, are pinned in
+`.github/workflows/actions.lock`. After adding or removing a workflow or
+changing a `uses:` reference, regenerate the lockfile with the authenticated
+GitHub CLI:
+
+```shell
+gh extension install github/gh-actions-lock
+gh actions-lock
+gh actions-lock --verify
+```
+
+Review and commit the workflow changes and the generated lockfile together. Do
+not edit the lockfile by hand. CI verifies it against the workflows and upstream
+repositories. Renovate regenerates it when updating action versions.
+
 ### Updating documentation
 
 Task uses [Vitepress][vitepress] to host a documentation server. The code for
