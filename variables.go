@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/joho/godotenv"
-
 	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/internal/deepcopy"
 	"github.com/go-task/task/v3/internal/env"
@@ -18,6 +16,7 @@ import (
 	"github.com/go-task/task/v3/internal/refs"
 	"github.com/go-task/task/v3/internal/slicesext"
 	"github.com/go-task/task/v3/internal/templater"
+	"github.com/go-task/task/v3/taskfile"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -179,11 +178,11 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 			if _, err := os.Stat(dotEnvPath); os.IsNotExist(err) {
 				continue
 			}
-			envs, err := godotenv.Read(dotEnvPath)
+			envs, err := taskfile.ReadDotenvOrdered(dotEnvPath)
 			if err != nil {
 				return nil, err
 			}
-			for key, value := range envs {
+			for key, value := range envs.AllFromFront() {
 				if _, ok := dotenvEnvs.Get(key); !ok {
 					dotenvEnvs.Set(key, ast.Var{Value: value})
 				}
