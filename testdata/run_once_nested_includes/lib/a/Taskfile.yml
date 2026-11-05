@@ -1,0 +1,9 @@
+version: "3"
+includes:
+  tools:
+    taskfile: ../../tools
+    dir: ../../tools
+tasks:
+  lib:
+    deps:
+      - tools:exe

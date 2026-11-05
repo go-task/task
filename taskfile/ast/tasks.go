@@ -167,7 +167,13 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 			}
 
 			taskName = taskNameWithNamespace(name, include.Namespace)
-			task.Namespace = include.Namespace
+			// Accumulate the namespace so that it stays a prefix of the full
+			// task name when includes are nested.
+			if task.Namespace != "" {
+				task.Namespace = taskNameWithNamespace(task.Namespace, include.Namespace)
+			} else {
+				task.Namespace = include.Namespace
+			}
 			task.Task = taskName
 		}
 
