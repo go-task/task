@@ -1,0 +1,6 @@
+version: '3'
+
+tasks:
+  local:
+    dotenv: [nested.env, fallback.env]
+    cmds: []

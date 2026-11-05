@@ -1,0 +1,9 @@
+version: '3'
+
+dotenv: [nested.env, fallback.env]
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - echo "$FULL_PATH|$FULL_PATH_2"
