@@ -23,6 +23,11 @@
 - Fixed task names containing regex characters (e.g. `c++` or `deploy.prod`)
   crashing Task or matching the wrong task when calling a task that has no
   exact match (#2916 by @vsaraikin).
+- Fixed an `https` remote Taskfile being downloaded over an unencrypted
+  connection when the server redirects to `http`. Such a redirect now requires
+  `--insecure`, like an `http` entrypoint (#3091 by @vmaerten).
+- Fixed `remote.headers` being sent over plain `http` when an `https` remote
+  Taskfile is redirected to `http` on the same host (#3091 by @vmaerten).
 
 ## v3.54.0 - 2026-10-01
 

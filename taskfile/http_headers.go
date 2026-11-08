@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
+	"net/url"
 	"slices"
 
 	"golang.org/x/net/http/httpguts"
@@ -18,13 +19,16 @@ type HeadersByHost map[string]map[string]string
 
 type headersTransport struct {
 	base    http.RoundTripper
+	scheme  string
 	host    string
 	headers map[string]string
 }
 
 func (t *headersTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Scope all configured headers to this host, including after redirects.
-	if !hostMatches(t.host, req.URL.Host) {
+	// Scope all configured headers to this origin, including after redirects:
+	// an https URL redirected to http on the same host keeps its Host string,
+	// so the scheme must match too or the headers would travel in plaintext.
+	if req.URL.Scheme != t.scheme || !hostMatches(t.host, req.URL.Host) {
 		return t.base.RoundTrip(req)
 	}
 	req = req.Clone(req.Context())
@@ -43,15 +47,16 @@ func (node *HTTPNode) clientWithHeaders() (*http.Client, error) {
 	if len(headers) == 0 {
 		return node.client, nil
 	}
-	return withHeaders(node.client, node.url.Host, headers), nil
+	return withHeaders(node.client, node.url, headers), nil
 }
 
-func withHeaders(client *http.Client, host string, headers map[string]string) *http.Client {
+func withHeaders(client *http.Client, origin *url.URL, headers map[string]string) *http.Client {
 	// The client may be http.DefaultClient; leave it unchanged.
 	configured := *client
 	configured.Transport = &headersTransport{
 		base:    cmp.Or(client.Transport, http.DefaultTransport),
-		host:    host,
+		scheme:  origin.Scheme,
+		host:    origin.Host,
 		headers: headers,
 	}
 	return &configured
