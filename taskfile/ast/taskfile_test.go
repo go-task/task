@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v4"
 
+	"github.com/go-task/task/v3/errors"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
 
@@ -174,4 +175,20 @@ func TestTimeoutParseError(t *testing.T) {
 			assert.ErrorContains(t, err, test.message)
 		})
 	}
+}
+
+func TestTaskfileDecodeErrorLocation(t *testing.T) {
+	t.Parallel()
+
+	const content = `version: '3'
+tasks:
+  a:
+    cmds: 12
+`
+	var tf ast.Taskfile
+	err := yaml.Unmarshal([]byte(content), &tf)
+	decodeErr, ok := errors.AsTaskfileDecodeError(err)
+	require.True(t, ok, "expected a TaskfileDecodeError, got %v", err)
+	assert.Equal(t, 4, decodeErr.Line)
+	assert.Equal(t, 5, decodeErr.Column)
 }
