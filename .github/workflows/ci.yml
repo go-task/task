@@ -26,7 +26,7 @@ jobs:
           persist-credentials: false
 
       - name: ⬇️ Install actions-lock
-        run: gh extension install github/gh-actions-lock --pin v0.4.0
+        run: gh extension install github/gh-actions-lock --pin v0.4.1
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -177,7 +177,7 @@ jobs:
           node-version: '26'
 
       - name: ⬇️ Setup pnpm
-        uses: pnpm/action-setup@v6.0.10
+        uses: pnpm/action-setup@v6.1.1
         with:
           package_json_file: website/package.json
 
