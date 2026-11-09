@@ -25,7 +25,7 @@ type (
 
 func NewTaskfileDecodeError(err error, node *yaml.Node) *TaskfileDecodeError {
 	// If the error is already a DecodeError, return it
-	if taskfileInvalidErr, ok := errors.AsType[*TaskfileDecodeError](err); ok {
+	if taskfileInvalidErr, ok := AsTaskfileDecodeError(err); ok {
 		return taskfileInvalidErr
 	}
 	return &TaskfileDecodeError{
@@ -36,6 +36,23 @@ func NewTaskfileDecodeError(err error, node *yaml.Node) *TaskfileDecodeError {
 	}
 }
 
+// AsTaskfileDecodeError finds a TaskfileDecodeError in err's chain. yaml v4
+// collects errors returned by UnmarshalYAML hooks into *yaml.LoadErrors,
+// which errors.As cannot see through.
+func AsTaskfileDecodeError(err error) (*TaskfileDecodeError, bool) {
+	if decodeErr, ok := errors.AsType[*TaskfileDecodeError](err); ok {
+		return decodeErr, true
+	}
+	if loadErrs, ok := errors.AsType[*yaml.LoadErrors](err); ok {
+		for _, loadErr := range loadErrs.Errors {
+			if decodeErr, ok := errors.AsType[*TaskfileDecodeError](loadErr); ok {
+				return decodeErr, true
+			}
+		}
+	}
+	return nil, false
+}
+
 func (err *TaskfileDecodeError) Error() string {
 	buf := &bytes.Buffer{}
 
@@ -43,8 +60,9 @@ func (err *TaskfileDecodeError) Error() string {
 	if err.Message != "" {
 		fmt.Fprintln(buf, color.RedString("err:  %s", err.Message))
 	} else {
-		// Extract the errors from the TypeError
-		if te, ok := errors.AsType[*yaml.TypeError](err.Err); ok {
+		// Extract the errors from the TypeError. LoadErrors synthesizes it with
+		// the compact "line N: message" entries, which LoadError.Error() lacks.
+		if te, ok := errors.AsType[*yaml.TypeError](err.Err); ok { //nolint:staticcheck // see above
 			if len(te.Errors) > 1 {
 				fmt.Fprintln(buf, color.RedString("errs:"))
 				for _, message := range te.Errors {

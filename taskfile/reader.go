@@ -270,7 +270,7 @@ func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error)
 	var tf ast.Taskfile
 	if err := yaml.Unmarshal(b, &tf); err != nil {
 		// Decode the taskfile and add the file info the any errors
-		if taskfileDecodeErr, ok := errors.AsType[*errors.TaskfileDecodeError](err); ok {
+		if taskfileDecodeErr, ok := errors.AsTaskfileDecodeError(err); ok {
 			snippet := NewSnippet(b,
 				WithLine(taskfileDecodeErr.Line),
 				WithColumn(taskfileDecodeErr.Column),
