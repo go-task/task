@@ -144,13 +144,13 @@ tasks:
     desc: Runs test suite with watch tests included
     deps: [sleepit:build, gotestsum:install]
     cmds:
-      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' ./... -tags 'watch'
+      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' -- -tags 'watch' ./...
 
   test:all:
     desc: Runs test suite with signals and watch tests included
     deps: [sleepit:build, gotestsum:install]
     cmds:
-      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' -tags 'signals watch' ./...
+      - gotestsum -f '{{.GOTESTSUM_FORMAT}}' -- -tags 'signals watch' ./...
 
   bench:checksum:
     desc: Runs checksum benchmarks
