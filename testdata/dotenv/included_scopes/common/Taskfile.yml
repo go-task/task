@@ -1,0 +1,6 @@
+version: '3'
+tasks:
+  inspect:
+    cmds:
+      - 'echo "{{.DOTENV_CHOICE | default ""}}|$DOTENV_CHOICE|$DOTENV_APP"'
+      - 'echo "explicit=$DOTENV_EXPLICIT root=$DOTENV_ROOT base=$DOTENV_BASE env-path=$DOTENV_ENV_PATH"'

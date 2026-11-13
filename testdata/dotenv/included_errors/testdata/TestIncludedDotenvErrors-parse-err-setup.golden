@@ -1,0 +1,1 @@
+error reading env file {{.TEST_DIR}}/testdata/dotenv/included_errors/broken.env: unterminated quoted value "unterminated
