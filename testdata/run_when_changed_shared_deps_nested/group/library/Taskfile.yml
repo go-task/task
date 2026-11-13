@@ -1,0 +1,13 @@
+version: '3'
+
+tasks:
+  build:
+    run: when_changed
+    deps: [generate]
+    cmds:
+      - echo "build library"
+
+  generate:
+    run: when_changed
+    cmds:
+      - echo "generate library"
