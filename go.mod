@@ -18,7 +18,7 @@ require (
 	github.com/go-task/template v0.2.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-getter v1.8.10
-	github.com/helshabini/fsbroker v1.0.5
+	github.com/helshabini/fsbroker v1.0.6
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/puzpuzpuz/xsync/v4 v4.5.0
