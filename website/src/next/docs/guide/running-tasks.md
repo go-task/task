@@ -145,6 +145,85 @@ Task looks for these names in order of priority:
 - `Taskfile.dist.yaml`
 - `taskfile.dist.yaml`
 
-Commit a `.dist` variant if users need to supply their own `Taskfile.yml`
-override. The local file takes priority; add it to `.gitignore` if it should
-remain personal.
+Commit a `.dist` variant if users need to supply their own complete
+`Taskfile.yml`. The local file takes priority; add it to `.gitignore` if it
+should remain personal. To customize only some variables or tasks, use a local
+override instead.
+
+## Customize a Taskfile locally {#local-overrides}
+
+To change a few settings for yourself without touching the shared Taskfile,
+create a `Taskfile.override.yml` next to it. Task loads it on top of the main
+file:
+
+::: code-group
+
+```yaml [Taskfile.yml]
+version: '3'
+
+vars:
+  PORT: 3000
+
+tasks:
+  dev:
+    cmds:
+      - echo 'PORT={{.PORT}}'
+```
+
+```yaml [Taskfile.override.yml]
+version: '3'
+
+vars:
+  PORT: 4000
+```
+
+:::
+
+`task dev` now prints `PORT=4000`. Add `Taskfile.override.yml` to `.gitignore`
+so it stays on your machine.
+
+An override can set any root key of a Taskfile except `silent`, which belongs in
+the [config file](../reference/config.md#silent) instead. Its `version` can't be
+newer than the main Taskfile's, so `version: '3'` keeps working when the main
+Taskfile bumps its version:
+
+- Settings such as `output`, `method`, `run`, `interval`, `set`, `shopt` and
+  `use_gitignore` replace the main Taskfile's when present. An empty list, like
+  `set: []`, clears the main one. Command-line flags such as `--output` still
+  take priority.
+- Includes are added, for example your own tasks under
+  `includes: {me: ~/tasks/Taskfile.yml}`. Redefining an include of the main
+  Taskfile is an error; to point it elsewhere, have its path read a variable.
+- Variables and environment variables are merged: yours win, the others are
+  kept.
+- Your `dotenv` files are read before the main Taskfile's, so their values win.
+  Like any dotenv file, they don't override a key set under `env`; use `env` in
+  your override for that.
+- A task with the same name replaces the original entirely. To tweak a single
+  value of a shared task, have the main Taskfile read it from a variable, then
+  override that variable.
+
+::: tip
+
+An overridden variable keeps its place in the main Taskfile, so its value can
+only use variables declared above it.
+
+:::
+
+The lowercase and `.yaml` spellings (`taskfile.override.yml`,
+`Taskfile.override.yaml`, `taskfile.override.yaml`) work too. Task only looks
+next to the root Taskfile it finds: included, remote and stdin Taskfiles never
+get an override. Since the override is read before includes, a variable can
+change which file gets included, but it can't redefine an included task like
+`docs:build`.
+
+To run without your override, name the Taskfile explicitly:
+
+```shell
+task -t Taskfile.yml dev # prints PORT=3000
+```
+
+For the same reason, a task that calls Task again with
+<span v-pre>`-t {{.ROOT_TASKFILE}}`</span> or
+<span v-pre>`-t {{.TASKFILE}}`</span> loses your override. Use
+<span v-pre>`task -d {{.ROOT_DIR}}`</span> instead to keep it.

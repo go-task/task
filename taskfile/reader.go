@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"slices"
 	"sync"
 	"time"
@@ -42,6 +43,7 @@ type (
 	// [ast.TaskfileGraph] from them.
 	Reader struct {
 		graph               *ast.TaskfileGraph
+		automaticOverride   bool
 		insecure            bool
 		download            bool
 		offline             bool
@@ -158,6 +160,11 @@ func (r *Reader) include(ctx context.Context, node Node) error {
 	if err != nil {
 		return err
 	}
+	if r.loadsOverride(node) {
+		if err := readAutomaticOverride(filepath.Dir(node.Location()), vertex.Taskfile); err != nil {
+			return err
+		}
+	}
 
 	// Create an error group to wait for all included Taskfiles to be read
 	var g errgroup.Group
@@ -268,7 +275,16 @@ func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error)
 	}
 
 	var tf ast.Taskfile
-	if err := yaml.Unmarshal(b, &tf); err != nil {
+	if err := decodeTaskfile(b, node.Location(), &tf, &tf); err != nil {
+		return nil, err
+	}
+	return &tf, nil
+}
+
+// decodeTaskfile unmarshals b into tf through target, a view of tf that may
+// restrict which fields are accepted.
+func decodeTaskfile(b []byte, location string, tf *ast.Taskfile, target yaml.Unmarshaler) error {
+	if err := yaml.Unmarshal(b, target); err != nil {
 		// Decode the taskfile and add the file info the any errors
 		if taskfileDecodeErr, ok := errors.AsType[*errors.TaskfileDecodeError](err); ok {
 			snippet := NewSnippet(b,
@@ -276,18 +292,18 @@ func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error)
 				WithColumn(taskfileDecodeErr.Column),
 				WithPadding(2),
 			)
-			return nil, taskfileDecodeErr.WithFileInfo(node.Location(), snippet.String())
+			return taskfileDecodeErr.WithFileInfo(location, snippet.String())
 		}
-		return nil, &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(node.Location()), Err: err}
+		return &errors.TaskfileInvalidError{URI: filepathext.TryAbsToRel(location), Err: err}
 	}
 
 	// Check that the Taskfile is set and has a schema version
 	if tf.Version == nil {
-		return nil, &errors.TaskfileVersionCheckError{URI: node.Location()}
+		return &errors.TaskfileVersionCheckError{URI: location}
 	}
 
 	// Set the taskfile/task's locations
-	tf.Location = node.Location()
+	tf.Location = location
 	for task := range tf.Tasks.Values(nil) {
 		// If the task is not defined, create a new one
 		if task == nil {
@@ -299,7 +315,7 @@ func (r *Reader) readNode(ctx context.Context, node Node) (*ast.Taskfile, error)
 		}
 	}
 
-	return &tf, nil
+	return nil
 }
 
 func (r *Reader) readNodeContent(ctx context.Context, node Node) ([]byte, error) {
