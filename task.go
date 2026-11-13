@@ -309,15 +309,20 @@ func (e *Executor) mkdir(t *ast.Task) error {
 }
 
 func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
+	failfast := e.Failfast || t.Failfast
 	g := &errgroup.Group{}
-	if e.Failfast || t.Failfast {
+	if failfast {
 		g, ctx = errgroup.WithContext(ctx)
 	}
 
 	reacquire := e.releaseConcurrencyLimit()
 	defer reacquire()
 
-	for _, d := range t.Deps {
+	// Without failfast every dep runs to completion, but errgroup.Wait only
+	// surfaces the first error, so all dep failures are collected and joined.
+	// Each dep writes its own slot, keeping the message in declaration order.
+	errs := make([]error, len(t.Deps))
+	for i, d := range t.Deps {
 		g.Go(func() error {
 			depCtx := ctx
 			var timeout *errors.TaskTimeoutError
@@ -330,13 +335,22 @@ func (e *Executor) runDeps(ctx context.Context, t *ast.Task) error {
 
 			err := e.RunTask(depCtx, &Call{Task: d.Task, Vars: d.Vars, Silent: d.Silent, Indirect: true})
 			if err != nil && timedOut(depCtx, timeout) {
-				return timeout
+				err = timeout
+			}
+			if !failfast && err != nil {
+				errs[i] = err
 			}
 			return err
 		})
 	}
 
-	return g.Wait()
+	if err := g.Wait(); err != nil {
+		if failfast {
+			return err
+		}
+		return errors.Join(errs...)
+	}
+	return nil
 }
 
 func (e *Executor) runDeferred(t *ast.Task, call *Call, i int, vars *ast.Vars, deferredExitCode *uint8) {

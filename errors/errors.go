@@ -78,3 +78,8 @@ func AsType[T error](err error) (T, bool) {
 func Unwrap(err error) error {
 	return errors.Unwrap(err)
 }
+
+// Join wraps the standard errors.Join function so that we don't need to alias that package.
+func Join(errs ...error) error {
+	return errors.Join(errs...)
+}
