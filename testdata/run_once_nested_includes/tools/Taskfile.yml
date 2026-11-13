@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  exe:
+    run: once
+    cmds:
+      - echo "building tool"

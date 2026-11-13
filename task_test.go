@@ -2427,6 +2427,30 @@ func TestRunOnceSharedDeps(t *testing.T) {
 	assert.Contains(t, buff.String(), `task: [service-b:build] echo "build b"`)
 }
 
+func TestRunOnceNestedIncludes(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/run_once_nested_includes"
+
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithForceAll(true),
+	)
+	require.NoError(t, e.Setup())
+	require.NoError(t, e.Run(t.Context(), &task.Call{Task: "all"}))
+
+	// The shared task is reached through two branches of the include tree,
+	// so run: once must still execute it exactly once (see #3058).
+	rx := regexp.MustCompile(`task: \[c:[a,b]:tools:exe\] echo "building tool"`)
+	matches := rx.FindAllStringSubmatch(buff.String(), -1)
+	assert.Len(t, matches, 1)
+	assert.Contains(t, buff.String(), `task: [c:a:lib] echo "building a"`)
+	assert.Contains(t, buff.String(), `task: [c:b:lib] echo "building b"`)
+}
+
 func TestRunOnceSharedFailurePropagates(t *testing.T) {
 	t.Parallel()
 

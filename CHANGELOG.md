@@ -30,6 +30,8 @@
   Taskfile is redirected to `http` on the same host (#3091 by @vmaerten).
 - Fixed `--offline` failing when an `optional: true` remote include is not in
   the cache: the include is now skipped instead (#3076, #3081 by @Tidehyc).
+- Fixed `run: once` not deduplicating a task that is reached through multiple
+  levels of nested includes (#3058 by @sainimal1ba-hue).
 
 ## v3.54.0 - 2026-10-01
 
