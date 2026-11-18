@@ -152,3 +152,9 @@ tasks:
   task-3:
     internal: true
     cmd: echo "3"
+
+  sources-variable:
+    sources:
+      - "*.txt"
+    cmds:
+      - echo "{{.sources}}"
