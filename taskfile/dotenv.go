@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joho/godotenv"
-
+	"github.com/go-task/task/v3/internal/dotenv"
 	"github.com/go-task/task/v3/internal/filepathext"
 	"github.com/go-task/task/v3/internal/templater"
 	"github.com/go-task/task/v3/taskfile/ast"
@@ -26,11 +25,11 @@ func Dotenv(vars *ast.Vars, tf *ast.Taskfile, dir string) (*ast.Vars, error) {
 			continue
 		}
 
-		envs, err := godotenv.Read(dotEnvPath)
+		envs, err := dotenv.Read(dotEnvPath)
 		if err != nil {
 			return nil, fmt.Errorf("error reading env file %s: %w", dotEnvPath, err)
 		}
-		for key, value := range envs {
+		for key, value := range envs.AllFromFront() {
 			if _, ok := env.Get(key); !ok {
 				env.Set(key, ast.Var{Value: value})
 			}
