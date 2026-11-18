@@ -1,0 +1,8 @@
+version: '3'
+
+run: once
+
+tasks:
+  build:
+    cmds:
+      - echo "build library"
