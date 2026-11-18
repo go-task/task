@@ -1,0 +1,23 @@
+version: '3'
+dotenv: [root.env]
+env:
+  DOTENV_EXPLICIT: explicit
+includes:
+  app:
+    taskfile: app/Taskfile.yml
+    dir: work
+  sibling: sibling/Taskfile.yml
+  a:
+    taskfile: shared/Taskfile.yml
+    vars: {FLAVOR: a}
+  b:
+    taskfile: shared/Taskfile.yml
+    vars: {FLAVOR: b}
+  flat:
+    taskfile: flat/Taskfile.yml
+    flatten: true
+tasks:
+  inspect:
+    cmds:
+      - 'echo "{{.DOTENV_CHOICE}}|$DOTENV_CHOICE|$DOTENV_APP"'
+      - 'echo "explicit=$DOTENV_EXPLICIT root=$DOTENV_ROOT base=$DOTENV_BASE env-path=$DOTENV_ENV_PATH"'
