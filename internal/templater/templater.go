@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"maps"
+	"regexp"
 	"strings"
 
 	"github.com/go-task/template"
@@ -111,6 +112,27 @@ func ReplaceWithExtra[T any](v T, cache *Cache, extra map[string]any) T {
 	return copy
 }
 
+// globVarPattern matches direct variable lookups in a glob pattern.
+var globVarPattern = regexp.MustCompile(`\{\{\s*\.([a-zA-Z_][a-zA-Z0-9_.]*)\s*\}\}`)
+
+// hasUnresolvedDynamicVar reports whether a glob references a shell-derived
+// variable that has not been evaluated yet. FastGetVariables leaves such
+// variables with an empty value so templates can still be parsed, which would
+// turn "{{.DIR}}/**/*" into "/**/*" and make the globber scan from the
+// filesystem root (and follow symlink cycles until it hangs).
+func hasUnresolvedDynamicVar(glob string, cache *Cache) bool {
+	for _, match := range globVarPattern.FindAllStringSubmatch(glob, -1) {
+		v, ok := cache.Vars.Get(match[1])
+		if !ok {
+			return true
+		}
+		if v.Sh != nil && (v.Value == nil || v.Value == "") {
+			return true
+		}
+	}
+	return false
+}
+
 func ReplaceGlobs(globs []*ast.Glob, cache *Cache) []*ast.Glob {
 	if cache.err != nil || len(globs) == 0 {
 		return nil
@@ -118,8 +140,12 @@ func ReplaceGlobs(globs []*ast.Glob, cache *Cache) []*ast.Glob {
 
 	new := make([]*ast.Glob, len(globs))
 	for i, g := range globs {
+		replaced := g.Glob
+		if !hasUnresolvedDynamicVar(g.Glob, cache) {
+			replaced = Replace(g.Glob, cache)
+		}
 		new[i] = &ast.Glob{
-			Glob:   Replace(g.Glob, cache),
+			Glob:   replaced,
 			Negate: g.Negate,
 		}
 	}
