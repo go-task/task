@@ -90,20 +90,8 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			return nil
 		}
 	}
-	rangeFunc := getRangeFunc(c.Dir)
 
-	var taskRangeFunc func(k string, v ast.Var) error
-	if t != nil {
-		// NOTE(@andreynering): We're manually joining these paths here because
-		// this is the raw task, not the compiled one.
-		cache := &templater.Cache{Vars: result}
-		dir := templater.Replace(t.Dir, cache)
-		if err := cache.Err(); err != nil {
-			return nil, err
-		}
-		dir = filepathext.SmartJoin(c.Dir, dir)
-		taskRangeFunc = getRangeFunc(dir)
-	}
+	rangeFunc := getRangeFunc(c.Dir)
 
 	for k, v := range c.TaskfileEnv.All() {
 		if err := rangeFunc(k, v); err != nil {
@@ -115,20 +103,39 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			return nil, err
 		}
 	}
-	if t != nil {
-		for k, v := range t.IncludeVars.All() {
-			if err := rangeFunc(k, v); err != nil {
-				return nil, err
-			}
-		}
-		for k, v := range t.IncludedTaskfileVars.All() {
-			if err := taskRangeFunc(k, v); err != nil {
-				return nil, err
-			}
+
+	if t == nil {
+		return result, nil
+	}
+
+	for k, v := range t.IncludeVars.All() {
+		if err := rangeFunc(k, v); err != nil {
+			return nil, err
 		}
 	}
 
-	if t == nil || call == nil {
+	// The task dir may reference variables, so it can only be resolved once the
+	// Taskfile variables above have been added to the result. Resolving it any
+	// earlier makes those references expand to an empty string, which silently
+	// runs the dynamic variables below in the Taskfile dir instead of the task
+	// one.
+	// NOTE(@andreynering): We're manually joining these paths here because
+	// this is the raw task, not the compiled one.
+	cache := &templater.Cache{Vars: result}
+	dir := templater.Replace(t.Dir, cache)
+	if err := cache.Err(); err != nil {
+		return nil, err
+	}
+	dir = filepathext.SmartJoin(c.Dir, dir)
+	taskRangeFunc := getRangeFunc(dir)
+
+	for k, v := range t.IncludedTaskfileVars.All() {
+		if err := taskRangeFunc(k, v); err != nil {
+			return nil, err
+		}
+	}
+
+	if call == nil {
 		return result, nil
 	}
 
