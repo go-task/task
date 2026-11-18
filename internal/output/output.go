@@ -3,6 +3,7 @@ package output
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/templater"
@@ -11,6 +12,19 @@ import (
 
 type Output interface {
 	WrapWriter(stdOut, stdErr io.Writer, prefix string, cache *templater.Cache) (io.Writer, io.Writer, CloseFunc)
+}
+
+// Lifecycle is optional. An Output without these methods keeps its behavior.
+//
+// The executor calls TaskStarted, then TaskSkipped or TaskFinished, but not
+// both. Two or more tasks can have the same name, because `prefix` is free
+// text. Deps operate in parallel, thus these calls come from two or more
+// goroutines.
+type Lifecycle interface {
+	TaskStarted(name string)
+	TaskSkipped(name string)
+	TaskFinished(name string, err error, d time.Duration)
+	RunFinished()
 }
 
 type CloseFunc func(err error) error
@@ -34,6 +48,11 @@ func BuildFor(o *ast.Output, logger *logger.Logger) (Output, error) {
 			return nil, err
 		}
 		return NewPrefixed(logger), nil
+	case "status":
+		if err := checkOutputGroupUnset(o); err != nil {
+			return nil, err
+		}
+		return NewStatus(logger), nil
 	default:
 		return nil, fmt.Errorf(`task: output style %q not recognized`, o.Name)
 	}
