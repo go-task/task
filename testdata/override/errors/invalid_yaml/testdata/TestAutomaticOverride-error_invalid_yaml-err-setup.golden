@@ -1,0 +1,2 @@
+task: Failed to parse testdata/override/errors/invalid_yaml/Taskfile.override.yml:
+yaml: line 1: did not find expected node content

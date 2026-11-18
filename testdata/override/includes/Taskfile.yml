@@ -1,0 +1,7 @@
+version: '3'
+
+vars:
+  INCLUDE: missing
+
+includes:
+  docs: ./{{.INCLUDE}}
