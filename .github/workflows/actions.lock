@@ -6,13 +6,13 @@ workflows:
     '.github/workflows/ci.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/github-script@v9.0.0'
-        - 'actions/setup-go@v7.0.0'
+        - 'actions/setup-go@v7.1.0'
         - 'actions/setup-node@v7.1.0'
         - 'actions/setup-python@v7.1.0'
         - 'go-task/setup-task@v2.2.0'
         - 'golang/govulncheck-action@v1.1.0'
         - 'golangci/golangci-lint-action@v9.3.0'
-        - 'hustcer/setup-nu@v3.29'
+        - 'hustcer/setup-nu@v3.30'
         - 'pnpm/action-setup@v6.1.1'
     '.github/workflows/issue-awaiting-response.yml':
         - 'actions/github-script@v9.0.0'
@@ -24,11 +24,11 @@ workflows:
         - 'actions/github-script@v9.0.0'
     '.github/workflows/release-nightly.yml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-go@v7.0.0'
+        - 'actions/setup-go@v7.1.0'
         - 'goreleaser/goreleaser-action@v7.3.0'
     '.github/workflows/release.yml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-go@v7.0.0'
+        - 'actions/setup-go@v7.1.0'
         - 'actions/setup-node@v7.1.0'
         - 'go-task/setup-task@v2.2.0'
         - 'goreleaser/goreleaser-action@v7.3.0'
@@ -54,9 +54,9 @@ dependencies:
         commit: 'sha1-7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5'
         owner_id: 44036562
         repo_id: 192624594
-    'actions/setup-go@v7.0.0':
-        ref: 'v7.0.0'
-        commit: 'sha1-b7ad1dad31e06c5925ef5d2fc7ad053ef454303e'
+    'actions/setup-go@v7.1.0':
+        ref: 'v7.1.0'
+        commit: 'sha1-d8cbb8045d7f43706b9177cceb36c1f91a6644d5'
         owner_id: 44036562
         repo_id: 192624594
     'actions/setup-node@v7.1.0':
@@ -92,9 +92,9 @@ dependencies:
         commit: 'sha1-a4f02ab5355a589de60d917a659ce617ed19b3de'
         owner_id: 24697112
         repo_id: 209873006
-    'hustcer/setup-nu@v3.29':
-        ref: 'v3.29'
-        commit: 'sha1-eacad52a4634c4f8d17a94916f93be6856861b9c'
+    'hustcer/setup-nu@v3.30':
+        ref: 'v3.30'
+        commit: 'sha1-1b8faed9a8ff673c8ce0beae243e0b72d0787241'
         owner_id: 1161607
         repo_id: 486109928
     'pnpm/action-setup@v6.1.1':
