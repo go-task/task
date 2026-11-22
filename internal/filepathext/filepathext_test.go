@@ -31,6 +31,13 @@ func TestIsAbs(t *testing.T) {
 			want: true,
 		},
 		{
+			// Go templates allow optional whitespace after "{{", so a spaced
+			// special-variable expression must still be treated as absolute.
+			name: "special dir template expression with spaces",
+			path: "{{ .ROOT_DIR }}/foo",
+			want: true,
+		},
+		{
 			name: "taskfile dir template expression",
 			path: "{{.TASKFILE_DIR}}/foo",
 			want: true,
