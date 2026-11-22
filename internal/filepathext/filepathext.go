@@ -33,7 +33,12 @@ var knownAbsDirs = []string{
 
 func isSpecialDir(dir string) bool {
 	for _, d := range knownAbsDirs {
-		if strings.Contains(dir, d) {
+		// NOTE: The special variables are only absolute when they appear as an
+		// actual template expression (e.g. "{{.ROOT_DIR}}"). Matching on a bare
+		// substring would incorrectly treat ordinary relative paths whose names
+		// merely contain one of these strings (e.g. "project.ROOT_DIR/file.txt")
+		// as absolute. See https://github.com/go-task/task/issues/3021.
+		if strings.Contains(dir, "{{"+d) {
 			return true
 		}
 	}
