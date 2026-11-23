@@ -21,7 +21,7 @@ jobs:
     runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - name: 📥 Checkout
-        uses: useblacksmith/checkout@v1
+        uses: useblacksmith/checkout@v1.8.3
         with:
           persist-credentials: false
 
@@ -44,7 +44,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     steps:
       - name: 📥 Checkout
-        uses: useblacksmith/checkout@v1
+        uses: useblacksmith/checkout@v1.8.3
 
       - name: ⬇️ Setup Go
         uses: actions/setup-go@v7.1.0
@@ -129,7 +129,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     steps:
       - name: 📥 Checkout
-        uses: useblacksmith/checkout@v1
+        uses: useblacksmith/checkout@v1.8.3
 
       - name: ⬇️ Setup Go
         uses: actions/setup-go@v7.1.0
@@ -146,7 +146,7 @@ jobs:
     runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - name: 📥 Checkout
-        uses: useblacksmith/checkout@v1
+        uses: useblacksmith/checkout@v1.8.3
 
       - name: ⬇️ Setup Python
         uses: actions/setup-python@v7.1.0
@@ -164,7 +164,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     steps:
       - name: 📥 Checkout
-        uses: useblacksmith/checkout@v1
+        uses: useblacksmith/checkout@v1.8.3
 
       - name: ⬇️ Setup Go
         uses: actions/setup-go@v7.1.0
