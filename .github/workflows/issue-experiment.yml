@@ -10,7 +10,7 @@ permissions:
 jobs:
   issue-experiment-proposal:
     if: github.event.issue_field.id == '6591' && github.event.issue_field_value.option.name == 'proposal'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/github-script@v9.0.0
         with:
@@ -24,7 +24,7 @@ jobs:
             })
   issue-experiment-draft:
     if: github.event.issue_field.id == '6591' && github.event.issue_field_value.option.name == 'draft'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/github-script@v9.0.0
         with:
@@ -38,7 +38,7 @@ jobs:
             })
   issue-experiment-candidate:
     if: github.event.issue_field.id == '6591' && github.event.issue_field_value.option.name == 'candidate'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/github-script@v9.0.0
         with:
@@ -52,7 +52,7 @@ jobs:
             })
   issue-experiment-stable:
     if: github.event.issue_field.id == '6591' && github.event.issue_field_value.option.name == 'stable'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/github-script@v9.0.0
         with:
@@ -66,7 +66,7 @@ jobs:
             })
   issue-experiment-released:
     if: github.event.issue_field.id == '6591' && github.event.issue_field_value.option.name == 'released'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/github-script@v9.0.0
         with:
@@ -86,7 +86,7 @@ jobs:
             })
   issue-experiment-abandoned:
     if: github.event.issue_field.id == '6591' && github.event.issue_field_value.option.name == 'abandoned'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/github-script@v9.0.0
         with:
@@ -106,7 +106,7 @@ jobs:
             })
   issue-experiment-superseded:
     if: github.event.issue_field.id == '6591' && github.event.issue_field_value.option.name == 'superseded'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/github-script@v9.0.0
         with:
