@@ -18,10 +18,10 @@ permissions:
 jobs:
   verify-actions-lock:
     name: 🔒 Verify actions lockfile
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v7.0.1
+        uses: useblacksmith/checkout@v1.8.3
         with:
           persist-credentials: false
 
@@ -41,10 +41,10 @@ jobs:
       fail-fast: false
       matrix:
         go-version: [1.26.x, 1.27.x]
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v7.0.1
+        uses: useblacksmith/checkout@v1.8.3
 
       - name: ⬇️ Setup Go
         uses: actions/setup-go@v7.1.0
@@ -55,13 +55,21 @@ jobs:
         run: go build -v ./cmd/task
 
   test:
-    name: 🧪 Test (${{ matrix.go-version }}, ${{ matrix.platform }})
+    name: 🧪 Test (${{ matrix.go-version }}, ${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         go-version: [1.26.x, 1.27.x]
-        platform: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.platform }}
+        os: [linux, macos, windows]
+        include:
+          - os: linux
+            runner: blacksmith-2vcpu-ubuntu-2404-arm
+          - os: macos
+            runner: blacksmith-6vcpu-macos-latest
+          - os: windows
+            runner: blacksmith-2vcpu-windows-2025
+
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v7.0.1
@@ -82,7 +90,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, macos-latest]
+        platform: [blacksmith-2vcpu-ubuntu-2604, blacksmith-6vcpu-macos-15]
     runs-on: ${{ matrix.platform }}
     steps:
       - name: 📥 Checkout
@@ -126,10 +134,10 @@ jobs:
       fail-fast: false
       matrix:
         go-version: [1.26.x, 1.27.x]
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v7.0.1
+        uses: useblacksmith/checkout@v1.8.3
 
       - name: ⬇️ Setup Go
         uses: actions/setup-go@v7.1.0
@@ -143,10 +151,10 @@ jobs:
 
   lint-jsonschema:
     name: 📋 Lint JSON Schema
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v7.0.1
+        uses: useblacksmith/checkout@v1.8.3
 
       - name: ⬇️ Setup Python
         uses: actions/setup-python@v7.1.0
@@ -161,10 +169,10 @@ jobs:
 
   website:
     name: 📚 Build documentation channels
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v7.0.1
+        uses: useblacksmith/checkout@v1.8.3
 
       - name: ⬇️ Setup Go
         uses: actions/setup-go@v7.1.0
@@ -216,7 +224,7 @@ jobs:
     # Pull requests only: the release commit is pushed straight to main and is
     # the one thing allowed to rewrite these files.
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     permissions:
       pull-requests: read
     steps:
@@ -251,6 +259,6 @@ jobs:
 
   govulncheck:
     name: 🛡️ Vulnerabilities
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - uses: golang/govulncheck-action@v1.1.0

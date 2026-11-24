@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   issue-closed:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/github-script@v9.0.0
         with:

@@ -14,6 +14,7 @@ workflows:
         - 'golangci/golangci-lint-action@v9.3.0'
         - 'hustcer/setup-nu@v3.30'
         - 'pnpm/action-setup@v6.1.1'
+        - 'useblacksmith/checkout@v1.8.3'
     '.github/workflows/issue-awaiting-response.yml':
         - 'actions/github-script@v9.0.0'
     '.github/workflows/issue-closed.yml':
@@ -23,16 +24,16 @@ workflows:
     '.github/workflows/issue-needs-triage.yml':
         - 'actions/github-script@v9.0.0'
     '.github/workflows/release-nightly.yml':
-        - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v7.1.0'
         - 'goreleaser/goreleaser-action@v7.3.0'
+        - 'useblacksmith/checkout@v1.8.3'
     '.github/workflows/release.yml':
-        - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v7.1.0'
         - 'actions/setup-node@v7.1.0'
         - 'go-task/setup-task@v2.2.0'
         - 'goreleaser/goreleaser-action@v7.3.0'
         - 'pnpm/action-setup@v6.1.1'
+        - 'useblacksmith/checkout@v1.8.3'
 dependencies:
     'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd':
         ref: 'v6.0.2'
@@ -102,3 +103,8 @@ dependencies:
         commit: 'sha1-73e46992e05b19abd31f2f3c20e0e7370d762115'
         owner_id: 21320719
         repo_id: 262289747
+    'useblacksmith/checkout@v1.8.3':
+        ref: 'v1.8.3'
+        commit: 'sha1-75c49b6ed30ce59336e9252425796cfcfac155f8'
+        owner_id: 156274793
+        repo_id: 1107788336
