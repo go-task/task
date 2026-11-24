@@ -36,6 +36,12 @@ export const sponsors: { tier: string; size: string; items: Sponsor[] }[] = [
     size: 'big',
     items: [
       {
+        name: 'Blacksmith',
+        url: 'https://www.blacksmith.sh/',
+        img: '/img/blacksmith.png',
+        description: 'Hosts our CI runners for free'
+      },
+      {
         name: 'Cloudsmith',
         url: 'https://cloudsmith.com/',
         img: '/img/cloudsmith.svg',

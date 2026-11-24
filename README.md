@@ -40,6 +40,11 @@
   <table>
     <tr>
       <td align="center" valign="middle">
+        <a target="_blank" href="https://www.blacksmith.sh/">
+          <img src="website/src/public/img/blacksmith.png" height="100px" width="200px" title="Blacksmith" />
+        </a>
+      </td>
+      <td align="center" valign="middle">
         <a target="_blank" href="https://cloudsmith.com/">
           <img src="website/src/public/img/cloudsmith.svg" height="100px" width="200px" title="Cloudsmith" />
         </a>
@@ -54,6 +59,9 @@
       </td>
     </tr>
     <tr>
+      <td align="center">
+        CI runners provided by <a target="_blank" href="https://www.blacksmith.sh/">Blacksmith</a>.
+      </td>
       <td align="center">
         Package hosting provided by <a target="_blank" href="https://cloudsmith.com/">Cloudsmith</a>.
       </td>
