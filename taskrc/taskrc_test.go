@@ -146,6 +146,40 @@ temp-dir: local-cache
 	assert.Equal(t, "local-cache", *cfg.TempDir)
 }
 
+func TestGetConfig_Coreutils(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+	_, _, localDir := setupDirs(t)
+
+	writeFile(t, localDir, ".taskrc.yml", `
+coreutils: turtle
+`)
+
+	cfg, err := GetConfig(localDir)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	require.NotNil(t, cfg.Coreutils)
+	assert.Equal(t, "turtle", *cfg.Coreutils)
+}
+
+func TestGetConfig_CoreutilsMergePrecedence(t *testing.T) { //nolint:paralleltest // cannot run in parallel
+	xdgConfigDir, homeDir, localDir := setupDirs(t)
+
+	writeFile(t, xdgConfigDir, "taskrc.yml", `
+coreutils: auto
+`)
+	writeFile(t, homeDir, ".taskrc.yml", `
+coreutils: system
+`)
+	writeFile(t, localDir, ".taskrc.yml", `
+coreutils: turtle
+`)
+
+	cfg, err := GetConfig(localDir)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	require.NotNil(t, cfg.Coreutils)
+	assert.Equal(t, "turtle", *cfg.Coreutils)
+}
+
 func TestGetConfig_All(t *testing.T) { //nolint:paralleltest // cannot run in parallel
 	xdgConfigDir, homeDir, localDir := setupDirs(t)
 

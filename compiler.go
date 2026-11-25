@@ -29,6 +29,10 @@ type Compiler struct {
 
 	Logger *logger.Logger
 
+	// Coreutils is the mode dynamic variables run with. The zero value
+	// falls back to the environment and then the default.
+	Coreutils execext.CoreutilsMode
+
 	dynamicCache   map[string]string
 	muDynamicCache sync.Mutex
 }
@@ -169,11 +173,12 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 
 	var stdout bytes.Buffer
 	opts := &execext.RunCommandOptions{
-		Command: *v.Sh,
-		Dir:     dir,
-		Stdout:  &stdout,
-		Stderr:  c.Logger.Stderr,
-		Env:     e,
+		Command:   *v.Sh,
+		Dir:       dir,
+		Stdout:    &stdout,
+		Stderr:    c.Logger.Stderr,
+		Env:       e,
+		Coreutils: c.Coreutils,
 	}
 	if err := execext.RunCommand(context.Background(), opts); err != nil {
 		return "", fmt.Errorf(`task: Command "%s" failed: %s`, opts.Command, err)

@@ -101,37 +101,30 @@ echo $a
 
 ## Are shell core utilities available on Windows?
 
-The most common ones, yes. And we might add more in the future.
-This is possible because Task compiles a small set of core utilities in Go and
-enables them by default on Windows for greater compatibility.
+The most common ones, yes. This is possible because Task runs the core
+utilities from [charm.land/turtle](https://charm.land/turtle) and enables them
+by default on Windows for greater compatibility.
 
-It's possible to control whether these builtin core utilities are used or not
-with the [`TASK_CORE_UTILS`](./reference/environment.md#task-core-utils)
-environment variable:
+Which implementation runs is controlled by the
+[`coreutils`](./reference/config.md#coreutils) taskrc setting or the
+[`TASK_COREUTILS`](./reference/environment.md#task-coreutils) environment
+variable:
 
-```bash
-# Enable, even on non-Windows platforms
-env TASK_CORE_UTILS=1 task ...
-
-# Disable, even on Windows
-env TASK_CORE_UTILS=0 task ...
+```yaml
+# .taskrc.yml
+coreutils: turtle
 ```
 
-This is the list of core utils that are currently available:
+```bash
+# Environment
+env TASK_COREUTILS=turtle task ...
+```
 
-* `base64`
-* `cat`
-* `chmod`
-* `cp`
-* `find`
-* `gzip`
-* `ls`
-* `mkdir`
-* `mktemp`
-* `mv`
-* `rm`
-* `shasum`
-* `tar`
-* `touch`
-* `xargs`
-* (more might be added in the future)
+The options are `turtle` (always Turtle), `system` (prefer the ones in PATH,
+falling back to Turtle), `auto` (Turtle on Windows, the system utilities
+elsewhere, the default) and `off` (run everything through the host system).
+The legacy `TASK_CORE_UTILS` boolean remains supported as a fallback, with
+`true` mapping to `system` and `false` to `auto`.
+
+See the [charm.land/turtle](https://charm.land/turtle) repository for the full
+list of available utilities.

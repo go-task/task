@@ -11,7 +11,6 @@ import (
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/syntax"
-	"mvdan.cc/sh/x/coreutils"
 
 	"github.com/go-task/task/v3/errors"
 )
@@ -29,6 +28,9 @@ type RunCommandOptions struct {
 	Stdin     io.Reader
 	Stdout    io.Writer
 	Stderr    io.Writer
+	// Coreutils selects how the core utilities run. The zero value falls
+	// back to the environment and then the default.
+	Coreutils CoreutilsMode
 }
 
 // RunCommand runs a shell command
@@ -63,11 +65,16 @@ func RunCommand(ctx context.Context, opts *RunCommandOptions) error {
 		environ = os.Environ()
 	}
 
+	coreutils := opts.Coreutils
+	if coreutils == "" {
+		coreutils, _ = CoreutilsFromEnv()
+	}
+
 	r, err := interp.New(
 		interp.BashOpts(bashOpts...),
 		interp.Params(params...),
 		interp.Env(expand.ListEnviron(environ...)),
-		interp.ExecHandlers(execHandlers()...),
+		interp.ExecHandlers(execHandlers(coreutils)...),
 		interp.OpenHandler(openHandler),
 		interp.StdIO(opts.Stdin, opts.Stdout, opts.Stderr),
 		dirOption(opts.Dir),
@@ -102,6 +109,11 @@ func ExpandLiteral(s string) (string, error) {
 	if s == "" {
 		return "", nil
 	}
+	// A backslash on Windows is a path separator, not a shell escape, so
+	// normalize to forward slashes before parsing: otherwise the expansion
+	// eats the backslashes and the path points nowhere. This is a no-op on
+	// the other platforms.
+	s = filepath.ToSlash(s)
 	p := syntax.NewParser()
 	word, err := p.Document(strings.NewReader(s))
 	if err != nil {
@@ -138,9 +150,9 @@ func ExpandFields(s string) ([]string, error) {
 	return expand.Fields(cfg, words...)
 }
 
-func execHandlers() (handlers []func(next interp.ExecHandlerFunc) interp.ExecHandlerFunc) {
-	if useGoCoreUtils {
-		handlers = append(handlers, coreutils.ExecHandler)
+func execHandlers(coreutils CoreutilsMode) (handlers []func(next interp.ExecHandlerFunc) interp.ExecHandlerFunc) {
+	if handler := coreutilsHandler(coreutils); handler != nil {
+		handlers = append(handlers, handler)
 	}
 	return handlers
 }

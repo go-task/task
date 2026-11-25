@@ -10,21 +10,24 @@ import (
 )
 
 type StatusChecker struct {
-	logger *logger.Logger
+	logger    *logger.Logger
+	coreutils execext.CoreutilsMode
 }
 
-func NewStatusChecker(logger *logger.Logger) StatusCheckable {
+func NewStatusChecker(logger *logger.Logger, coreutils execext.CoreutilsMode) StatusCheckable {
 	return &StatusChecker{
-		logger: logger,
+		logger:    logger,
+		coreutils: coreutils,
 	}
 }
 
 func (checker *StatusChecker) IsUpToDate(ctx context.Context, t *ast.Task) (bool, error) {
 	for _, s := range t.Status {
 		err := execext.RunCommand(ctx, &execext.RunCommandOptions{
-			Command: s,
-			Dir:     t.Dir,
-			Env:     env.Get(t),
+			Command:   s,
+			Dir:       t.Dir,
+			Env:       env.Get(t),
+			Coreutils: checker.coreutils,
 		})
 		if err != nil {
 			checker.logger.VerboseOutf(logger.Yellow, "task: status command %s exited non-zero: %s\n", s, err)

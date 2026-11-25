@@ -163,9 +163,10 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	// Check if condition after CompiledTask so dynamic variables are resolved
 	if strings.TrimSpace(t.If) != "" {
 		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
-			Command: t.If,
-			Dir:     t.Dir,
-			Env:     env.Get(t),
+			Command:   t.If,
+			Dir:       t.Dir,
+			Env:       env.Get(t),
+			Coreutils: e.coreutils,
 		}); err != nil {
 			e.Logger.VerboseOutf(logger.Yellow, "task: if condition not met - skipped: %q\n", call.Task)
 			return nil
@@ -378,9 +379,10 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 	// Check if condition for any command type
 	if strings.TrimSpace(cmd.If) != "" {
 		if err := execext.RunCommand(ctx, &execext.RunCommandOptions{
-			Command: cmd.If,
-			Dir:     t.Dir,
-			Env:     env.Get(t),
+			Command:   cmd.If,
+			Dir:       t.Dir,
+			Env:       env.Get(t),
+			Coreutils: e.coreutils,
 		}); err != nil {
 			if timedOut(ctx, timeout) {
 				return timeout
@@ -438,6 +440,7 @@ func (e *Executor) runCommand(ctx context.Context, t *ast.Task, call *Call, i in
 			Stdin:     e.Stdin,
 			Stdout:    stdOut,
 			Stderr:    stdErr,
+			Coreutils: e.coreutils,
 		})
 		if closeErr := closer(err); closeErr != nil {
 			e.Logger.Errf(logger.Red, "task: unable to close writer: %v\n", closeErr)

@@ -184,6 +184,23 @@ interactive: true
 temp-dir: .task
 ```
 
+### `coreutils`
+
+- **Type**: `string`
+- **Default**: `auto`
+- **Options**: `turtle`, `system`, `auto`, `off`
+- **Description**: How the core utilities run in Task's shell. `turtle` always
+  runs [charm.land/turtle](https://charm.land/turtle)'s implementations,
+  `system` prefers the ones in PATH and falls back to Turtle, `auto` picks
+  Turtle on Windows and the system utilities elsewhere, and `off` skips the
+  middleware entirely.
+- **Environment variable**:
+  [`TASK_COREUTILS`](./environment.md#task-coreutils)
+
+```yaml
+coreutils: turtle
+```
+
 ### `remote`
 
 - **Type**: `object`
@@ -423,6 +440,7 @@ color: true
 disable-fuzzy: false
 concurrency: 2
 temp-dir: .task
+coreutils: auto
 remote:
   insecure: false
   offline: false

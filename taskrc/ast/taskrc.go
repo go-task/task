@@ -20,6 +20,7 @@ type TaskRC struct {
 	Remote       Remote          `yaml:"remote"`
 	Failfast     bool            `yaml:"failfast"`
 	TempDir      *string         `yaml:"temp-dir"`
+	Coreutils    *string         `yaml:"coreutils"`
 	Experiments  map[string]int  `yaml:"experiments"`
 }
 
@@ -80,6 +81,7 @@ func (t *TaskRC) Merge(other *TaskRC) {
 	t.Interactive = cmp.Or(other.Interactive, t.Interactive)
 	t.Failfast = cmp.Or(other.Failfast, t.Failfast)
 	t.TempDir = cmp.Or(other.TempDir, t.TempDir)
+	t.Coreutils = cmp.Or(other.Coreutils, t.Coreutils)
 }
 
 // Replace each host's headers as a whole so closer config files can drop headers.

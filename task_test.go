@@ -1519,7 +1519,7 @@ func TestIncludesHttp(t *testing.T) {
 							t.Parallel()
 							task, err := e.CompiledTask(&task.Call{Task: tc.name})
 							require.NoError(t, err)
-							assert.Equal(t, tc.dir, task.Dir)
+							assert.Equal(t, filepath.ToSlash(tc.dir), task.Dir)
 						})
 					}
 				})
