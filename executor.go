@@ -132,6 +132,7 @@ func (e *Executor) fingerprinter() *fingerprint.Fingerprinter {
 		e.TempDir.Fingerprint,
 		e.Dry,
 		e.Logger,
+		fingerprint.WithShellOptions(e.Taskfile.Set, e.Taskfile.Shopt),
 	)
 }
 
