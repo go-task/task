@@ -1,0 +1,5 @@
+err:  field "silent" is not allowed in a Taskfile override
+file: {{.TEST_DIR}}/testdata/override/errors/forbidden_key/Taskfile.override.yml:2:1
+  1 | version: '3'
+> 2 | silent: true
+    | ^
