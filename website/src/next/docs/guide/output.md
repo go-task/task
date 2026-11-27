@@ -16,11 +16,12 @@ together. Use `silent` separately to hide the command text Task logs.
 
 ## Choose an output mode {#output-syntax}
 
-| What do you need?                    | Mode                    |
-| ------------------------------------ | ----------------------- |
-| Live output without extra formatting | `interleaved` (default) |
-| Live output labeled by task          | `prefixed`              |
-| Each command's output in one block   | `group`                 |
+| What do you need?                        | Mode                    |
+| ---------------------------------------- | ----------------------- |
+| Live output without extra formatting     | `interleaved` (default) |
+| Live output labeled by task              | `prefixed`              |
+| Each command's output in one block       | `group`                 |
+| One progress line per task, with timings | `status`                |
 
 ### Identify parallel output
 
@@ -103,6 +104,56 @@ tasks:
 
 `task passes` prints nothing. `task fails` prints `Failure details` and the
 failure message. Hiding successful output does not change exit codes.
+
+### Report task progress
+
+Set `output: status` to print one line for each task instead of its output. Each
+line names the task and says whether it ran, was skipped as up to date,
+succeeded, or failed. A task that succeeds has its output hidden. A task that
+fails shows its output in full, as `group` with `error_only` does.
+
+```yaml
+version: '3'
+
+output: status
+
+tasks:
+  default:
+    deps: [lint, test]
+
+  lint:
+    sources: ['**/*.go']
+    cmds:
+      - echo 'Lint passed'
+
+  test:
+    cmds:
+      - echo 'Tests passed'
+```
+
+```text
+Running    default
+Running    lint
+Running    test
+Skipped    lint
+Succeeded  test (1.21s)
+Succeeded  default (1.22s)
+1 Skipped, 2 Succeeded
+```
+
+The line is labeled with the task's `prefix` when it sets one, and with the task
+name otherwise. Control characters are removed from the label, so a `prefix`
+cannot move the cursor and write over a line this mode already printed.
+
+This mode also works with `--dry`, which makes
+`task --dry --output status <name>` print the whole plan and mark the steps that
+are already up to date. A dry run executes nothing, so every task it lists
+reports `Succeeded` with a duration near zero. Read it as the plan, not as a
+result.
+
+A task with `interactive: true` keeps the terminal and is not buffered, so a
+task that prompts for input still works. Mark any task that prompts, or its
+prompt waits behind a buffer that nobody sees.
 
 ## Hide command echoes {#silent-mode}
 

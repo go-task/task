@@ -1,6 +1,7 @@
 package task
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"slices"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 	"mvdan.cc/sh/v3/interp"
@@ -71,6 +73,10 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 			summary.PrintTask(e.Logger, compiledTask)
 		}
 		return nil
+	}
+
+	if l, ok := e.Output.(output.Lifecycle); ok {
+		defer l.RunFinished()
 	}
 
 	// Prompt for all required vars from deps upfront (parallel execution)
@@ -203,8 +209,23 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 	release := e.acquireConcurrencyLimit()
 	defer release()
 
-	if err = e.startExecution(ctx, t, func(ctx context.Context) error {
+	if err = e.startExecution(ctx, t, func(ctx context.Context) (retErr error) {
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q started\n", call.Task)
+
+		// These calls are in the callback, not around startExecution. A task
+		// with two or more dependents thus reports one time.
+		var skipped bool
+		if l, ok := e.Output.(output.Lifecycle); ok {
+			label := cmp.Or(t.Prefix, t.Name())
+			started := time.Now()
+			l.TaskStarted(label)
+			defer func() {
+				if !skipped {
+					l.TaskFinished(label, retErr, time.Since(started))
+				}
+			}()
+		}
+
 		if err := e.runDeps(ctx, t); err != nil {
 			return err
 		}
@@ -226,6 +247,10 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 			}
 
 			if upToDate && preCondMet {
+				skipped = true
+				if l, ok := e.Output.(output.Lifecycle); ok {
+					l.TaskSkipped(cmp.Or(t.Prefix, t.Name()))
+				}
 				if e.Verbose || (!call.Silent && !t.IsSilent() && !e.Taskfile.Silent && !e.Silent) {
 					name := t.Name()
 					if e.OutputStyle.Name == "prefixed" {

@@ -240,7 +240,7 @@ task build --temp-dir .task-cache
 
 #### `-o, --output <mode>`
 
-Set output style. Available modes: `interleaved`, `group`, `prefixed`.
+Set output style. Available modes: `interleaved`, `group`, `prefixed`, `status`.
 
 - **Environment variable**: [`TASK_OUTPUT`](./environment.md#task-output)
 
