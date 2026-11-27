@@ -19,12 +19,23 @@ type (
 		logger         *logger.Logger
 		statusChecker  StatusCheckable
 		sourcesChecker SourcesCheckable
+		posixOpts      []string
+		bashOpts       []string
 	}
 )
 
 func WithStatusChecker(checker StatusCheckable) FingerprinterOption {
 	return func(f *Fingerprinter) {
 		f.statusChecker = checker
+	}
+}
+
+// WithShellOptions configures the shell options used when running status
+// commands, so that settings such as pipefail also apply to them.
+func WithShellOptions(posixOpts, bashOpts []string) FingerprinterOption {
+	return func(f *Fingerprinter) {
+		f.posixOpts = posixOpts
+		f.bashOpts = bashOpts
 	}
 }
 
@@ -94,7 +105,7 @@ func (f *Fingerprinter) UpToDate(ctx context.Context, t *ast.Task) (bool, error)
 
 	statusChecker := f.statusChecker
 	if statusChecker == nil {
-		statusChecker = NewStatusChecker(f.logger)
+		statusChecker = NewStatusChecker(f.logger, f.posixOpts, f.bashOpts)
 	}
 	sourcesChecker, err := f.resolveSourcesChecker(t)
 	if err != nil {
