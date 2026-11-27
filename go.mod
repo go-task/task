@@ -1,11 +1,12 @@
 module github.com/go-task/task/v3
 
-go 1.26.4
+go 1.26.8
 
 require (
 	charm.land/bubbles/v2 v2.2.1
 	charm.land/bubbletea/v2 v2.1.2
 	charm.land/lipgloss/v2 v2.1.1
+	charm.land/turtle/shcoreutils v0.1.0
 	github.com/Ladicle/tabwriter v1.0.0
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/alecthomas/chroma/v2 v2.27.0
@@ -31,12 +32,13 @@ require (
 	golang.org/x/net v0.63.0
 	golang.org/x/sync v0.25.0
 	golang.org/x/term v0.48.0
-	mvdan.cc/sh/v3 v3.14.1
-	mvdan.cc/sh/x v0.0.0-20261118121211-95154f9b8122
+	mvdan.cc/sh/v3 v3.14.1-0.20261125142311-f2395c263723
 )
 
 require (
 	cel.dev/expr v0.26.0 // indirect
+	charm.land/turtle/coreutils v0.1.0 // indirect
+	charm.land/turtle/fsx v0.1.0 // indirect
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/auth v0.24.4 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.3.1 // indirect
@@ -77,7 +79,6 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect
 	github.com/dlclark/regexp2/v2 v2.13.1 // indirect
-	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.40.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
@@ -93,22 +94,18 @@ require (
 	github.com/hashicorp/go-version v1.9.0 // indirect
 	github.com/klauspost/compress v1.20.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.2 // indirect
-	github.com/klauspost/pgzip v1.3.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.1 // indirect
 	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-runewidth v0.0.31 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
-	github.com/pierrec/lz4/v4 v4.1.33 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sergi/go-diff v1.4.5 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.9.0 // indirect
 	github.com/stretchr/objx v0.8.0 // indirect
-	github.com/u-root/u-root v0.16.0 // indirect
-	github.com/u-root/uio v0.0.0-20240224005618-d2acac8f3701 // indirect
 	github.com/ulikunitz/xz v0.5.17 // indirect
 	github.com/xo/terminfo v1.3.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

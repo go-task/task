@@ -9,6 +9,7 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 	"github.com/sajari/fuzzy"
 
+	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/fingerprint"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/internal/output"
@@ -58,6 +59,7 @@ type (
 		Concurrency         int
 		Interval            time.Duration
 		Failfast            bool
+		Coreutils           string
 
 		// I/O
 		Stdin  io.Reader
@@ -73,6 +75,8 @@ type (
 		TaskSorter         sort.Sorter
 		UserWorkingDir     string
 		EnableVersionCheck bool
+
+		coreutils execext.CoreutilsMode
 
 		fuzzyModel     *fuzzy.Model
 		fuzzyModelOnce sync.Once
@@ -132,6 +136,7 @@ func (e *Executor) fingerprinter() *fingerprint.Fingerprinter {
 		e.TempDir.Fingerprint,
 		e.Dry,
 		e.Logger,
+		fingerprint.WithCoreutils(e.coreutils),
 	)
 }
 
@@ -662,4 +667,18 @@ type failfastOption struct {
 
 func (o *failfastOption) ApplyToExecutor(e *Executor) {
 	e.Failfast = o.failfast
+}
+
+// WithCoreutils selects how the core utilities run. The environment takes
+// precedence over this setting, matching the other taskrc options.
+func WithCoreutils(mode string) *coreutilsOption {
+	return &coreutilsOption{mode}
+}
+
+type coreutilsOption struct {
+	mode string
+}
+
+func (o *coreutilsOption) ApplyToExecutor(e *Executor) {
+	e.Coreutils = o.mode
 }

@@ -3,6 +3,7 @@ package fingerprint
 import (
 	"context"
 
+	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/logger"
 	"github.com/go-task/task/v3/taskfile/ast"
 )
@@ -17,6 +18,7 @@ type (
 		tempDir        string
 		dry            bool
 		logger         *logger.Logger
+		coreutils      execext.CoreutilsMode
 		statusChecker  StatusCheckable
 		sourcesChecker SourcesCheckable
 	}
@@ -31,6 +33,14 @@ func WithStatusChecker(checker StatusCheckable) FingerprinterOption {
 func WithSourcesChecker(checker SourcesCheckable) FingerprinterOption {
 	return func(f *Fingerprinter) {
 		f.sourcesChecker = checker
+	}
+}
+
+// WithCoreutils sets the mode status commands run with. The zero value
+// falls back to the environment and then the default.
+func WithCoreutils(mode execext.CoreutilsMode) FingerprinterOption {
+	return func(f *Fingerprinter) {
+		f.coreutils = mode
 	}
 }
 
@@ -94,7 +104,7 @@ func (f *Fingerprinter) UpToDate(ctx context.Context, t *ast.Task) (bool, error)
 
 	statusChecker := f.statusChecker
 	if statusChecker == nil {
-		statusChecker = NewStatusChecker(f.logger)
+		statusChecker = NewStatusChecker(f.logger, f.coreutils)
 	}
 	sourcesChecker, err := f.resolveSourcesChecker(t)
 	if err != nil {

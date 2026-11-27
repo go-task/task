@@ -4,6 +4,9 @@
 
 ### 🚀 Features
 
+- Task now ships with a brand new implementation of the POSIX and GNU core
+  utilities. We explain more about it on
+  [this blog post](https://taskfile.dev/blog/an-update-on-the-coreutils).
 - Task's [watch functionality](https://taskfile.dev/docs/guide/watch)
   (`--watch` or `watch: true`) was partly rewritten to be significantly more
   reliable, specially when it comes to detecting duplicated events.

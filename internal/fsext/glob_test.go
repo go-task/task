@@ -32,6 +32,11 @@ func TestFastRecursiveGlob(t *testing.T) {
 		filepath.ToSlash(files[1]),
 		filepath.ToSlash(files[2]),
 	}, got)
+
+	got, ok, err = FastRecursiveGlob(filepath.Join(root, "**", "deeper", "*.yaml"))
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.Equal(t, []string{filepath.ToSlash(files[2])}, got)
 }
 
 func TestFastRecursiveGlobFallback(t *testing.T) {
@@ -44,7 +49,6 @@ func TestFastRecursiveGlobFallback(t *testing.T) {
 	}{
 		{name: "no recursive marker", pattern: filepath.Join(root, "*.yaml")},
 		{name: "wildcard root", pattern: filepath.Join(root, "*", "**", "*.yaml")},
-		{name: "nested suffix", pattern: filepath.Join(root, "**", "generated", "*.yaml")},
 		{name: "brace suffix", pattern: filepath.Join(root, "**", "*.{yaml,yml}")},
 		{name: "multiple recursive markers", pattern: filepath.Join(root, "**", "nested", "**", "*.yaml")},
 	}
@@ -72,7 +76,7 @@ func TestFastRecursiveGlobNonDirectoryRoot(t *testing.T) {
 	require.Nil(t, got)
 }
 
-func TestFastRecursiveGlobSymlinkDirectoryFallback(t *testing.T) {
+func TestFastRecursiveGlobSymlinkDirectory(t *testing.T) {
 	t.Parallel()
 
 	tempDir := t.TempDir()
@@ -80,13 +84,32 @@ func TestFastRecursiveGlobSymlinkDirectoryFallback(t *testing.T) {
 	target := filepath.Join(tempDir, "target")
 	require.NoError(t, os.MkdirAll(root, 0o755))
 	require.NoError(t, os.MkdirAll(target, 0o755))
-	require.NoError(t, os.WriteFile(filepath.Join(target, "file.yaml"), nil, 0o600))
+	file := filepath.Join(target, "file.yaml")
+	require.NoError(t, os.WriteFile(file, nil, 0o600))
 	if err := os.Symlink(target, filepath.Join(root, "linked")); err != nil {
 		t.Skipf("cannot create directory symlink: %v", err)
 	}
 
 	got, ok, err := FastRecursiveGlob(filepath.Join(root, "**", "*.yaml"))
 	require.NoError(t, err)
-	require.False(t, ok)
-	require.Nil(t, got)
+	require.True(t, ok)
+	require.Equal(t, []string{filepath.ToSlash(filepath.Join(root, "linked", "file.yaml"))}, got)
+}
+
+func TestFastRecursiveGlobSymlinkLoop(t *testing.T) {
+	t.Parallel()
+
+	tempDir := t.TempDir()
+	root := filepath.Join(tempDir, "root")
+	require.NoError(t, os.MkdirAll(root, 0o755))
+	file := filepath.Join(root, "file.yaml")
+	require.NoError(t, os.WriteFile(file, nil, 0o600))
+	if err := os.Symlink(root, filepath.Join(root, "loop")); err != nil {
+		t.Skipf("cannot create directory symlink: %v", err)
+	}
+
+	got, ok, err := FastRecursiveGlob(filepath.Join(root, "**", "*.yaml"))
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.Equal(t, []string{filepath.ToSlash(file)}, got)
 }

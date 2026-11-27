@@ -123,13 +123,20 @@ checksums and temporary metadata. Can be relative like `tmp/task` or absolute
 like `/tmp/.task` or `~/.task`. Relative paths are relative to the root
 Taskfile, not the working directory. Defaults to: `./.task`.
 
+### `TASK_COREUTILS`
+
+This env selects how the core utilities run in Task's shell. Valid values are
+`turtle`, `system`, `auto` and `off`. By default, `auto` runs the
+[core utilities from charm.land/turtle](https://charm.land/turtle) on Windows
+and the system ones elsewhere. It takes precedence over the
+[`coreutils`](./config.md#coreutils) taskrc setting.
+
+For backward compatibility, a boolean is also accepted: `true` (`1`) maps to
+`system` and `false` (`0`) maps to `auto`.
+
 ### `TASK_CORE_UTILS`
 
-This env controls whether the Bash interpreter will use its own core utilities
-implemented in Go, or the ones available in the system. Valid values are `true`
-(`1`) or `false` (`0`). By default, this is `true` on Windows and `false` on
-other operating systems. We might consider making this enabled by default on all
-platforms in the future.
+Legacy spelling of [`TASK_COREUTILS`](#task-coreutils). Prefer the new name.
 
 ### `FORCE_COLOR`
 

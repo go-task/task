@@ -91,6 +91,7 @@ var (
 	CertKey             string
 	Interactive         bool
 	TempDir             string
+	Coreutils           string
 )
 
 func init() {
@@ -119,6 +120,9 @@ func init() {
 
 	config, _ := taskrc.GetConfig(dir)
 	experiments.ParseWithConfig(dir, config)
+	if config != nil && config.Coreutils != nil {
+		Coreutils = *config.Coreutils
+	}
 
 	// Parse the rest of the flags
 	log.SetFlags(0)
@@ -332,6 +336,7 @@ func (o *flagsOption) ApplyToExecutor(e *task.Executor) {
 		task.WithVersionCheck(true),
 		task.WithFailfast(Failfast),
 		task.WithTempDirPath(TempDir),
+		task.WithCoreutils(Coreutils),
 	)
 }
 

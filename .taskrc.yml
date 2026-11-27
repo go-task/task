@@ -1,3 +1,4 @@
+coreutils: turtle
 experiments:
   GENTLE_FORCE: 0
   ENV_PRECEDENCE: 0

@@ -35,6 +35,9 @@ func (e *Executor) Setup() error {
 	if err := e.readTaskfile(node); err != nil {
 		return err
 	}
+	if err := e.setupCoreutils(); err != nil {
+		return err
+	}
 	e.setupStdFiles()
 	if err := e.setupOutput(); err != nil {
 		return err
@@ -205,6 +208,15 @@ func (e *Executor) setupOutput() error {
 	return err
 }
 
+func (e *Executor) setupCoreutils() error {
+	mode, err := execext.ResolveCoreutils(e.Coreutils)
+	if err != nil {
+		return fmt.Errorf("task: invalid coreutils configuration: %w", err)
+	}
+	e.coreutils = mode
+	return nil
+}
+
 func (e *Executor) setupCompiler() error {
 	if e.UserWorkingDir == "" {
 		var err error
@@ -221,6 +233,7 @@ func (e *Executor) setupCompiler() error {
 		TaskfileEnv:    e.Taskfile.Env,
 		TaskfileVars:   e.Taskfile.Vars,
 		Logger:         e.Logger,
+		Coreutils:      e.coreutils,
 	}
 	return nil
 }
