@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Validate every new post before writing any of them or promoting the website.
