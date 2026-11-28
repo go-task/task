@@ -1,0 +1,11 @@
+version: '3'
+
+includes:
+  service-a: ./service-a
+  service-b: ./service-b
+
+tasks:
+  build:
+    deps:
+      - service-a:build
+      - service-b:build

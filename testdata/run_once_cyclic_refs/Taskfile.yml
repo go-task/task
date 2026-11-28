@@ -1,0 +1,14 @@
+version: '3'
+
+tasks:
+  countdown:
+    run: when_changed
+    cmds:
+      - echo "countdown"
+      - task: step
+
+  step:
+    run: once
+    cmds:
+      - task: countdown
+        if: 'false'
