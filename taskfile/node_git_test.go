@@ -2,11 +2,14 @@ package taskfile
 
 import (
 	"context"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -382,4 +385,104 @@ func TestGetOrCloneRepo_ReclonesWithoutGitDir(t *testing.T) { //nolint:parallelt
 	_, err = node.getOrCloneRepo(context.Background())
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to clone repository")
+}
+
+type blockingGitCacheReadNode struct {
+	Node
+	readyPath   string
+	releasePath string
+}
+
+func (node blockingGitCacheReadNode) Read() ([]byte, error) {
+	if err := os.WriteFile(node.readyPath, nil, 0o600); err != nil {
+		return nil, err
+	}
+	deadline := time.Now().Add(10 * time.Second)
+	for time.Now().Before(deadline) {
+		if _, err := os.Stat(node.releasePath); err == nil {
+			return node.Node.Read()
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return nil, os.ErrDeadlineExceeded
+}
+
+func TestGitCacheReaderHelper(t *testing.T) {
+	t.Parallel()
+	if os.Getenv("GO_TASK_GIT_CACHE_READER_HELPER") != "1" {
+		return
+	}
+
+	baseNode, err := NewFileNode(os.Getenv("GO_TASK_GIT_CACHE_TASKFILE"), "")
+	require.NoError(t, err)
+	node := blockingGitCacheReadNode{
+		Node:        baseNode,
+		readyPath:   os.Getenv("GO_TASK_GIT_CACHE_READY"),
+		releasePath: os.Getenv("GO_TASK_GIT_CACHE_RELEASE"),
+	}
+	_, err = NewReader().Read(context.Background(), node)
+	require.NoError(t, err)
+}
+
+func TestReaderReadPreventsConcurrentGitCacheCleanup(t *testing.T) { //nolint:paralleltest // t.Setenv changes the user cache directory
+	cacheDir := t.TempDir()
+	setUserCacheDir(t, cacheDir)
+	root, err := gitCacheRoot()
+	require.NoError(t, err)
+	require.NoError(t, os.MkdirAll(root, 0o700))
+	require.NoError(t, os.WriteFile(filepath.Join(root, "cached-repo"), nil, 0o600))
+
+	taskfile := filepath.Join(t.TempDir(), "Taskfile.yml")
+	require.NoError(t, os.WriteFile(taskfile, []byte("version: '3'\n"), 0o600))
+	readyPath := filepath.Join(t.TempDir(), "reader-ready")
+	releasePath := filepath.Join(filepath.Dir(readyPath), "release-reader")
+
+	//nolint:gosec // Re-execute this test binary to model a separate Task process.
+	cmd := exec.CommandContext(context.Background(), os.Args[0], "-test.run=^TestGitCacheReaderHelper$")
+	cmd.Env = append(os.Environ(),
+		"GO_TASK_GIT_CACHE_READER_HELPER=1",
+		"GO_TASK_GIT_CACHE_TASKFILE="+taskfile,
+		"GO_TASK_GIT_CACHE_READY="+readyPath,
+		"GO_TASK_GIT_CACHE_RELEASE="+releasePath,
+	)
+	cmd.Stdout = io.Discard
+	cmd.Stderr = io.Discard
+	require.NoError(t, cmd.Start())
+	t.Cleanup(func() {
+		if cmd.ProcessState == nil {
+			_ = cmd.Process.Kill()
+			_ = cmd.Wait()
+		}
+	})
+
+	deadline := time.Now().Add(10 * time.Second)
+	for time.Now().Before(deadline) {
+		if _, err := os.Stat(readyPath); err == nil {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if _, err := os.Stat(readyPath); err != nil {
+		t.Fatalf("reader helper did not start reading: %s", err)
+	}
+
+	cleanupDone := make(chan error, 1)
+	go func() { cleanupDone <- cleanGitCache(root) }()
+	select {
+	case err := <-cleanupDone:
+		_ = os.WriteFile(releasePath, nil, 0o600)
+		t.Fatalf("git cache cleanup completed while another process was reading: %v", err)
+	case <-time.After(100 * time.Millisecond):
+	}
+	require.NoError(t, os.WriteFile(releasePath, nil, 0o600))
+	select {
+	case err := <-cleanupDone:
+		require.NoError(t, err)
+	case <-time.After(10 * time.Second):
+		t.Fatal("git cache cleanup did not resume after the reader finished")
+	}
+	require.NoError(t, cmd.Wait())
+	if _, err := os.Stat(root); !os.IsNotExist(err) {
+		t.Fatalf("expected git cache root to be removed, stat error: %v", err)
+	}
 }
