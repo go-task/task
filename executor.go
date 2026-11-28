@@ -131,10 +131,16 @@ func (e *Executor) Options(opts ...ExecutorOption) {
 // fingerprinter is built on the fly rather than once in Setup because fields
 // like Dry may be mutated between runs.
 func (e *Executor) fingerprinter() *fingerprint.Fingerprinter {
+	return e.newFingerprinter(e.Dry)
+}
+
+// newFingerprinter builds a fingerprinter that saves the new checksum or
+// timestamp of the tasks it checks, unless dry is set.
+func (e *Executor) newFingerprinter(dry bool) *fingerprint.Fingerprinter {
 	return fingerprint.NewFingerprinter(
 		e.Taskfile.Method,
 		e.TempDir.Fingerprint,
-		e.Dry,
+		dry,
 		e.Logger,
 		fingerprint.WithCoreutils(e.coreutils),
 	)

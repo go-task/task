@@ -654,6 +654,87 @@ func TestStatusChecksumMissingGenerated(t *testing.T) { // nolint:paralleltest /
 	require.NoError(t, err, "generated.txt should be recreated after third run")
 }
 
+// Listing the tasks as JSON reports whether each one is up-to-date. It must
+// not save a new fingerprint while doing so, or the next run skips a task whose
+// sources changed since it last ran.
+func TestJsonListDoesNotUpdateFingerprint(t *testing.T) { // nolint:paralleltest // changes the working directory
+	tests := []struct {
+		method string
+		// makeStale changes the sources after the first run, so that the
+		// task is no longer up-to-date with the given method.
+		makeStale func(t *testing.T, dir string)
+	}{
+		{
+			method: "checksum",
+			makeStale: func(t *testing.T, dir string) {
+				t.Helper()
+				require.NoError(t, os.WriteFile(filepath.Join(dir, "source.txt"), []byte("changed"), 0o644))
+			},
+		},
+		{
+			method: "timestamp",
+			makeStale: func(t *testing.T, dir string) {
+				t.Helper()
+				// Make the source newer than the saved timestamp but older
+				// than now, without depending on the file system's clock.
+				saved := time.Now().Add(-2 * time.Hour)
+				modified := time.Now().Add(-time.Hour)
+				require.NoError(t, os.Chtimes(filepath.Join(dir, ".task", "timestamp", "build"), saved, saved))
+				require.NoError(t, os.Chtimes(filepath.Join(dir, "source.txt"), modified, modified))
+			},
+		},
+	}
+
+	for _, tt := range tests { // nolint:paralleltest // changes the working directory
+		t.Run(tt.method, func(t *testing.T) {
+			dir := t.TempDir()
+			// Like `task --list --json`, which is run from the project's
+			// directory.
+			t.Chdir(dir)
+			taskfile := fmt.Sprintf(`version: '3'
+
+tasks:
+  build:
+    desc: Build
+    method: %s
+    sources: [source.txt]
+    cmds:
+      - echo building
+`, tt.method)
+			require.NoError(t, os.WriteFile(filepath.Join(dir, "Taskfile.yml"), []byte(taskfile), 0o644))
+			require.NoError(t, os.WriteFile(filepath.Join(dir, "source.txt"), []byte("original"), 0o644))
+
+			var buff bytes.Buffer
+			e := task.NewExecutor(
+				task.WithDir(dir),
+				task.WithStdout(&buff),
+				task.WithStderr(&buff),
+				task.WithTempDir(task.TempDir{
+					Remote:      filepath.Join(dir, ".task"),
+					Fingerprint: filepath.Join(dir, ".task"),
+				}),
+			)
+			require.NoError(t, e.Setup())
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+
+			tt.makeStale(t, dir)
+
+			buff.Reset()
+			_, err := e.ListTasks(task.ListOptions{
+				ListOnlyTasksWithDescriptions: true,
+				FormatTaskListAsJSON:          true,
+			})
+			require.NoError(t, err)
+			assert.Contains(t, buff.String(), `"up_to_date": false`)
+
+			buff.Reset()
+			require.NoError(t, e.Run(t.Context(), &task.Call{Task: "build"}))
+			assert.NotContains(t, buff.String(), "is up to date")
+			assert.Contains(t, buff.String(), "building")
+		})
+	}
+}
+
 // The injected fingerprint variable follows the method the up-to-date check
 // uses, including when that method comes from the Taskfile level.
 func TestFingerprintVarMethod(t *testing.T) {
