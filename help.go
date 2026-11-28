@@ -150,7 +150,10 @@ func (e *Executor) ToEditorOutput(tasks []*ast.Task, noStatus bool, nested bool)
 				return nil
 			}
 
-			upToDate, err := e.fingerprinter().UpToDate(context.Background(), tasks[i])
+			// Only report the status. Saving the new checksum or timestamp
+			// here would make the next run skip a task whose sources
+			// changed since it last ran.
+			upToDate, err := e.newFingerprinter(true).UpToDate(context.Background(), tasks[i])
 			if err != nil {
 				return err
 			}
